@@ -174,8 +174,7 @@ def read_community_members(
     memberships = session.exec(statement.offset(skip).limit(limit)).all()
     count = session.exec(select(func.count()).where(CommunityMember.community_id == id)).one()
     
-    # Better:
-    from app.models import User
+    from app.models import User, UsersPublic
     statement = (
         select(User)
         .join(CommunityMember, User.id == CommunityMember.user_id)

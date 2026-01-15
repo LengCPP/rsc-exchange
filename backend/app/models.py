@@ -178,6 +178,12 @@ class ItemsPublic(SQLModel):
     count: int
 
 
+class SearchResults(SQLModel):
+    users: list[UserPublic]
+    items: list[ItemPublic]
+    communities: list[CommunityPublic]
+
+
 # Generic message
 class Message(SQLModel):
     message: str

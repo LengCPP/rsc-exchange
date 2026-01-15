@@ -9,28 +9,6 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
-export type CommunitiesPublic = {
-    data: Array<CommunityPublic>;
-    count: number;
-};
-
-export type CommunityCreate = {
-    name: string;
-    description?: (string | null);
-};
-
-export type CommunityPublic = {
-    name: string;
-    description?: (string | null);
-    id: string;
-    created_by: string;
-};
-
-export type CommunityUpdate = {
-    name?: (string | null);
-    description?: (string | null);
-};
-
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -98,7 +76,6 @@ export type UserPublic = {
     full_name?: (string | null);
     public_id: string;
     id: string;
-    communities?: Array<CommunityPublic>;
 };
 
 export type UserRegister = {
@@ -130,91 +107,6 @@ export type ValidationError = {
     msg: string;
     type: string;
 };
-
-export type CommunitiesReadCommunitiesData = {
-    limit?: number;
-    skip?: number;
-};
-
-export type CommunitiesReadCommunitiesResponse = (CommunitiesPublic);
-
-export type CommunitiesCreateCommunityData = {
-    requestBody: CommunityCreate;
-};
-
-export type CommunitiesCreateCommunityResponse = (CommunityPublic);
-
-export type CommunitiesReadCommunityData = {
-    id: string;
-};
-
-export type CommunitiesReadCommunityResponse = (CommunityPublic);
-
-export type CommunitiesUpdateCommunityData = {
-    id: string;
-    requestBody: CommunityUpdate;
-};
-
-export type CommunitiesUpdateCommunityResponse = (CommunityPublic);
-
-export type CommunitiesDeleteCommunityData = {
-    id: string;
-};
-
-export type CommunitiesDeleteCommunityResponse = (Message);
-
-export type CommunitiesJoinCommunityData = {
-    id: string;
-};
-
-export type CommunitiesJoinCommunityResponse = (Message);
-
-export type CommunitiesLeaveCommunityData = {
-    id: string;
-    userId?: (string | null);
-};
-
-export type CommunitiesLeaveCommunityResponse = (Message);
-
-export type CommunitiesReadCommunityMembersData = {
-    id: string;
-    limit?: number;
-    skip?: number;
-};
-
-export type CommunitiesReadCommunityMembersResponse = (UsersPublic);
-
-export type FriendsReadFriendsData = {
-    limit?: number;
-    skip?: number;
-};
-
-export type FriendsReadFriendsResponse = (UsersPublic);
-
-export type FriendsReadFriendRequestsData = {
-    limit?: number;
-    skip?: number;
-};
-
-export type FriendsReadFriendRequestsResponse = (UsersPublic);
-
-export type FriendsCreateFriendRequestData = {
-    friendId: string;
-};
-
-export type FriendsCreateFriendRequestResponse = (Message);
-
-export type FriendsAcceptFriendRequestData = {
-    friendId: string;
-};
-
-export type FriendsAcceptFriendRequestResponse = (Message);
-
-export type FriendsRemoveFriendData = {
-    friendId: string;
-};
-
-export type FriendsRemoveFriendResponse = (Message);
 
 export type ItemsReadItemsData = {
     limit?: number;
