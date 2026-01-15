@@ -2,8 +2,8 @@ import {
   Container,
   EmptyState,
   Flex,
+  Grid,
   Heading,
-  Table,
   VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -12,8 +12,8 @@ import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
 import { ItemsService } from "@/client"
-import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
 import AddItem from "@/components/Items/AddItem"
+import ItemCard from "@/components/Items/ItemCard"
 import PendingItems from "@/components/Pending/PendingItems"
 import {
   PaginationItems,
@@ -82,39 +82,22 @@ function ItemsTable() {
 
   return (
     <>
-      <Table.Root size={{ base: "sm", md: "md" }}>
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeader w="30%">ID</Table.ColumnHeader>
-            <Table.ColumnHeader w="30%">Title</Table.ColumnHeader>
-            <Table.ColumnHeader w="30%">Description</Table.ColumnHeader>
-            <Table.ColumnHeader w="10%">Actions</Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {items?.map((item) => (
-            <Table.Row key={item.id} opacity={isPlaceholderData ? 0.5 : 1}>
-              <Table.Cell truncate maxW="30%">
-                {item.id}
-              </Table.Cell>
-              <Table.Cell truncate maxW="30%">
-                {item.title}
-              </Table.Cell>
-              <Table.Cell
-                color={!item.description ? "gray" : "inherit"}
-                truncate
-                maxW="30%"
-              >
-                {item.description || "N/A"}
-              </Table.Cell>
-              <Table.Cell width="10%">
-                <ItemActionsMenu item={item} />
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
-      <Flex justifyContent="flex-end" mt={4}>
+      <Grid
+        templateColumns={{
+          base: "1fr",
+          sm: "repeat(2, 1fr)",
+          md: "repeat(3, 1fr)",
+          lg: "repeat(4, 1fr)",
+        }}
+        gap={6}
+        mt={6}
+        opacity={isPlaceholderData ? 0.5 : 1}
+      >
+        {items?.map((item) => (
+          <ItemCard key={item.id} item={item} />
+        ))}
+      </Grid>
+      <Flex justifyContent="center" mt={8}>
         <PaginationRoot
           count={count}
           pageSize={PER_PAGE}

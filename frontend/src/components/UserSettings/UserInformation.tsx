@@ -4,12 +4,14 @@ import {
   Container,
   Flex,
   Heading,
+  IconButton,
   Input,
   Text,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
+import { FaShare } from "react-icons/fa"
 
 import {
   type ApiError,
@@ -19,7 +21,7 @@ import {
 } from "@/client"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
-import { emailPattern, handleError } from "@/utils"
+import { emailPattern, formatPublicId, handleError } from "@/utils"
 import { Field } from "../ui/field"
 
 const UserInformation = () => {
@@ -69,6 +71,16 @@ const UserInformation = () => {
     toggleEditMode()
   }
 
+  const handleShareId = async () => {
+    const formattedId = formatPublicId(currentUser?.public_id)
+    try {
+      await navigator.clipboard.writeText(formattedId)
+      showSuccessToast("User ID copied to clipboard!")
+    } catch (err) {
+      handleError({ message: "Failed to copy to clipboard" } as ApiError)
+    }
+  }
+
   return (
     <>
       <Container maxW="full">
@@ -80,7 +92,29 @@ const UserInformation = () => {
           as="form"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <Field label="Full name">
+          <Field label="User ID">
+            <Flex align="center" gap={2}>
+              <Text
+                fontSize="md"
+                py={2}
+                fontWeight="semibold"
+                letterSpacing="wide"
+                fontFamily="mono"
+              >
+                {formatPublicId(currentUser?.public_id)}
+              </Text>
+              <IconButton
+                aria-label="Share User ID"
+                size="sm"
+                variant="ghost"
+                onClick={handleShareId}
+                title="Copy ID to share with friends"
+              >
+                <FaShare />
+              </IconButton>
+            </Flex>
+          </Field>
+          <Field mt={4} label="Full name">
             {editMode ? (
               <Input
                 {...register("full_name", { maxLength: 30 })}
