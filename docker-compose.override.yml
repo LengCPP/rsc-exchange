@@ -40,6 +40,8 @@ services:
       - --certificatesresolvers.le.acme.storage=/tmp/acme.json
       # Using a non-existent but HTTPS caserver to effectively disable ACME for .localhost
       - --certificatesresolvers.le.acme.caserver=https://127.0.0.1:2379/v2/keys
+      # NOTE: The email above is read from docker-compose.override.yml for local development
+      # In production, this will use the ACME email from your deployment configuration
     labels:
       # Enable Traefik for this service, to make it available in the public network
       - traefik.enable=true

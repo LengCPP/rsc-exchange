@@ -58,3 +58,13 @@ export const handleError = (err: ApiError) => {
   }
   showErrorToast(errorMessage)
 }
+
+/**
+ * Format a public ID for display by converting to uppercase
+ * @param publicId - The public ID string (e.g., 'u1a2b3c4' or 'i5d6e7f8')
+ * @returns Uppercase formatted ID (e.g., 'U1A2B3C4' or 'I5D6E7F8')
+ */
+export const formatPublicId = (publicId: string | undefined): string => {
+  if (!publicId) return ""
+  return publicId.toUpperCase()
+}

@@ -1,4 +1,5 @@
 import logging
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -8,6 +9,7 @@ import emails  # type: ignore
 import jwt
 from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
+from sqlmodel import Session, select
 
 from app.core import security
 from app.core.config import settings
@@ -121,3 +123,40 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except InvalidTokenError:
         return None
+
+
+def generate_unique_id(prefix: str, session: Session, model: type) -> str:
+    """
+    Generate a unique 8-character alphanumeric ID with a prefix.
+
+    Args:
+        prefix: Single character prefix ('u' for users, 'i' for items)
+        session: Database session for uniqueness checking
+        model: SQLModel class to check against
+
+    Returns:
+        A unique ID string like 'u1a2b3c4' (prefix + 7 random chars)
+
+    Note:
+        - Excludes ambiguous characters: 0, O, o, I, l, 1
+        - Case-insensitive but stored in lowercase
+        - IDs should be displayed as uppercase on frontend
+    """
+    # Character set excluding ambiguous characters
+    # Removed: 0, O, I, l, 1 (zero, O, I, lowercase L, one)
+    charset = "23456789abcdefghjkmnpqrstuvwxyz"
+
+    max_attempts = 100
+    for _ in range(max_attempts):
+        # Generate 7 random characters (prefix + 7 = 8 total)
+        random_chars = "".join(secrets.choice(charset) for _ in range(7))
+        unique_id = f"{prefix.lower()}{random_chars}"
+
+        # Check if ID already exists
+        statement = select(model).where(model.public_id == unique_id)
+        existing = session.exec(statement).first()
+
+        if not existing:
+            return unique_id
+
+    raise ValueError(f"Failed to generate unique ID after {max_attempts} attempts")

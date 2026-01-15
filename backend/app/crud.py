@@ -5,11 +5,17 @@ from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.utils import generate_unique_id
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
+    public_id = generate_unique_id("u", session, User)
     db_obj = User.model_validate(
-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
+        user_create,
+        update={
+            "hashed_password": get_password_hash(user_create.password),
+            "public_id": public_id,
+        },
     )
     session.add(db_obj)
     session.commit()
@@ -47,7 +53,10 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
 
 
 def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
-    db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
+    public_id = generate_unique_id("i", session, Item)
+    db_item = Item.model_validate(
+        item_in, update={"owner_id": owner_id, "public_id": public_id}
+    )
     session.add(db_item)
     session.commit()
     session.refresh(db_item)
