@@ -51,12 +51,14 @@ const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   ))
 
   return (
-    <>
-      <Text fontSize="xs" px={4} py={2} fontWeight="bold">
-        Menu
-      </Text>
-      <Box>{listItems}</Box>
-    </>
+    <Flex direction="column" flex="1">
+      <Box>
+        <Text fontSize="xs" px={4} py={2} fontWeight="bold">
+          Menu
+        </Text>
+        {listItems}
+      </Box>
+    </Flex>
   )
 }
 

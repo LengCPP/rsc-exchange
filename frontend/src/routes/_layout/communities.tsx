@@ -8,27 +8,18 @@ import {
   VStack,
   SimpleGrid,
   Box,
-  Input,
-  DialogRoot,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogActionTrigger,
-  DialogTrigger,
+  Separator,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { FiGlobe, FiPlus, FiUserPlus, FiTrash2, FiUserMinus } from "react-icons/fi"
-import { useForm, type SubmitHandler } from "react-hook-form"
 import { useState } from "react"
 import { z } from "zod"
 
-import { CommunitiesService, FriendsService, type CommunityCreate } from "@/client"
+import { CommunitiesService, FriendsService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
-import { Field } from "@/components/ui/field"
 import useAuth from "@/hooks/useAuth"
+import AddCommunity from "@/components/Communities/AddCommunity"
 
 const communitiesSearchSchema = z.object({
   page: z.number().catch(1),
@@ -38,62 +29,6 @@ export const Route = createFileRoute("/_layout/communities")({
   component: Communities,
   validateSearch: (search) => communitiesSearchSchema.parse(search),
 })
-
-function AddCommunity({ onSuccess }: { onSuccess: () => void }) {
-  const { showSuccessToast, showErrorToast } = useCustomToast()
-  const { register, handleSubmit, reset } = useForm<CommunityCreate>()
-
-  const mutation = useMutation({
-    mutationFn: (data: CommunityCreate) => CommunitiesService.createCommunity({ requestBody: data }),
-    onSuccess: () => {
-      showSuccessToast("Community created successfully")
-      reset()
-      onSuccess()
-    },
-    onError: () => {
-      showErrorToast("Failed to create community")
-    },
-  })
-
-  const onSubmit: SubmitHandler<CommunityCreate> = (data) => {
-    mutation.mutate(data)
-  }
-
-  return (
-    <DialogRoot>
-      <DialogTrigger asChild>
-        <Button variant="solid">
-          <FiPlus /> Create Community
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Community</DialogTitle>
-        </DialogHeader>
-        <Box as="form" onSubmit={handleSubmit(onSubmit)}>
-          <DialogBody pb="4">
-            <VStack gap="4">
-              <Field label="Name" required>
-                <Input {...register("name", { required: true })} placeholder="Community Name" />
-              </Field>
-              <Field label="Description">
-                <Input {...register("description")} placeholder="Description" />
-              </Field>
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <DialogActionTrigger asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogActionTrigger>
-            <Button type="submit" loading={mutation.isPending}>
-              Create
-            </Button>
-          </DialogFooter>
-        </Box>
-      </DialogContent>
-    </DialogRoot>
-  )
-}
 
 function CommunityCard({ community }: { community: any }) {
   const queryClient = useQueryClient()
@@ -271,7 +206,7 @@ function Communities() {
     <Container maxW="full">
       <Flex pt={12} justify="space-between" align="center">
         <Heading size="lg">Communities</Heading>
-        <AddCommunity onSuccess={() => queryClient.invalidateQueries({ queryKey: ["communities"] })} />
+        <AddCommunity />
       </Flex>
 
       {isLoading ? (

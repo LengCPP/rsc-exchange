@@ -1,4 +1,4 @@
-import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
+import { Box, Flex, IconButton, Text, Spacer } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FaBars } from "react-icons/fa"
@@ -15,6 +15,7 @@ import {
   DrawerTrigger,
 } from "../ui/drawer"
 import SidebarItems from "./SidebarItems"
+import { ColorModeButton } from "../ui/color-mode"
 
 const Sidebar = () => {
   const queryClient = useQueryClient()
@@ -48,12 +49,12 @@ const Sidebar = () => {
             <FaBars />
           </IconButton>
         </DrawerTrigger>
-        <DrawerContent maxW="280px">
+        <DrawerContent maxW="280px" h="full">
           <DrawerCloseTrigger />
           <DrawerBody>
-            <Flex flexDir="column" justify="space-between">
-              <Box>
-                <SidebarItems />
+            <Flex flexDir="column" h="full">
+              <SidebarItems />
+              <Box mt={4}>
                 <Flex
                   as="button"
                   onClick={handleLogout}
@@ -61,15 +62,26 @@ const Sidebar = () => {
                   gap={4}
                   px={4}
                   py={2}
+                  _hover={{
+                    background: "gray.subtle",
+                  }}
+                  w="full"
+                  fontSize="sm"
                 >
                   <FiLogOut />
                   <Text>Log Out</Text>
                 </Flex>
               </Box>
               {currentUser?.email && (
-                <Text fontSize="sm" p={2}>
-                  Logged in as: {currentUser.email}
-                </Text>
+                <Flex alignItems="center">
+                  <Text fontSize="xs" p={4} color="gray.500">
+                    Logged in as: {currentUser.email}
+                  </Text>
+                  <Spacer />
+                  <Box p={4}>
+                    <ColorModeButton />
+                  </Box>
+                </Flex>
               )}
             </Flex>
           </DrawerBody>
@@ -88,9 +100,38 @@ const Sidebar = () => {
         h="100vh"
         p={4}
       >
-        <Box w="100%">
+        <Flex w="100%" direction="column">
           <SidebarItems />
-        </Box>
+          <Box mt={4}>
+            <Flex
+              as="button"
+              onClick={handleLogout}
+              alignItems="center"
+              gap={4}
+              px={4}
+              py={2}
+              _hover={{
+                background: "gray.subtle",
+              }}
+              w="full"
+              fontSize="sm"
+            >
+              <FiLogOut />
+              <Text>Log Out</Text>
+            </Flex>
+          </Box>
+          {currentUser?.email && (
+            <Flex alignItems="center">
+              <Text fontSize="xs" p={4} color="gray.500">
+                Logged in as: {currentUser.email}
+              </Text>
+              <Spacer />
+              <Box p={4}>
+                <ColorModeButton />
+              </Box>
+            </Flex>
+          )}
+        </Flex>
       </Box>
     </>
   )
