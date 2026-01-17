@@ -14,7 +14,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { FiGlobe, FiUserPlus, FiTrash2, FiUserMinus, FiSettings } from "react-icons/fi"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { z } from "zod"
 
 import { CommunitiesService, FriendsService } from "@/client"
@@ -46,6 +46,19 @@ function CommunityCard({ community }: { community: any }) {
 
   const communityExtended = community as CommunityPublicExtended
   const isClosed = communityExtended.is_closed
+
+  // Fetch friends list for the current user
+  const { data: friendsData, isLoading: isLoadingFriends } = useQuery({
+    queryKey: ["currentUserFriends"],
+    queryFn: () => FriendsService.readFriends(),
+    enabled: showMembers && !!currentUser?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const friendIds = useMemo(() => {
+    return new Set(friendsData?.data.map(friend => friend.id) || []);
+  }, [friendsData]);
+
 
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["communityMembers", community.id],
@@ -182,85 +195,94 @@ function CommunityCard({ community }: { community: any }) {
         <VStack mt={4} align="stretch" gap={2}>
           <Separator />
           <Text fontWeight="bold" fontSize="sm">Members:</Text>
-          {isLoadingMembers ? (
+          {isLoadingMembers || isLoadingFriends ? ( // Show loading if either members or friends are loading
             <Text fontSize="xs">Loading...</Text>
           ) : (
             members?.data
-              .filter((m: any) => m.id !== currentUser?.id)
+              .filter((m: any) => m.id !== currentUser?.id) // Filter out current user
               .map((m: any) => {
                 const member = m as UserPublicWithRole
-              const role = member.community_role || (member.id === community.created_by ? "admin" : "member")
-              const isCreator = member.id === community.created_by
+                const role = member.community_role || (member.id === community.created_by ? "admin" : "member")
+                const isCreator = member.id === community.created_by
+                const isFriend = friendIds.has(member.id); // Check if current member is a friend
 
-              return (
-                <Flex key={member.id} justify="space-between" align="center" p={2} _hover={{ bg: "bg.muted" }} rounded="md">
-                  <VStack align="start" gap={0}>
-                    <Text fontSize="sm" fontWeight="medium">{member.full_name || member.email}</Text>
-                    <Badge size="xs" colorPalette={role === "admin" ? "purple" : "gray"}>
-                      {role.toUpperCase()}
-                    </Badge>
-                  </VStack>
-                  
-                  <Flex gap={1} align="center">
-                    {/* Role Management Menu */}
-                    {isAdmin && !isCreator && member.id !== currentUser?.id && (
-                      <MenuRoot>
-                        <MenuTrigger asChild>
-                           <Button size="xs" variant="outline" title="Manage Role">
-                             <FiSettings />
-                           </Button>
-                        </MenuTrigger>
-                        <MenuContent>
-                           <MenuItem 
-                             value="admin" 
-                             onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "admin" })}
-                             disabled={role === "admin"}
-                           >
-                             Promote to Admin
-                           </MenuItem>
-                           <MenuItem 
-                             value="member" 
-                             onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "member" })}
-                             disabled={role === "member"}
-                           >
-                             Demote to Member
-                           </MenuItem>
-                        </MenuContent>
-                      </MenuRoot>
-                    )}
-
-                    {isAdmin && member.id !== currentUser?.id && (
-                      <Button
-                        size="xs"
-                        variant={"danger" as any}
-                        onClick={() => {
-                          if (window.confirm(`Are you sure you want to remove ${member.full_name || member.email}?`)) {
-                            removeMemberMutation.mutate(member.id)
-                          }
-                        }}
-                        title="Remove Member"
-                      >
-                        <FiUserMinus />
-                      </Button>
-                    )}
+                return (
+                  <Flex key={member.id} justify="space-between" align="center" p={2} _hover={{ bg: "bg.muted" }} rounded="md">
+                    <VStack align="start" gap={0}>
+                      <Text fontSize="sm" fontWeight="medium">{member.full_name || member.email}</Text>
+                      <Badge size="xs" colorPalette={role === "admin" ? "purple" : "gray"}>
+                        {role.toUpperCase()}
+                      </Badge>
+                      {isFriend && ( // Display Friend badge if they are a friend
+                        <Badge size="xs" colorPalette="blue" variant="solid">
+                          Friend
+                        </Badge>
+                      )}
+                    </VStack>
                     
-                    {member.id !== currentUser?.id && (
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        onClick={() => friendMutation.mutate(member.id)}
-                        title="Add Friend"
-                      >
-                        <FiUserPlus />
-                      </Button>
-                    )}
+                    <Flex gap={1} align="center">
+                      {/* Role Management Menu */}
+                      {isAdmin && !isCreator && member.id !== currentUser?.id && (
+                        <MenuRoot>
+                          <MenuTrigger asChild>
+                             <Button size="xs" variant="outline" title="Manage Role">
+                               <FiSettings />
+                             </Button>
+                          </MenuTrigger>
+                          <MenuContent>
+                             <MenuItem 
+                               value="admin" 
+                               onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "admin" })}
+                               disabled={role === "admin"}
+                             >
+                               Promote to Admin
+                             </MenuItem>
+                             <MenuItem 
+                               value="member" 
+                               onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "member" })}
+                               disabled={role === "member"}
+                             >
+                               Demote to Member
+                             </MenuItem>
+                          </MenuContent>
+                        </MenuRoot>
+                      )}
+
+                      {/* Remove Member Button */}
+                      {isAdmin && member.id !== currentUser?.id && (
+                        <Button
+                          size="xs"
+                          variant={"danger" as any}
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to remove ${member.full_name || member.email}?`)) {
+                              removeMemberMutation.mutate(member.id)
+                            }
+                          }}
+                          title="Remove Member"
+                        >
+                          <FiUserMinus />
+                        </Button>
+                      )}
+                      
+                      {/* Add Friend Button - Conditionally Rendered */}
+                      {member.id !== currentUser?.id && !isFriend && ( // Only show if not current user AND not already a friend
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => friendMutation.mutate(member.id)}
+                          title="Add Friend"
+                        >
+                          <FiUserPlus />
+                        </Button>
+                      )}
+                    </Flex>
                   </Flex>
-                </Flex>
-              )
-            })
-          )}
-        </VStack>
-      )}
+                )
+              })
+            )}
+          </VStack>
+        )}
+      </Flex>
     </Box>
   )
 }
