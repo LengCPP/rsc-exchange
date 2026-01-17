@@ -1,4 +1,4 @@
-import { Box, Flex, IconButton, Text, Spacer } from "@chakra-ui/react"
+import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FaBars } from "react-icons/fa"
@@ -30,64 +30,65 @@ const Sidebar = () => {
   return (
     <>
       {/* Mobile */}
-      <DrawerRoot
-        placement="start"
-        open={open}
-        onOpenChange={(e) => setOpen(e.open)}
+      <Flex
+        display={{ base: "flex", md: "none" }}
+        position="absolute"
+        zIndex="100"
+        m={4}
+        gap={2}
       >
-        <DrawerBackdrop />
-        <DrawerTrigger asChild>
-          <IconButton
-            variant="ghost"
-            color="inherit"
-            display={{ base: "flex", md: "none" }}
-            aria-label="Open Menu"
-            position="absolute"
-            zIndex="100"
-            m={4}
-          >
-            <FaBars />
-          </IconButton>
-        </DrawerTrigger>
-        <DrawerContent maxW="280px" h="full">
-          <DrawerCloseTrigger />
-          <DrawerBody>
-            <Flex flexDir="column" h="full">
-              <SidebarItems />
-              <Box mt={4}>
-                <Flex
-                  as="button"
-                  onClick={handleLogout}
-                  alignItems="center"
-                  gap={4}
-                  px={4}
-                  py={2}
-                  _hover={{
-                    background: "gray.subtle",
-                  }}
-                  w="full"
-                  fontSize="sm"
-                >
-                  <FiLogOut />
-                  <Text>Log Out</Text>
-                </Flex>
-              </Box>
-              {currentUser?.email && (
-                <Flex alignItems="center">
-                  <Text fontSize="xs" p={4} color="gray.500">
-                    Logged in as: {currentUser.email}
-                  </Text>
-                  <Spacer />
-                  <Box p={4}>
-                    <ColorModeButton />
-                  </Box>
-                </Flex>
-              )}
-            </Flex>
-          </DrawerBody>
-          <DrawerCloseTrigger />
-        </DrawerContent>
-      </DrawerRoot>
+        <DrawerRoot
+          placement="start"
+          open={open}
+          onOpenChange={(e) => setOpen(e.open)}
+        >
+          <DrawerBackdrop />
+          <DrawerTrigger asChild>
+            <IconButton
+              variant="ghost"
+              color="inherit"
+              aria-label="Open Menu"
+            >
+              <FaBars />
+            </IconButton>
+          </DrawerTrigger>
+          <DrawerContent maxW="280px" h="full">
+            <DrawerCloseTrigger />
+            <DrawerBody>
+              <Flex flexDir="column" h="full">
+                <SidebarItems />
+                <Box mt={4}>
+                  <Flex
+                    as="button"
+                    onClick={handleLogout}
+                    alignItems="center"
+                    gap={4}
+                    px={4}
+                    py={2}
+                    _hover={{
+                      background: "gray.subtle",
+                    }}
+                    w="full"
+                    fontSize="sm"
+                  >
+                    <FiLogOut />
+                    <Text>Log Out</Text>
+                  </Flex>
+                </Box>
+                {currentUser?.email && (
+                  <Flex alignItems="center">
+                    <Text fontSize="xs" p={4} color="gray.500">
+                      Logged in as: {currentUser.email}
+                    </Text>
+                  </Flex>
+                )}
+              </Flex>
+            </DrawerBody>
+            <DrawerCloseTrigger />
+          </DrawerContent>
+        </DrawerRoot>
+        <ColorModeButton />
+      </Flex>
 
       {/* Desktop */}
 
@@ -125,10 +126,6 @@ const Sidebar = () => {
               <Text fontSize="xs" p={4} color="gray.500">
                 Logged in as: {currentUser.email}
               </Text>
-              <Spacer />
-              <Box p={4}>
-                <ColorModeButton />
-              </Box>
             </Flex>
           )}
         </Flex>

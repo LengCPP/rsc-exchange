@@ -19,7 +19,7 @@ import {
   namePattern,
   passwordRules,
 } from "@/utils"
-import Logo from "/assets/images/rsc-xchange-logo.png"
+import Logo from "/assets/images/rsc-x-logo.png"
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,

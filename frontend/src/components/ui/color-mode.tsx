@@ -11,7 +11,14 @@ export interface ColorModeProviderProps extends ThemeProviderProps {}
 
 export function ColorModeProvider(props: ColorModeProviderProps) {
   return (
-    <ThemeProvider attribute="class" disableTransitionOnChange {...props} />
+    <ThemeProvider
+      attribute="class"
+      disableTransitionOnChange
+      defaultTheme="system"
+      enableSystem
+      storageKey="theme" // Explicitly setting storage key for clarity
+      {...props}
+    />
   )
 }
 
@@ -40,27 +47,33 @@ export function useColorModeValue<T>(light: T, dark: T) {
   return colorMode === "dark" ? dark : light
 }
 
+import { Flex, Text } from "@chakra-ui/react"
+
 export function ColorModeIcon() {
   const { colorMode } = useColorMode()
-  return colorMode === "dark" ? <LuMoon /> : <LuSun />
+  // Show the icon for the mode we will switch TO
+  return colorMode === "dark" ? <LuSun /> : <LuMoon />
 }
 
-interface ColorModeButtonProps extends Omit<IconButtonProps, "aria-label"> {}
+interface ColorModeButtonProps extends Omit<IconButtonProps, "aria-label"> {
+  showLabel?: boolean
+}
 
 export const ColorModeButton = React.forwardRef<
   HTMLButtonElement,
   ColorModeButtonProps
 >(function ColorModeButton(props, ref) {
-  const { toggleColorMode } = useColorMode()
+  const { showLabel, ...rest } = props
+  const { toggleColorMode, colorMode } = useColorMode()
   return (
     <ClientOnly fallback={<Skeleton boxSize="8" />}>
       <IconButton
         onClick={toggleColorMode}
         variant="ghost"
-        aria-label="Toggle color mode"
+        aria-label={`Switch to ${colorMode === "dark" ? "light" : "dark"} mode`}
         size="sm"
         ref={ref}
-        {...props}
+        {...rest}
         css={{
           _icon: {
             width: "5",
@@ -68,7 +81,14 @@ export const ColorModeButton = React.forwardRef<
           },
         }}
       >
-        <ColorModeIcon />
+        <Flex align="center" gap={2}>
+           <ColorModeIcon />
+           {showLabel && (
+             <Text fontSize="sm">
+               Switch to {colorMode === "dark" ? "Light" : "Dark"}
+             </Text>
+           )}
+        </Flex>
       </IconButton>
     </ClientOnly>
   )

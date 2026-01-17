@@ -57,7 +57,7 @@ const DeleteUser = ({ id }: { id: string }) => {
       onOpenChange={({ open }) => setIsOpen(open)}
     >
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" colorPalette="red">
+        <Button variant="dangerSecondary" size="sm">
           <FiTrash2 fontSize="16px" />
           Delete User
         </Button>
@@ -86,8 +86,7 @@ const DeleteUser = ({ id }: { id: string }) => {
               </Button>
             </DialogActionTrigger>
             <Button
-              variant="solid"
-              colorPalette="red"
+              variant="danger"
               type="submit"
               loading={isSubmitting}
             >

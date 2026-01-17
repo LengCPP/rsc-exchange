@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { FiGlobe, FiPlus, FiUserPlus, FiTrash2, FiUserMinus } from "react-icons/fi"
+import { FiGlobe, FiUserPlus, FiTrash2, FiUserMinus } from "react-icons/fi"
 import { useState } from "react"
 import { z } from "zod"
 
@@ -101,8 +101,7 @@ function CommunityCard({ community }: { community: any }) {
         {isAdmin && (
           <Button
             size="xs"
-            colorPalette="red"
-            variant="ghost"
+            variant="danger"
             onClick={() => {
                if (window.confirm("Are you sure you want to disband this community?")) {
                  disbandMutation.mutate()
@@ -119,6 +118,7 @@ function CommunityCard({ community }: { community: any }) {
         {!isMember ? (
           <Button
             size="sm"
+            variant="primary"
             onClick={() => joinMutation.mutate()}
             loading={joinMutation.isPending}
           >
@@ -126,14 +126,13 @@ function CommunityCard({ community }: { community: any }) {
           </Button>
         ) : (
           <>
-            <Button size="sm" variant="outline" onClick={() => setShowMembers(!showMembers)}>
+            <Button size="sm" variant="secondary" onClick={() => setShowMembers(!showMembers)}>
               {showMembers ? "Hide Members" : "Show Members"}
             </Button>
             {!isAdmin && (
               <Button
                 size="sm"
-                variant="ghost"
-                colorPalette="gray"
+                variant="dangerSecondary"
                 onClick={() => {
                    if (window.confirm("Are you sure you want to leave this community?")) {
                      leaveMutation.mutate()
@@ -161,8 +160,7 @@ function CommunityCard({ community }: { community: any }) {
                   {isAdmin && m.id !== currentUser?.id && (
                     <Button
                       size="xs"
-                      variant="ghost"
-                      colorPalette="red"
+                      variant="danger"
                       onClick={() => {
                         if (window.confirm(`Are you sure you want to remove ${m.full_name || m.email}?`)) {
                           removeMemberMutation.mutate(m.id)
@@ -194,7 +192,6 @@ function CommunityCard({ community }: { community: any }) {
 }
 
 function Communities() {
-  const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({
     queryKey: ["communities"],
     queryFn: () => CommunitiesService.readCommunities({}),

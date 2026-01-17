@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 
 import Logo from "/assets/images/rsc-x-logo.png"
 import UserMenu from "./UserMenu"
+import { ColorModeButton } from "../ui/color-mode"
 
 function Navbar() {
   const display = useBreakpointValue({ base: "none", md: "flex" })
@@ -23,6 +24,7 @@ function Navbar() {
         <Image src={Logo} alt="rsc-xchange logo" w="180px" maxW="2xs" px={2} />
       </Link>
       <Flex gap={2} alignItems="center">
+        <ColorModeButton />
         <UserMenu />
       </Flex>
     </Flex>

@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { FiUserPlus, FiUsers } from "react-icons/fi"
+import { FiUsers } from "react-icons/fi"
 
 import { FriendsService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -79,10 +79,10 @@ function Friends() {
               <Box key={user.id} p={4} borderWidth="1px" rounded="md" bg="bg.panel">
                 <Text fontWeight="bold">{user.full_name || user.email}</Text>
                 <Flex mt={3} gap={2}>
-                  <Button size="sm" onClick={() => acceptMutation.mutate(user.id)}>
+                  <Button size="sm" variant="primary" onClick={() => acceptMutation.mutate(user.id)}>
                     Accept
                   </Button>
-                  <Button size="sm" variant="subtle" colorPalette="red" onClick={() => removeMutation.mutate(user.id)}>
+                  <Button size="sm" variant="dangerSecondary" onClick={() => removeMutation.mutate(user.id)}>
                     Decline
                   </Button>
                 </Flex>
@@ -119,7 +119,7 @@ function Friends() {
             {friends?.data.map((user) => (
               <Box key={user.id} p={4} borderWidth="1px" rounded="md" bg="bg.panel">
                 <Text fontWeight="bold">{user.full_name || user.email}</Text>
-                <Button mt={3} size="sm" variant="subtle" colorPalette="red" onClick={() => removeMutation.mutate(user.id)}>
+                <Button mt={3} size="sm" variant="dangerSecondary" onClick={() => removeMutation.mutate(user.id)}>
                   Remove Friend
                 </Button>
               </Box>
