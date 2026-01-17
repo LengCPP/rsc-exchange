@@ -282,8 +282,7 @@ function CommunityCard({ community }: { community: any }) {
             )}
           </VStack>
         )}
-      </Flex>
-    </Box>
+      </Box>
   )
 }
 
