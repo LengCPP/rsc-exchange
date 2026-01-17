@@ -185,8 +185,10 @@ function CommunityCard({ community }: { community: any }) {
           {isLoadingMembers ? (
             <Text fontSize="xs">Loading...</Text>
           ) : (
-            members?.data.map((m: any) => {
-              const member = m as UserPublicWithRole
+            members?.data
+              .filter((m: any) => m.id !== currentUser?.id)
+              .map((m: any) => {
+                const member = m as UserPublicWithRole
               const role = member.community_role || (member.id === community.created_by ? "admin" : "member")
               const isCreator = member.id === community.created_by
 
