@@ -58,7 +58,7 @@ const DeleteConfirmation = () => {
         onOpenChange={({ open }) => setIsOpen(open)}
       >
         <DialogTrigger asChild>
-          <Button variant="dangerSecondary" mt={4}>
+          <Button variant={"dangerSecondary" as any} mt={4}>
             Delete
           </Button>
         </DialogTrigger>
@@ -90,7 +90,7 @@ const DeleteConfirmation = () => {
                   </Button>
                 </DialogActionTrigger>
                 <Button
-                  variant="danger"
+                  variant={"danger" as any}
                   type="submit"
                   loading={isSubmitting}
                 >

@@ -67,7 +67,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
         <Flex gap="2">
           {isMember ? (
             <Button
-              variant="dangerSecondary"
+              variant={"dangerSecondary" as any}
               size="sm"
               onClick={() => leaveMutation.mutate()}
               loading={leaveMutation.isPending}
@@ -77,7 +77,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
             </Button>
           ) : (
             <Button
-              variant="primary"
+              variant={"primary" as any}
               size="sm"
               onClick={() => joinMutation.mutate()}
               loading={joinMutation.isPending}
@@ -87,7 +87,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           )}
           {isAdmin && (
             <Button
-              variant="danger"
+              variant={"danger" as any}
               size="sm"
               onClick={() => disbandMutation.mutate()}
               loading={disbandMutation.isPending}

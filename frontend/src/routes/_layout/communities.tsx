@@ -9,10 +9,11 @@ import {
   SimpleGrid,
   Box,
   Separator,
+  Badge,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { FiGlobe, FiUserPlus, FiTrash2, FiUserMinus } from "react-icons/fi"
+import { FiGlobe, FiUserPlus, FiTrash2, FiUserMinus, FiSettings } from "react-icons/fi"
 import { useState } from "react"
 import { z } from "zod"
 
@@ -20,6 +21,13 @@ import { CommunitiesService, FriendsService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 import useAuth from "@/hooks/useAuth"
 import AddCommunity from "@/components/Communities/AddCommunity"
+import { CommunityPublicExtended, UserPublicWithRole } from "@/customTypes"
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from "@/components/ui/menu"
 
 const communitiesSearchSchema = z.object({
   page: z.number().catch(1),
@@ -35,6 +43,9 @@ function CommunityCard({ community }: { community: any }) {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { user: currentUser } = useAuth()
   const [showMembers, setShowMembers] = useState(false)
+
+  const communityExtended = community as CommunityPublicExtended
+  const isClosed = communityExtended.is_closed
 
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["communityMembers", community.id],
@@ -54,7 +65,7 @@ function CommunityCard({ community }: { community: any }) {
   const joinMutation = useMutation({
     mutationFn: () => CommunitiesService.joinCommunity({ id: community.id }),
     onSuccess: () => {
-      showSuccessToast("Joined community!")
+      showSuccessToast(isClosed ? "Request sent to admins!" : "Joined community!")
       queryClient.invalidateQueries({ queryKey: ["communities"] })
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
@@ -86,6 +97,20 @@ function CommunityCard({ community }: { community: any }) {
     onError: () => showErrorToast("Failed to leave community"),
   })
 
+  // Mock Mutation for Role Update
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string, role: string }) => {
+      // Simulate API call
+      console.log(`Updating user ${userId} to role ${role}`)
+      return new Promise((resolve) => setTimeout(resolve, 500))
+    },
+    onSuccess: (_, variables) => {
+      showSuccessToast(`User role updated to ${variables.role}`)
+      // In a real app, we would invalidate queries or update cache
+      queryClient.invalidateQueries({ queryKey: ["communityMembers", community.id] })
+    },
+  })
+
   const isMember = currentUser?.communities?.some(c => c.id === community.id)
   const isAdmin = community.created_by === currentUser?.id || currentUser?.is_superuser
 
@@ -93,7 +118,14 @@ function CommunityCard({ community }: { community: any }) {
     <Box p={6} rounded="lg" borderWidth="1px" bg="bg.panel">
       <Flex justify="space-between" align="start">
         <Box>
-          <Heading size="md">{community.name}</Heading>
+          <Flex align="center" gap={2}>
+            <Heading size="md">{community.name}</Heading>
+            {isClosed ? (
+              <Badge colorPalette="red" variant="subtle">Closed</Badge>
+            ) : (
+              <Badge colorPalette="green" variant="subtle">Open</Badge>
+            )}
+          </Flex>
           <Text mt={2} color="fg.muted">
             {community.description || "No description"}
           </Text>
@@ -101,7 +133,7 @@ function CommunityCard({ community }: { community: any }) {
         {isAdmin && (
           <Button
             size="xs"
-            variant="danger"
+            variant={"danger" as any}
             onClick={() => {
                if (window.confirm("Are you sure you want to disband this community?")) {
                  disbandMutation.mutate()
@@ -118,21 +150,21 @@ function CommunityCard({ community }: { community: any }) {
         {!isMember ? (
           <Button
             size="sm"
-            variant="primary"
+            variant={"primary" as any}
             onClick={() => joinMutation.mutate()}
             loading={joinMutation.isPending}
           >
-            Join Community
+            {isClosed ? "Request to Join" : "Join Community"}
           </Button>
         ) : (
           <>
-            <Button size="sm" variant="secondary" onClick={() => setShowMembers(!showMembers)}>
+            <Button size="sm" variant={"secondary" as any} onClick={() => setShowMembers(!showMembers)}>
               {showMembers ? "Hide Members" : "Show Members"}
             </Button>
             {!isAdmin && (
               <Button
                 size="sm"
-                variant="dangerSecondary"
+                variant={"dangerSecondary" as any}
                 onClick={() => {
                    if (window.confirm("Are you sure you want to leave this community?")) {
                      leaveMutation.mutate()
@@ -153,37 +185,77 @@ function CommunityCard({ community }: { community: any }) {
           {isLoadingMembers ? (
             <Text fontSize="xs">Loading...</Text>
           ) : (
-            members?.data.map((m: any) => (
-              <Flex key={m.id} justify="space-between" align="center">
-                <Text fontSize="sm">{m.full_name || m.email}</Text>
-                <Flex gap={1}>
-                  {isAdmin && m.id !== currentUser?.id && (
-                    <Button
-                      size="xs"
-                      variant="danger"
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to remove ${m.full_name || m.email}?`)) {
-                          removeMemberMutation.mutate(m.id)
-                        }
-                      }}
-                      title="Remove Member"
-                    >
-                      <FiUserMinus />
-                    </Button>
-                  )}
-                  {m.id !== currentUser?.id && (
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => friendMutation.mutate(m.id)}
-                      title="Add Friend"
-                    >
-                      <FiUserPlus />
-                    </Button>
-                  )}
+            members?.data.map((m: any) => {
+              const member = m as UserPublicWithRole
+              const role = member.community_role || (member.id === community.created_by ? "admin" : "member")
+              const isCreator = member.id === community.created_by
+
+              return (
+                <Flex key={member.id} justify="space-between" align="center" p={2} _hover={{ bg: "bg.muted" }} rounded="md">
+                  <VStack align="start" gap={0}>
+                    <Text fontSize="sm" fontWeight="medium">{member.full_name || member.email}</Text>
+                    <Badge size="xs" colorPalette={role === "admin" ? "purple" : "gray"}>
+                      {role.toUpperCase()}
+                    </Badge>
+                  </VStack>
+                  
+                  <Flex gap={1} align="center">
+                    {/* Role Management Menu */}
+                    {isAdmin && !isCreator && member.id !== currentUser?.id && (
+                      <MenuRoot>
+                        <MenuTrigger asChild>
+                           <Button size="xs" variant="outline" title="Manage Role">
+                             <FiSettings />
+                           </Button>
+                        </MenuTrigger>
+                        <MenuContent>
+                           <MenuItem 
+                             value="admin" 
+                             onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "admin" })}
+                             disabled={role === "admin"}
+                           >
+                             Promote to Admin
+                           </MenuItem>
+                           <MenuItem 
+                             value="member" 
+                             onClick={() => updateRoleMutation.mutate({ userId: member.id, role: "member" })}
+                             disabled={role === "member"}
+                           >
+                             Demote to Member
+                           </MenuItem>
+                        </MenuContent>
+                      </MenuRoot>
+                    )}
+
+                    {isAdmin && member.id !== currentUser?.id && (
+                      <Button
+                        size="xs"
+                        variant={"danger" as any}
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to remove ${member.full_name || member.email}?`)) {
+                            removeMemberMutation.mutate(member.id)
+                          }
+                        }}
+                        title="Remove Member"
+                      >
+                        <FiUserMinus />
+                      </Button>
+                    )}
+                    
+                    {member.id !== currentUser?.id && (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => friendMutation.mutate(member.id)}
+                        title="Add Friend"
+                      >
+                        <FiUserPlus />
+                      </Button>
+                    )}
+                  </Flex>
                 </Flex>
-              </Flex>
-            ))
+              )
+            })
           )}
         </VStack>
       )}

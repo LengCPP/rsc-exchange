@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import {
   Button,
   DialogActionTrigger,
@@ -11,10 +11,12 @@ import {
 import { useState } from "react"
 import { FiPlus } from "react-icons/fi"
 
-import { type CommunityCreate, CommunitiesService } from "@/client"
+import { CommunitiesService } from "@/client"
+import { CommunityCreateExtended } from "@/customTypes"
 import type { ApiError } from "@/client/core/ApiError"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { Checkbox } from "../ui/checkbox"
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -34,18 +36,20 @@ const AddCommunity = () => {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isValid, isSubmitting },
-  } = useForm<CommunityCreate>({
+  } = useForm<CommunityCreateExtended>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       name: "",
       description: "",
+      is_closed: false,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: CommunityCreate) =>
+    mutationFn: (data: CommunityCreateExtended) =>
       CommunitiesService.createCommunity({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Community created successfully.")
@@ -60,7 +64,7 @@ const AddCommunity = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<CommunityCreate> = (data) => {
+  const onSubmit: SubmitHandler<CommunityCreateExtended> = (data) => {
     mutation.mutate(data)
   }
 
@@ -112,6 +116,21 @@ const AddCommunity = () => {
                   type="text"
                 />
               </Field>
+
+              <Controller
+                control={control}
+                name="is_closed"
+                render={({ field }) => (
+                  <Field disabled={field.disabled}>
+                     <Checkbox
+                        checked={field.value}
+                        onCheckedChange={({ checked }) => field.onChange(checked)}
+                     >
+                       Private / Closed Community
+                     </Checkbox>
+                  </Field>
+                )}
+              />
             </VStack>
           </DialogBody>
 
