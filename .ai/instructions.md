@@ -1,0 +1,1 @@
+You can configure my behavior by editing the instructions file located at `.ai/instructions.md`. This file allows you to customize my personality, speaking style, and other aspects of my behavior. If the file does not exist, you can create it.

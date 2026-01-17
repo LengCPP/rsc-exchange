@@ -36,7 +36,7 @@ services:
       - --api
       - --api.insecure=true
       # Define a dummy "le" certresolver for local development to avoid errors
-      - --certificatesresolvers.le.acme.email=chomaitumeleng@gmail.com
+      - --certificatesresolvers.le.acme.email=admin@example.com
       - --certificatesresolvers.le.acme.storage=/tmp/acme.json
       # Using a non-existent but HTTPS caserver to effectively disable ACME for .localhost
       - --certificatesresolvers.le.acme.caserver=https://127.0.0.1:2379/v2/keys
@@ -85,7 +85,9 @@ services:
       SMTP_HOST: "mailcatcher"
       SMTP_PORT: "1025"
       SMTP_TLS: "false"
-      EMAILS_FROM_EMAIL: "noreply@example.com"
+      EMAILS_FROM_EMAIL: "noreply@rsc-xchange.app"
+      FRONTEND_HOST: "http://localhost:5173"
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173", "http://dashboard.localhost", "http://localhost", "http://localhost:8000", "http://api.localhost", "http://127.0.0.1:5173", "http://127.0.0.1", "http://127.0.0.1:8000"]'
 
   mailcatcher:
     image: schickling/mailcatcher
@@ -112,10 +114,21 @@ services:
       - traefik.docker.network=${STACK_NAME?Variable not set}_traefik-public
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=false
-    # ports:
-    #   - "5173:80"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: 
+      - npm
+      - run
+      - dev
+      - --
+      - --host
+
     build:
       context: ./frontend
+      target: build-stage
       args:
         - VITE_API_URL=http://api.localhost
         - NODE_ENV=development

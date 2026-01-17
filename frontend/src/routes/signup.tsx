@@ -19,7 +19,7 @@ import {
   namePattern,
   passwordRules,
 } from "@/utils"
-import Logo from "/assets/images/fastapi-logo.svg"
+import Logo from "/assets/images/rsc-xchange-logo.png"
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
