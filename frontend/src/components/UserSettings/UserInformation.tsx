@@ -11,7 +11,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { FaShare } from "react-icons/fa"
+import { FaShare, FaUserCircle } from "react-icons/fa"
 
 import {
   type ApiError,
@@ -92,6 +92,14 @@ const UserInformation = () => {
           as="form"
           onSubmit={handleSubmit(onSubmit)}
         >
+          <Flex align="center" mb={6} gap={4}>
+            <FaUserCircle size="60px" color="gray" />
+            <Box>
+                <Text fontSize="sm" color="gray.500">Avatar</Text>
+                <Text fontSize="xs" color="gray.400">Profile picture upload coming soon</Text>
+            </Box>
+          </Flex>
+
           <Field label="User ID">
             <Flex align="center" gap={2}>
               <Text

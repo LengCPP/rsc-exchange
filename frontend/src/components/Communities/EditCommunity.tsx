@@ -11,9 +11,10 @@ import { useState } from "react"
 import { Controller, type SubmitHandler, useForm } from "react-hook-form"
 import { FiEdit } from "react-icons/fi"
 
-import { CommunitiesService, type CommunityPublic } from "@/client"
+import { CommunitiesService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import type { CommunityUpdate } from "@/client/types.gen"
+import type { CommunityPublicExtended, CommunityUpdateExtended } from "@/customTypes"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { Checkbox } from "../ui/checkbox"
@@ -29,7 +30,7 @@ import {
 import { Field } from "../ui/field"
 
 interface EditCommunityProps {
-  community: CommunityPublic
+  community: CommunityPublicExtended
 }
 
 const EditCommunity = ({ community }: EditCommunityProps) => {
@@ -42,7 +43,7 @@ const EditCommunity = ({ community }: EditCommunityProps) => {
     reset,
     control,
     formState: { errors, isValid, isSubmitting },
-  } = useForm<CommunityUpdate>({
+  } = useForm<CommunityUpdateExtended>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
@@ -53,8 +54,11 @@ const EditCommunity = ({ community }: EditCommunityProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: CommunityUpdate) =>
-      CommunitiesService.updateCommunity({ id: community.id, requestBody: data }),
+    mutationFn: (data: CommunityUpdateExtended) =>
+      CommunitiesService.updateCommunity({ 
+        id: community.id, 
+        requestBody: data as unknown as CommunityUpdate 
+      }),
     onSuccess: () => {
       showSuccessToast("Community updated successfully.")
       setIsOpen(false)
@@ -68,7 +72,7 @@ const EditCommunity = ({ community }: EditCommunityProps) => {
     },
   })
 
-  const onSubmit: SubmitHandler<CommunityUpdate> = (data) => {
+  const onSubmit: SubmitHandler<CommunityUpdateExtended> = (data) => {
     mutation.mutate(data)
   }
 
@@ -132,7 +136,7 @@ const EditCommunity = ({ community }: EditCommunityProps) => {
                 render={({ field }) => (
                   <Field disabled={field.disabled}>
                     <Checkbox
-                      checked={field.value}
+                      checked={!!field.value}
                       onCheckedChange={({ checked }) => field.onChange(checked)}
                     >
                       Private / Closed Community

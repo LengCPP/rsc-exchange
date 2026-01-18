@@ -1,6 +1,10 @@
-import type { CommunityCreate, CommunityPublic, UserPublic } from "./client"
+import type { CommunityCreate, CommunityPublic, CommunityUpdate, UserPublic } from "./client"
 
 export interface CommunityCreateExtended extends CommunityCreate {
+  is_closed?: boolean
+}
+
+export interface CommunityUpdateExtended extends CommunityUpdate {
   is_closed?: boolean
 }
 

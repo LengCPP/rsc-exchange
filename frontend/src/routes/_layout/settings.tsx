@@ -1,5 +1,6 @@
-import { Container, Heading, Separator, Tabs, VStack } from "@chakra-ui/react"
+import { Box, Container, Heading, Tabs, Text, useBreakpointValue } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
+import { FiLock, FiSettings, FiUser, FiAlertTriangle, FiInfo } from "react-icons/fi"
 
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
@@ -8,54 +9,80 @@ import UserPreferences from "@/components/UserSettings/UserPreferences"
 import UserProfile from "@/components/UserSettings/UserProfile"
 import useAuth from "@/hooks/useAuth"
 
-const ProfileTab = () => (
-  <VStack align="stretch" gap={6}>
-    <UserInformation />
-    <Separator />
-    <UserProfile />
-  </VStack>
-)
-
-const tabsConfig = [
-  { value: "profile", title: "Profile", component: ProfileTab },
-  { value: "preferences", title: "Preferences", component: UserPreferences },
-  { value: "password", title: "Password", component: ChangePassword },
-  { value: "danger-zone", title: "Danger zone", component: DeleteAccount },
-]
-
 export const Route = createFileRoute("/_layout/settings")({
   component: UserSettings,
 })
 
 function UserSettings() {
   const { user: currentUser } = useAuth()
-  const finalTabs = currentUser?.is_superuser
-    ? tabsConfig.slice(0, 3)
-    : tabsConfig
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   if (!currentUser) {
     return null
   }
 
   return (
-    <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} py={12}>
-        User Settings
+    <Container maxW="full" py={8}>
+      <Heading size="lg" mb={8}>
+        Settings
       </Heading>
 
-      <Tabs.Root defaultValue="profile" variant="subtle">
-        <Tabs.List>
-          {finalTabs.map((tab) => (
-            <Tabs.Trigger key={tab.value} value={tab.value}>
-              {tab.title}
-            </Tabs.Trigger>
-          ))}
+      <Tabs.Root 
+        defaultValue="account" 
+        orientation={isMobile ? "horizontal" : "vertical"} 
+        variant="line"
+        colorPalette="teal"
+      >
+        <Tabs.List 
+          width={isMobile ? "full" : "250px"} 
+          borderRightWidth={isMobile ? 0 : "1px"} 
+          borderBottomWidth={isMobile ? "1px" : 0}
+          mr={isMobile ? 0 : 8}
+          mb={isMobile ? 8 : 0}
+        >
+          <Text fontWeight="bold" fontSize="xs" color="gray.500" mb={2} px={4} textTransform="uppercase">
+            Profile Details
+          </Text>
+          <Tabs.Trigger value="account" justifyContent="flex-start">
+            <Box mr={2}><FiUser /></Box> Account Info
+          </Tabs.Trigger>
+          <Tabs.Trigger value="profile" justifyContent="flex-start">
+            <Box mr={2}><FiInfo /></Box> Public Profile
+          </Tabs.Trigger>
+
+          <Box height={4} />
+
+          <Text fontWeight="bold" fontSize="xs" color="gray.500" mb={2} px={4} textTransform="uppercase">
+            Configuration
+          </Text>
+          <Tabs.Trigger value="preferences" justifyContent="flex-start">
+            <Box mr={2}><FiSettings /></Box> Preferences
+          </Tabs.Trigger>
+          <Tabs.Trigger value="password" justifyContent="flex-start">
+             <Box mr={2}><FiLock /></Box> Security
+          </Tabs.Trigger>
+          <Tabs.Trigger value="danger-zone" justifyContent="flex-start" color="red.500">
+             <Box mr={2}><FiAlertTriangle /></Box> Danger Zone
+          </Tabs.Trigger>
         </Tabs.List>
-        {finalTabs.map((tab) => (
-          <Tabs.Content key={tab.value} value={tab.value}>
-            <tab.component />
+
+        <Box flex="1" maxW="3xl">
+          <Tabs.Content value="account">
+            <UserInformation />
           </Tabs.Content>
-        ))}
+          <Tabs.Content value="profile">
+            <UserProfile />
+          </Tabs.Content>
+          <Tabs.Content value="preferences">
+            <UserPreferences />
+          </Tabs.Content>
+          <Tabs.Content value="password">
+            <ChangePassword />
+          </Tabs.Content>
+          <Tabs.Content value="danger-zone">
+            <DeleteAccount />
+          </Tabs.Content>
+        </Box>
       </Tabs.Root>
     </Container>
   )
