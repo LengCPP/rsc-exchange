@@ -24,6 +24,7 @@ export type CommunityPublic = {
     description?: (string | null);
     id: string;
     created_by: string;
+    current_user_role?: (string | null);
 };
 
 export type CommunityUpdate = {

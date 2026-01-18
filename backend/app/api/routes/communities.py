@@ -25,7 +25,7 @@ router = APIRouter()
 
 @router.get("/", response_model=CommunitiesPublic)
 def read_communities(
-    session: SessionDep, skip: int = 0, limit: int = 100
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> Any:
     """
     Retrieve communities.
@@ -35,7 +35,28 @@ def read_communities(
     statement = select(Community).offset(skip).limit(limit)
     communities = session.exec(statement).all()
 
-    return CommunitiesPublic(data=communities, count=count)
+    # Populate current_user_role
+    communities_public = []
+    
+    # Get all memberships for current user in fetched communities
+    community_ids = [c.id for c in communities]
+    if community_ids:
+        memberships = session.exec(
+            select(CommunityMember).where(
+                CommunityMember.user_id == current_user.id,
+                CommunityMember.community_id.in_(community_ids)
+            )
+        ).all()
+        membership_map = {m.community_id: m.role for m in memberships}
+    else:
+        membership_map = {}
+
+    for community in communities:
+        comm_pub = CommunityPublic.model_validate(community)
+        comm_pub.current_user_role = membership_map.get(community.id)
+        communities_public.append(comm_pub)
+
+    return CommunitiesPublic(data=communities_public, count=count)
 
 
 @router.post("/", response_model=CommunityPublic)

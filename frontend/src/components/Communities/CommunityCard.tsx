@@ -136,7 +136,9 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
 
   const isMember = currentUser?.communities?.some((c) => c.id === community.id)
   const isAdmin =
-    community.created_by === currentUser?.id || currentUser?.is_superuser
+    community.created_by === currentUser?.id ||
+    currentUser?.is_superuser ||
+    community.current_user_role === "admin"
 
   return (
     <Box p={6} rounded="lg" borderWidth="1px" bg="bg.panel" h="fit-content">

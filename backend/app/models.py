@@ -166,6 +166,7 @@ class Community(CommunityBase, table=True):
 class CommunityPublic(CommunityBase):
     id: uuid.UUID
     created_by: uuid.UUID
+    current_user_role: CommunityMemberRole | None = None
 
 
 class CommunitiesPublic(SQLModel):
