@@ -23,6 +23,11 @@ from app.models import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
+
+
+
+
+    Interest,
 )
 from app.utils import generate_new_account_email, send_email
 
@@ -77,7 +82,8 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
 
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
-    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
+    *, session: SessionDep, user_in: UserUpdateMe,
+    current_user: CurrentUser
 ) -> Any:
     """
     Update own user.
@@ -122,6 +128,54 @@ def read_user_me(current_user: CurrentUser) -> Any:
     """
     Get current user.
     """
+    return current_user
+
+
+
+@router.patch("/me/profile", response_model=UserPublic)
+def update_user_profile(
+    *, session: SessionDep, profile_in: UserProfileUpdate, current_user: CurrentUser
+) -> Any:
+    """
+    Update own user profile.
+    """
+    if not current_user.profile:
+        current_user.profile = UserProfile(user_id=current_user.id)
+    
+    if profile_in.bio is not None:
+        current_user.profile.bio = profile_in.bio
+        
+    if profile_in.interest_ids is not None:
+        current_user.interests.clear()
+        for interest_id in profile_in.interest_ids:
+            interest = session.get(Interest, interest_id)
+            if interest:
+                current_user.interests.append(interest)
+                
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me/settings", response_model=UserPublic)
+def update_user_settings(
+    *, session: SessionDep, settings_in: UserSettingsUpdate, current_user: CurrentUser
+) -> Any:
+    """
+    Update own user settings.
+    """
+    if not current_user.settings:
+        current_user.settings = UserSettings(user_id=current_user.id)
+        
+    if settings_in.theme is not None:
+        current_user.settings.theme = settings_in.theme
+    if settings_in.notifications_enabled is not None:
+        current_user.settings.notifications_enabled = settings_in.notifications_enabled
+        
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
     return current_user
 
 

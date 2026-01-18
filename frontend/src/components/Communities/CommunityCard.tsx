@@ -14,6 +14,7 @@ import { FiSettings, FiTrash2, FiUserMinus, FiUserPlus } from "react-icons/fi"
 
 import { CommunitiesService, FriendsService, OpenAPI } from "@/client"
 import { request as apiRequest } from "@/client/core/request"
+import EditCommunity from "@/components/Communities/EditCommunity"
 import {
   MenuContent,
   MenuItem,
@@ -35,7 +36,6 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
   const [showMembers, setShowMembers] = useState(false)
 
   const isClosed = community.is_closed
-
 
   // Fetch friends list for the current user
   const { data: friendsData, isLoading: isLoadingFriends } = useQuery({
@@ -159,23 +159,25 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           </Text>
         </Box>
         {isAdmin && (
-          <Button
-            size="xs"
-            variant={"danger" as any}
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Are you sure you want to disband this community?",
-                )
-              ) {
-                disbandMutation.mutate()
-              }
-            }}
-            title="Disband Community"
-          >
-            <FiTrash2 />
-          </Button>
-          
+          <Flex gap={2}>
+            <EditCommunity community={community} />
+            <Button
+              size="xs"
+              variant={"danger" as any}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Are you sure you want to disband this community?",
+                  )
+                ) {
+                  disbandMutation.mutate()
+                }
+              }}
+              title="Disband Community"
+            >
+              <FiTrash2 />
+            </Button>
+          </Flex>
         )}
       </Flex>
 

@@ -1,15 +1,19 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import CommunityCard from "./CommunityCard"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
 import * as Client from "@/client"
 import * as ApiRequest from "@/client/core/request"
+import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import CommunityCard from "./CommunityCard"
 
 // Mock hooks
 vi.mock("@/hooks/useAuth", () => ({
   default: () => ({
-    user: { id: "current-user-id", is_superuser: false, communities: [{ id: "community-id" }] },
+    user: {
+      id: "current-user-id",
+      is_superuser: false,
+      communities: [{ id: "community-id" }],
+    },
   }),
 }))
 
@@ -87,10 +91,12 @@ describe("CommunityCard", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(Client.CommunitiesService.readCommunityMembers).mockResolvedValue({
-      data: mockMembers,
-      count: 2,
-    })
+    vi.mocked(Client.CommunitiesService.readCommunityMembers).mockResolvedValue(
+      {
+        data: mockMembers,
+        count: 2,
+      },
+    )
     vi.mocked(Client.FriendsService.readFriends).mockResolvedValue({
       data: [],
       count: 0,
@@ -100,7 +106,9 @@ describe("CommunityCard", () => {
   it("should promote a member to admin", async () => {
     vi.mocked(ApiRequest.request).mockResolvedValue({ success: true })
 
-    render(<CommunityCard community={mockCommunity} />, { wrapper: createWrapper() })
+    render(<CommunityCard community={mockCommunity} />, {
+      wrapper: createWrapper(),
+    })
 
     // Open members list
     const showMembersBtn = screen.getByText("Show Members")
@@ -132,26 +140,28 @@ describe("CommunityCard", () => {
             user_id: "member-1",
           },
           body: { role: "admin", status: undefined },
-        })
+        }),
       )
     })
   })
 
   it("should demote an admin to member", async () => {
     // Setup a scenario where Member One is an admin
-    const adminMembers = [
-        ...mockMembers,
-    ]
-    adminMembers[1].community_role = 'admin'
+    const adminMembers = [...mockMembers]
+    adminMembers[1].community_role = "admin"
 
-    vi.mocked(Client.CommunitiesService.readCommunityMembers).mockResolvedValue({
+    vi.mocked(Client.CommunitiesService.readCommunityMembers).mockResolvedValue(
+      {
         data: adminMembers,
         count: 2,
-    })
-    
+      },
+    )
+
     vi.mocked(ApiRequest.request).mockResolvedValue({ success: true })
 
-    render(<CommunityCard community={mockCommunity} />, { wrapper: createWrapper() })
+    render(<CommunityCard community={mockCommunity} />, {
+      wrapper: createWrapper(),
+    })
 
     // Open members list
     fireEvent.click(screen.getByText("Show Members"))
@@ -171,18 +181,18 @@ describe("CommunityCard", () => {
 
     // Verify API call
     await waitFor(() => {
-        expect(ApiRequest.request).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({
-            method: "PATCH",
-            url: "/api/v1/communities/{id}/members/{user_id}",
-            path: {
-              id: "community-id",
-              user_id: "member-1",
-            },
-            body: { role: "member", status: undefined },
-          })
-        )
-      })
+      expect(ApiRequest.request).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          method: "PATCH",
+          url: "/api/v1/communities/{id}/members/{user_id}",
+          path: {
+            id: "community-id",
+            user_id: "member-1",
+          },
+          body: { role: "member", status: undefined },
+        }),
+      )
+    })
   })
 })

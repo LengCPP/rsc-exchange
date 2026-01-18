@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate
+from app.models import User, UserCreate, Interest
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -31,3 +31,12 @@ def init_db(session: Session) -> None:
             is_superuser=True,
         )
         user = crud.create_user(session=session, user_create=user_in)
+
+    # Prepopulate interests
+    default_interests = ["Music", "Chess", "Sports", "Technology", "Art", "Travel", "Gaming", "Cooking"]
+    for interest_name in default_interests:
+        interest = session.exec(select(Interest).where(Interest.name == interest_name)).first()
+        if not interest:
+            interest = Interest(name=interest_name)
+            session.add(interest)
+    session.commit()

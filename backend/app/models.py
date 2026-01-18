@@ -42,6 +42,36 @@ class Friendship(SQLModel, table=True):
     status: FriendshipStatus = Field(default=FriendshipStatus.PENDING)
 
 
+class Interest(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(unique=True, index=True)
+    category: str | None = None
+    users: list["User"] = Relationship(back_populates="interests", link_model="UserInterest")
+    communities: list["Community"] = Relationship(back_populates="interests", link_model="CommunityInterest")
+
+
+class UserInterest(SQLModel, table=True):
+    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
+    interest_id: uuid.UUID = Field(foreign_key="interest.id", primary_key=True, ondelete="CASCADE")
+
+
+class CommunityInterest(SQLModel, table=True):
+    community_id: uuid.UUID = Field(foreign_key="community.id", primary_key=True, ondelete="CASCADE")
+    interest_id: uuid.UUID = Field(foreign_key="interest.id", primary_key=True, ondelete="CASCADE")
+
+
+class UserSettings(SQLModel, table=True):
+    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
+    theme: str = Field(default="system")
+    notifications_enabled: bool = Field(default=True)
+
+
+class UserProfile(SQLModel, table=True):
+    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
+    bio: str | None = Field(default=None, max_length=500)
+
+
+
 # Shared properties
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
@@ -80,6 +110,16 @@ class UserUpdateMe(SQLModel):
     email: EmailStr | None = Field(default=None, max_length=255)
 
 
+class UserProfileUpdate(SQLModel):
+    bio: str | None = Field(default=None, max_length=500)
+    interest_ids: list[uuid.UUID] | None = None
+
+
+class UserSettingsUpdate(SQLModel):
+    theme: str | None = None
+    notifications_enabled: bool | None = None
+
+
 class UpdatePassword(SQLModel):
     current_password: str = Field(min_length=8, max_length=40)
     new_password: str = Field(min_length=8, max_length=40)
@@ -94,6 +134,9 @@ class User(UserBase, table=True):
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
+    settings: UserSettings | None = Relationship(sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
+    profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
+    interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
 
 
 class CommunityBase(SQLModel):
@@ -137,6 +180,24 @@ class UserPublic(UserBase):
     communities: list[CommunityPublic] = []
     community_role: CommunityMemberRole | None = None
     community_status: CommunityMemberStatus | None = None
+    profile: UserProfilePublic | None = None
+    settings: UserSettingsPublic | None = None
+    interests: list[InterestPublic] = []
+
+
+class InterestPublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    category: str | None
+
+
+class UserProfilePublic(SQLModel):
+    bio: str | None
+
+
+class UserSettingsPublic(SQLModel):
+    theme: str
+    notifications_enabled: bool
 
 
 class CommunityMemberUpdate(SQLModel):

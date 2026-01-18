@@ -1,16 +1,25 @@
-import { Container, Heading, Tabs } from "@chakra-ui/react"
+import { Container, Heading, Separator, Tabs, VStack } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 
-import Appearance from "@/components/UserSettings/Appearance"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
 import UserInformation from "@/components/UserSettings/UserInformation"
+import UserPreferences from "@/components/UserSettings/UserPreferences"
+import UserProfile from "@/components/UserSettings/UserProfile"
 import useAuth from "@/hooks/useAuth"
 
+const ProfileTab = () => (
+  <VStack align="stretch" gap={6}>
+    <UserInformation />
+    <Separator />
+    <UserProfile />
+  </VStack>
+)
+
 const tabsConfig = [
-  { value: "my-profile", title: "My profile", component: UserInformation },
+  { value: "profile", title: "Profile", component: ProfileTab },
+  { value: "preferences", title: "Preferences", component: UserPreferences },
   { value: "password", title: "Password", component: ChangePassword },
-  { value: "appearance", title: "Appearance", component: Appearance },
   { value: "danger-zone", title: "Danger zone", component: DeleteAccount },
 ]
 
@@ -34,7 +43,7 @@ function UserSettings() {
         User Settings
       </Heading>
 
-      <Tabs.Root defaultValue="my-profile" variant="subtle">
+      <Tabs.Root defaultValue="profile" variant="subtle">
         <Tabs.List>
           {finalTabs.map((tab) => (
             <Tabs.Trigger key={tab.value} value={tab.value}>

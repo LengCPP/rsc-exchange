@@ -177,7 +177,7 @@ def leave_community(
 
 @router.get("/{id}/members", response_model=UsersPublic)
 def read_community_members(
-    session: SessionDep, id: uuid.UUID, skip: int = 0, limit: int = 100
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> Any:
     """
     Get members of a community.
@@ -185,6 +185,20 @@ def read_community_members(
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    # Privacy check for closed communities
+    if community.is_closed and not current_user.is_superuser:
+        statement = select(CommunityMember).where(
+            CommunityMember.community_id == id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+        )
+        membership = session.exec(statement).first()
+        if not membership:
+            raise HTTPException(
+                status_code=403, 
+                detail="This community is closed. You must be a member to view the member list."
+            )
 
     count = session.exec(
         select(func.count()).where(CommunityMember.community_id == id)

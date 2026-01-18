@@ -1,0 +1,92 @@
+import { Container, Heading, Stack, VStack } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useTheme } from "next-themes"
+import { useEffect } from "react"
+
+import { OpenAPI } from "@/client"
+import { request as apiRequest } from "@/client/core/request"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Radio, RadioGroup } from "@/components/ui/radio"
+import type { UserPublicExtended, UserSettingsUpdate } from "@/customTypes"
+import useAuth from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+
+const UserPreferences = () => {
+  const { theme, setTheme } = useTheme()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+  const queryClient = useQueryClient()
+  const { user: currentUserData } = useAuth()
+  const currentUser = currentUserData as UserPublicExtended
+
+  const mutation = useMutation({
+    mutationFn: (data: UserSettingsUpdate) =>
+      apiRequest(OpenAPI, {
+        method: "PATCH",
+        url: "/api/v1/users/me/settings",
+        body: data,
+        mediaType: "application/json",
+      }),
+    onSuccess: () => {
+      showSuccessToast("Preferences updated.")
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+    },
+    onError: () => {
+      showErrorToast("Failed to update preferences.")
+    },
+  })
+
+  // Sync backend theme to local theme on load if different
+  // Only if backend has a value.
+  useEffect(() => {
+    if (currentUser?.settings?.theme && currentUser.settings.theme !== theme) {
+      setTheme(currentUser.settings.theme)
+    }
+  }, [currentUser?.settings?.theme, setTheme, theme])
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value)
+    mutation.mutate({ theme: value })
+  }
+
+  const handleNotificationChange = (details: {
+    checked: boolean | "indeterminate"
+  }) => {
+    mutation.mutate({ notifications_enabled: !!details.checked })
+  }
+
+  return (
+    <Container maxW="full">
+      <Heading size="sm" py={4}>
+        Preferences
+      </Heading>
+
+      <VStack align="start" gap={6}>
+        <VStack align="start" gap={2}>
+          <Heading size="xs">Appearance</Heading>
+          <RadioGroup
+            onValueChange={(e) => handleThemeChange(e.value)}
+            value={theme}
+            colorPalette="teal"
+          >
+            <Stack>
+              <Radio value="system">System</Radio>
+              <Radio value="light">Light Mode</Radio>
+              <Radio value="dark">Dark Mode</Radio>
+            </Stack>
+          </RadioGroup>
+        </VStack>
+
+        <VStack align="start" gap={2}>
+          <Heading size="xs">Notifications</Heading>
+          <Checkbox
+            checked={currentUser?.settings?.notifications_enabled ?? true}
+            onCheckedChange={handleNotificationChange}
+          >
+            Enable Notifications
+          </Checkbox>
+        </VStack>
+      </VStack>
+    </Container>
+  )
+}
+export default UserPreferences
