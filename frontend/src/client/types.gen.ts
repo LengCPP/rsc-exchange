@@ -104,6 +104,21 @@ export type UserCreate = {
     full_name?: (string | null);
 };
 
+export type InterestPublic = {
+    id: string;
+    name: string;
+    category?: (string | null);
+};
+
+export type UserProfilePublic = {
+    bio?: (string | null);
+};
+
+export type UserSettingsPublic = {
+    theme: string;
+    notifications_enabled: boolean;
+};
+
 export type UserPublic = {
     email: string;
     is_active?: boolean;
@@ -112,6 +127,11 @@ export type UserPublic = {
     public_id: string;
     id: string;
     communities?: Array<CommunityPublic>;
+    community_role?: (string | null);
+    community_status?: (string | null);
+    profile?: (UserProfilePublic | null);
+    settings?: (UserSettingsPublic | null);
+    interests?: Array<InterestPublic>;
 };
 
 export type UserRegister = {

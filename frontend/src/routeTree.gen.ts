@@ -23,6 +23,7 @@ import { Route as LayoutItemsImport } from './routes/_layout/items'
 import { Route as LayoutFriendsImport } from './routes/_layout/friends'
 import { Route as LayoutCommunitiesImport } from './routes/_layout/communities'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
+import { Route as LayoutUsersUserIdImport } from './routes/_layout/users/$userId'
 
 // Create/Update Routes
 
@@ -86,6 +87,11 @@ const LayoutAdminRoute = LayoutAdminImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutUsersUserIdRoute = LayoutUsersUserIdImport.update({
+  path: '/users/$userId',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -138,6 +144,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/users/$userId': {
+      preLoaderRoute: typeof LayoutUsersUserIdImport
+      parentRoute: typeof LayoutImport
+    }
   }
 }
 
@@ -152,6 +162,7 @@ export const routeTree = rootRoute.addChildren([
     LayoutProfileRoute,
     LayoutSettingsRoute,
     LayoutIndexRoute,
+    LayoutUsersUserIdRoute,
   ]),
   LoginRoute,
   RecoverPasswordRoute,
