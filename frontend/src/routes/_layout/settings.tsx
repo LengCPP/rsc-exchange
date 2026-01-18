@@ -1,12 +1,10 @@
 import { Box, Container, Heading, Tabs, Text, useBreakpointValue } from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
-import { FiLock, FiSettings, FiUser, FiAlertTriangle, FiInfo } from "react-icons/fi"
+import { FiAlertTriangle, FiLock, FiSettings } from "react-icons/fi"
 
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
-import UserInformation from "@/components/UserSettings/UserInformation"
 import UserPreferences from "@/components/UserSettings/UserPreferences"
-import UserProfile from "@/components/UserSettings/UserProfile"
 import useAuth from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/settings")({
@@ -28,7 +26,7 @@ function UserSettings() {
       </Heading>
 
       <Tabs.Root 
-        defaultValue="account" 
+        defaultValue="preferences" 
         orientation={isMobile ? "horizontal" : "vertical"} 
         variant="line"
         colorPalette="teal"
@@ -40,18 +38,6 @@ function UserSettings() {
           mr={isMobile ? 0 : 8}
           mb={isMobile ? 8 : 0}
         >
-          <Text fontWeight="bold" fontSize="xs" color="gray.500" mb={2} px={4} textTransform="uppercase">
-            Profile Details
-          </Text>
-          <Tabs.Trigger value="account" justifyContent="flex-start">
-            <Box mr={2}><FiUser /></Box> Account Info
-          </Tabs.Trigger>
-          <Tabs.Trigger value="profile" justifyContent="flex-start">
-            <Box mr={2}><FiInfo /></Box> Public Profile
-          </Tabs.Trigger>
-
-          <Box height={4} />
-
           <Text fontWeight="bold" fontSize="xs" color="gray.500" mb={2} px={4} textTransform="uppercase">
             Configuration
           </Text>
@@ -67,12 +53,6 @@ function UserSettings() {
         </Tabs.List>
 
         <Box flex="1" maxW="3xl">
-          <Tabs.Content value="account">
-            <UserInformation />
-          </Tabs.Content>
-          <Tabs.Content value="profile">
-            <UserProfile />
-          </Tabs.Content>
           <Tabs.Content value="preferences">
             <UserPreferences />
           </Tabs.Content>

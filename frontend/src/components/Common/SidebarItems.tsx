@@ -5,7 +5,6 @@ import {
   FiBriefcase,
   FiGlobe,
   FiHome,
-  FiSettings,
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi"
@@ -18,7 +17,6 @@ const items = [
   { icon: FiBriefcase, title: "Items", path: "/items" },
   { icon: FiGlobe, title: "Communities", path: "/communities" },
   { icon: FiUserPlus, title: "Friends", path: "/friends" },
-  { icon: FiSettings, title: "User Settings", path: "/settings" },
 ]
 
 interface SidebarItemsProps {

@@ -1,11 +1,11 @@
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
+import { Link as RouterLink } from "@tanstack/react-router"
 import { useState } from "react"
 import { FaBars } from "react-icons/fa"
-import { FiLogOut } from "react-icons/fi"
+import { FiSettings } from "react-icons/fi"
 
 import type { UserPublic } from "@/client"
-import useAuth from "@/hooks/useAuth"
 import { ColorModeButton } from "../ui/color-mode"
 import {
   DrawerBackdrop,
@@ -20,12 +20,7 @@ import SidebarItems from "./SidebarItems"
 const Sidebar = () => {
   const queryClient = useQueryClient()
   const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
-  const { logout } = useAuth()
   const [open, setOpen] = useState(false)
-
-  const handleLogout = async () => {
-    logout()
-  }
 
   return (
     <>
@@ -54,22 +49,22 @@ const Sidebar = () => {
               <Flex flexDir="column" h="full">
                 <SidebarItems />
                 <Box mt={4}>
-                  <Flex
-                    as="button"
-                    onClick={handleLogout}
-                    alignItems="center"
-                    gap={4}
-                    px={4}
-                    py={2}
-                    _hover={{
-                      background: "gray.subtle",
-                    }}
-                    w="full"
-                    fontSize="sm"
-                  >
-                    <FiLogOut />
-                    <Text>Log Out</Text>
-                  </Flex>
+                  <RouterLink to="/settings">
+                    <Flex
+                      alignItems="center"
+                      gap={4}
+                      px={4}
+                      py={2}
+                      _hover={{
+                        background: "gray.subtle",
+                      }}
+                      w="full"
+                      fontSize="sm"
+                    >
+                      <FiSettings />
+                      <Text>Settings</Text>
+                    </Flex>
+                  </RouterLink>
                 </Box>
                 {currentUser?.email && (
                   <Flex alignItems="center">
@@ -100,22 +95,22 @@ const Sidebar = () => {
         <Flex w="100%" direction="column">
           <SidebarItems />
           <Box mt={4}>
-            <Flex
-              as="button"
-              onClick={handleLogout}
-              alignItems="center"
-              gap={4}
-              px={4}
-              py={2}
-              _hover={{
-                background: "gray.subtle",
-              }}
-              w="full"
-              fontSize="sm"
-            >
-              <FiLogOut />
-              <Text>Log Out</Text>
-            </Flex>
+            <RouterLink to="/settings">
+              <Flex
+                alignItems="center"
+                gap={4}
+                px={4}
+                py={2}
+                _hover={{
+                  background: "gray.subtle",
+                }}
+                w="full"
+                fontSize="sm"
+              >
+                <FiSettings />
+                <Text>Settings</Text>
+              </Flex>
+            </RouterLink>
           </Box>
           {currentUser?.email && (
             <Flex alignItems="center">
@@ -131,3 +126,4 @@ const Sidebar = () => {
 }
 
 export default Sidebar
+

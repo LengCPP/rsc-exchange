@@ -40,11 +40,18 @@ export type ItemCreate = {
     description?: (string | null);
 };
 
+export type ItemOwnerPublic = {
+    id: string;
+    full_name?: (string | null);
+    email: string;
+};
+
 export type ItemPublic = {
     title: string;
     description?: (string | null);
     id: string;
-    owner_id: string;
+    count: number;
+    owners: Array<ItemOwnerPublic>;
 };
 
 export type ItemsPublic = {

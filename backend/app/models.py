@@ -130,7 +130,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     public_id: str | None = Field(default=None, unique=True, index=True, max_length=8)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    items: list["Item"] = Relationship(back_populates="owners", link_model=UserItem)
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
@@ -234,20 +234,30 @@ class ItemUpdate(SQLModel):
     description: str | None = Field(default=None, max_length=255)
 
 
+class UserItem(SQLModel, table=True):
+    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
+    item_id: uuid.UUID = Field(foreign_key="item.id", primary_key=True, ondelete="CASCADE")
+
+
 # Database model, database table inferred from class name
 class Item(ItemBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    title: str = Field(max_length=255)
-    owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
-    owner: User | None = Relationship(back_populates="items")
+    title: str = Field(max_length=255, index=True)
+    count: int = Field(default=1)
+    owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
+
+
+class ItemOwnerPublic(SQLModel):
+    id: uuid.UUID
+    full_name: str | None
+    email: str
 
 
 # Properties to return via API, id is always required
 class ItemPublic(ItemBase):
     id: uuid.UUID
-    owner_id: uuid.UUID
+    count: int
+    owners: list[ItemOwnerPublic] = []
 
 
 class ItemsPublic(SQLModel):

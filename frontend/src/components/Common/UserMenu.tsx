@@ -31,7 +31,7 @@ const UserMenu = () => {
           </MenuTrigger>
 
           <MenuContent>
-            <Link to="settings">
+            <Link to="/profile">
               <MenuItem
                 closeOnSelect
                 value="user-settings"
