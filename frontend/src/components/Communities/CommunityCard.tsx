@@ -125,8 +125,8 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           422: "Validation Error",
         },
       }),
-    onSuccess: () => {
-      showSuccessToast("Member updated successfully")
+    onSuccess: (data: any) => {
+      showSuccessToast(data.message)
       queryClient.invalidateQueries({
         queryKey: ["communityMembers", community.id],
       })
@@ -175,6 +175,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           >
             <FiTrash2 />
           </Button>
+          
         )}
       </Flex>
 

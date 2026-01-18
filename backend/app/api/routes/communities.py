@@ -235,11 +235,15 @@ def update_community_member_role(
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    crud.update_community_member(
+    updated_member = crud.update_community_member(
         session=session,
         community_id=id,
         user_id=user_id,
         role=member_in.role,
         status=member_in.status,
     )
-    return Message(message="Member updated successfully")
+    
+    if not updated_member:
+        raise HTTPException(status_code=404, detail="Member not found in this community")
+
+    return Message(message=f"Member updated successfully. New role: {updated_member.role}")
