@@ -131,8 +131,6 @@ function Friends() {
           </EmptyState.Root>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
-
-
             {friends?.data.map((user) => (
               <Box
                 key={user.id}
@@ -142,7 +140,10 @@ function Friends() {
                 bg="bg.panel"
               >
                 <Link to="/users/$userId" params={{ userId: user.id }}>
-                  <Text fontWeight="bold" _hover={{ textDecoration: "underline", color: "teal.500" }}>
+                  <Text
+                    fontWeight="bold"
+                    _hover={{ textDecoration: "underline", color: "teal.500" }}
+                  >
                     {user.full_name || user.email}
                   </Text>
                 </Link>

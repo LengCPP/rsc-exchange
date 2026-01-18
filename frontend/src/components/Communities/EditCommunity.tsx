@@ -14,7 +14,10 @@ import { FiEdit } from "react-icons/fi"
 import { CommunitiesService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import type { CommunityUpdate } from "@/client/types.gen"
-import type { CommunityPublicExtended, CommunityUpdateExtended } from "@/customTypes"
+import type {
+  CommunityPublicExtended,
+  CommunityUpdateExtended,
+} from "@/customTypes"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { Checkbox } from "../ui/checkbox"
@@ -55,9 +58,9 @@ const EditCommunity = ({ community }: EditCommunityProps) => {
 
   const mutation = useMutation({
     mutationFn: (data: CommunityUpdateExtended) =>
-      CommunitiesService.updateCommunity({ 
-        id: community.id, 
-        requestBody: data as unknown as CommunityUpdate 
+      CommunitiesService.updateCommunity({
+        id: community.id,
+        requestBody: data as unknown as CommunityUpdate,
       }),
     onSuccess: () => {
       showSuccessToast("Community updated successfully.")

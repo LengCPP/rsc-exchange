@@ -1,4 +1,14 @@
-import type { CommunityCreate, CommunityPublic, CommunityUpdate, UserPublic } from "./client"
+import type {
+  CommunityCreate,
+  CommunityPublic,
+  CommunityUpdate,
+  UserPublic,
+} from "./client"
+
+export enum ItemType {
+  GENERAL = "general",
+  BOOK = "book",
+}
 
 export interface CommunityCreateExtended extends CommunityCreate {
   is_closed?: boolean

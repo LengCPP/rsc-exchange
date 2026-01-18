@@ -17,6 +17,14 @@ To run the project with Docker:
 3.  **Local Development with Domains**:
     To use custom domains like `dashboard.localhost` and `api.localhost`, update your `.env` and set `DOMAIN=localhost`, then ensure your `docker-compose.override.yml` is configured to use the proxy.
 
+### Supabase Setup
+
+This project uses Supabase for image storage. You need to configure a bucket:
+
+1. Create a bucket named `rsc-xchange.app` in your Supabase project.
+2. Set the bucket to **Public**.
+3. Add a policy to allow authenticated users to upload files (`INSERT` permission for `authenticated` role).
+
 ---
 
 # RSC-Xchange

@@ -17,42 +17,70 @@ export type CommunitiesPublic = {
 export type CommunityCreate = {
     name: string;
     description?: (string | null);
+    is_closed?: boolean;
+};
+
+export type CommunityMemberRole = 'admin' | 'member';
+
+export type CommunityMemberStatus = 'pending' | 'accepted' | 'rejected';
+
+export type CommunityMemberUpdate = {
+    role?: (CommunityMemberRole | null);
+    status?: (CommunityMemberStatus | null);
 };
 
 export type CommunityPublic = {
     name: string;
     description?: (string | null);
+    is_closed?: boolean;
     id: string;
     created_by: string;
-    current_user_role?: (string | null);
+    current_user_role?: (CommunityMemberRole | null);
 };
 
 export type CommunityUpdate = {
     name?: (string | null);
     description?: (string | null);
+    is_closed?: (boolean | null);
 };
 
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
+export type InterestPublic = {
+    id: string;
+    name: string;
+    category: (string | null);
+};
+
 export type ItemCreate = {
     title: string;
     description?: (string | null);
+    item_type?: ItemType;
+    image_url?: (string | null);
+    extra_data?: {
+        [key: string]: unknown;
+    };
 };
 
 export type ItemOwnerPublic = {
     id: string;
-    full_name?: (string | null);
+    full_name: (string | null);
     email: string;
 };
 
 export type ItemPublic = {
     title: string;
     description?: (string | null);
+    item_type?: ItemType;
+    image_url?: (string | null);
+    extra_data?: {
+        [key: string]: unknown;
+    };
     id: string;
     count: number;
-    owners: Array<ItemOwnerPublic>;
+    owners?: Array<ItemOwnerPublic>;
 };
 
 export type ItemsPublic = {
@@ -60,9 +88,16 @@ export type ItemsPublic = {
     count: number;
 };
 
+export type ItemType = 'general' | 'book';
+
 export type ItemUpdate = {
     title?: (string | null);
     description?: (string | null);
+    item_type?: (ItemType | null);
+    image_url?: (string | null);
+    extra_data?: ({
+    [key: string]: unknown;
+} | null);
 };
 
 export type Message = {
@@ -105,19 +140,13 @@ export type UserCreate = {
     full_name?: (string | null);
 };
 
-export type InterestPublic = {
-    id: string;
-    name: string;
-    category?: (string | null);
-};
-
 export type UserProfilePublic = {
-    bio?: (string | null);
+    bio: (string | null);
 };
 
-export type UserSettingsPublic = {
-    theme: string;
-    notifications_enabled: boolean;
+export type UserProfileUpdate = {
+    bio?: (string | null);
+    interest_ids?: (Array<(string)> | null);
 };
 
 export type UserPublic = {
@@ -128,8 +157,8 @@ export type UserPublic = {
     public_id: string;
     id: string;
     communities?: Array<CommunityPublic>;
-    community_role?: (string | null);
-    community_status?: (string | null);
+    community_role?: (CommunityMemberRole | null);
+    community_status?: (CommunityMemberStatus | null);
     profile?: (UserProfilePublic | null);
     settings?: (UserSettingsPublic | null);
     interests?: Array<InterestPublic>;
@@ -139,6 +168,16 @@ export type UserRegister = {
     email: string;
     password: string;
     full_name?: (string | null);
+};
+
+export type UserSettingsPublic = {
+    theme: string;
+    notifications_enabled: boolean;
+};
+
+export type UserSettingsUpdate = {
+    theme?: (string | null);
+    notifications_enabled?: (boolean | null);
 };
 
 export type UsersPublic = {
@@ -218,6 +257,14 @@ export type CommunitiesReadCommunityMembersData = {
 
 export type CommunitiesReadCommunityMembersResponse = (UsersPublic);
 
+export type CommunitiesUpdateCommunityMemberRoleData = {
+    id: string;
+    requestBody: CommunityMemberUpdate;
+    userId: string;
+};
+
+export type CommunitiesUpdateCommunityMemberRoleResponse = (Message);
+
 export type FriendsReadFriendsData = {
     limit?: number;
     skip?: number;
@@ -249,6 +296,13 @@ export type FriendsRemoveFriendData = {
 };
 
 export type FriendsRemoveFriendResponse = (Message);
+
+export type InterestsReadInterestsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type InterestsReadInterestsResponse = (Array<InterestPublic>);
 
 export type ItemsReadItemsData = {
     limit?: number;
@@ -349,6 +403,18 @@ export type UsersUpdatePasswordMeData = {
 };
 
 export type UsersUpdatePasswordMeResponse = (Message);
+
+export type UsersUpdateUserProfileData = {
+    requestBody: UserProfileUpdate;
+};
+
+export type UsersUpdateUserProfileResponse = (UserPublic);
+
+export type UsersUpdateUserSettingsData = {
+    requestBody: UserSettingsUpdate;
+};
+
+export type UsersUpdateUserSettingsResponse = (UserPublic);
 
 export type UsersRegisterUserData = {
     requestBody: UserRegister;

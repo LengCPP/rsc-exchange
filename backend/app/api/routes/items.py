@@ -29,7 +29,6 @@ def read_items(
     Retrieve items.
     """
     
-    # 1. Get friend IDs
     friends_stmt = select(Friendship.friend_id).where(
         Friendship.user_id == current_user.id,
         Friendship.status == FriendshipStatus.ACCEPTED
@@ -44,8 +43,6 @@ def read_items(
     
     all_visible_user_ids = list(set([current_user.id] + list(friend_ids) + list(friend_ids_2)))
 
-    # 2. Filter items owned by visible users
-    # Join Item -> UserItem
     query = (
         select(Item)
         .join(UserItem)
@@ -69,6 +66,9 @@ def read_items(
                 id=item.id,
                 title=item.title,
                 description=item.description,
+                item_type=item.item_type,
+                image_url=item.image_url,
+                extra_data=item.extra_data,
                 count=item.count,
                 owners=owners_public
             )
@@ -115,6 +115,9 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         id=item.id,
         title=item.title,
         description=item.description,
+        item_type=item.item_type,
+        image_url=item.image_url,
+        extra_data=item.extra_data,
         count=item.count,
         owners=owners_public
     )
@@ -129,7 +132,10 @@ def create_item(
     """
     
     existing_item = session.exec(
-        select(Item).where(Item.title == item_in.title)
+        select(Item).where(
+            Item.title == item_in.title,
+            Item.item_type == item_in.item_type
+        )
     ).first()
     
     if existing_item:
@@ -142,8 +148,7 @@ def create_item(
             session.refresh(item)
     else:
         item = Item(
-            title=item_in.title,
-            description=item_in.description,
+            **item_in.model_dump(),
             count=1
         )
         item.owners.append(current_user)
@@ -159,6 +164,9 @@ def create_item(
         id=item.id,
         title=item.title,
         description=item.description,
+        item_type=item.item_type,
+        image_url=item.image_url,
+        extra_data=item.extra_data,
         count=item.count,
         owners=owners_public
     )
@@ -197,6 +205,9 @@ def update_item(
         id=item.id,
         title=item.title,
         description=item.description,
+        item_type=item.item_type,
+        image_url=item.image_url,
+        extra_data=item.extra_data,
         count=item.count,
         owners=owners_public
     )

@@ -2,6 +2,7 @@ from enum import Enum
 import uuid
 
 from pydantic import EmailStr
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -21,6 +22,12 @@ class FriendshipStatus(str, Enum):
     ACCEPTED = "accepted"
 
 
+class ItemType(str, Enum):
+    GENERAL = "general"
+    BOOK = "book"
+
+
+# Link Models
 class CommunityMember(SQLModel, table=True):
     community_id: uuid.UUID = Field(
         foreign_key="community.id", primary_key=True, ondelete="CASCADE"
@@ -42,14 +49,6 @@ class Friendship(SQLModel, table=True):
     status: FriendshipStatus = Field(default=FriendshipStatus.PENDING)
 
 
-class Interest(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(unique=True, index=True)
-    category: str | None = None
-    users: list["User"] = Relationship(back_populates="interests", link_model="UserInterest")
-    communities: list["Community"] = Relationship(back_populates="interests", link_model="CommunityInterest")
-
-
 class UserInterest(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     interest_id: uuid.UUID = Field(foreign_key="interest.id", primary_key=True, ondelete="CASCADE")
@@ -60,6 +59,12 @@ class CommunityInterest(SQLModel, table=True):
     interest_id: uuid.UUID = Field(foreign_key="interest.id", primary_key=True, ondelete="CASCADE")
 
 
+class UserItem(SQLModel, table=True):
+    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
+    item_id: uuid.UUID = Field(foreign_key="item.id", primary_key=True, ondelete="CASCADE")
+
+
+# Support Models
 class UserSettings(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     theme: str = Field(default="system")
@@ -70,6 +75,14 @@ class UserProfile(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     bio: str | None = Field(default=None, max_length=500)
 
+
+# Main Models (Circular references handled by strings)
+class Interest(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(unique=True, index=True)
+    category: str | None = None
+    users: list["User"] = Relationship(back_populates="interests", link_model=UserInterest)
+    communities: list["Community"] = Relationship(back_populates="interests", link_model=CommunityInterest)
 
 
 # Shared properties
@@ -125,7 +138,6 @@ class UpdatePassword(SQLModel):
     new_password: str = Field(min_length=8, max_length=40)
 
 
-# Database model, database table inferred from class name
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     public_id: str | None = Field(default=None, unique=True, index=True, max_length=8)
@@ -134,8 +146,8 @@ class User(UserBase, table=True):
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
-    settings: UserSettings | None = Relationship(sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
-    profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False}, cascade_delete=True)
+    settings: UserSettings | None = Relationship(sa_relationship_kwargs={"uselist": False})
+    profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False})
     interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
 
 
@@ -161,31 +173,25 @@ class Community(CommunityBase, table=True):
     members: list["User"] = Relationship(
         back_populates="communities", link_model=CommunityMember
     )
+    interests: list["Interest"] = Relationship(back_populates="communities", link_model=CommunityInterest)
 
 
-class CommunityPublic(CommunityBase):
-    id: uuid.UUID
-    created_by: uuid.UUID
-    current_user_role: CommunityMemberRole | None = None
+class ItemBase(SQLModel):
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    item_type: ItemType = Field(default=ItemType.GENERAL)
+    image_url: str | None = Field(default=None, max_length=512)
+    extra_data: dict = Field(default={}, sa_column=Column(JSON))
 
 
-class CommunitiesPublic(SQLModel):
-    data: list[CommunityPublic]
-    count: int
+class Item(ItemBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str = Field(max_length=255, index=True)
+    count: int = Field(default=1)
+    owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
 
 
-# Properties to return via API, id is always required
-class UserPublic(UserBase):
-    id: uuid.UUID
-    public_id: str
-    communities: list[CommunityPublic] = []
-    community_role: CommunityMemberRole | None = None
-    community_status: CommunityMemberStatus | None = None
-    profile: UserProfilePublic | None = None
-    settings: UserSettingsPublic | None = None
-    interests: list[InterestPublic] = []
-
-
+# API Models (Public)
 class InterestPublic(SQLModel):
     id: uuid.UUID
     name: str
@@ -199,6 +205,28 @@ class UserProfilePublic(SQLModel):
 class UserSettingsPublic(SQLModel):
     theme: str
     notifications_enabled: bool
+
+
+class CommunityPublic(CommunityBase):
+    id: uuid.UUID
+    created_by: uuid.UUID
+    current_user_role: CommunityMemberRole | None = None
+
+
+class CommunitiesPublic(SQLModel):
+    data: list[CommunityPublic]
+    count: int
+
+
+class UserPublic(UserBase):
+    id: uuid.UUID
+    public_id: str
+    communities: list[CommunityPublic] = []
+    community_role: CommunityMemberRole | None = None
+    community_status: CommunityMemberStatus | None = None
+    profile: UserProfilePublic | None = None
+    settings: UserSettingsPublic | None = None
+    interests: list[InterestPublic] = []
 
 
 class CommunityMemberUpdate(SQLModel):
@@ -217,35 +245,16 @@ class UsersPublic(SQLModel):
     count: int
 
 
-# Shared properties
-class ItemBase(SQLModel):
-    title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=255)
+class ItemCreate(ItemBase):
+    pass
 
 
-# Properties to receive on item creation
-class ItemCreate(SQLModel):
-    title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=255)
-
-
-# Properties to receive on item update
 class ItemUpdate(SQLModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
-
-
-class UserItem(SQLModel, table=True):
-    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
-    item_id: uuid.UUID = Field(foreign_key="item.id", primary_key=True, ondelete="CASCADE")
-
-
-# Database model, database table inferred from class name
-class Item(ItemBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    title: str = Field(max_length=255, index=True)
-    count: int = Field(default=1)
-    owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
+    item_type: ItemType | None = None
+    image_url: str | None = None
+    extra_data: dict | None = None
 
 
 class ItemOwnerPublic(SQLModel):
@@ -254,7 +263,6 @@ class ItemOwnerPublic(SQLModel):
     email: str
 
 
-# Properties to return via API, id is always required
 class ItemPublic(ItemBase):
     id: uuid.UUID
     count: int
@@ -272,18 +280,15 @@ class SearchResults(SQLModel):
     communities: list[CommunityPublic]
 
 
-# Generic message
 class Message(SQLModel):
     message: str
 
 
-# JSON payload containing access token
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
 
 
-# Contents of JWT token
 class TokenPayload(SQLModel):
     sub: str | None = None
 

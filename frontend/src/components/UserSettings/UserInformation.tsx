@@ -95,8 +95,12 @@ const UserInformation = () => {
           <Flex align="center" mb={6} gap={4}>
             <FaUserCircle size="60px" color="gray" />
             <Box>
-                <Text fontSize="sm" color="gray.500">Avatar</Text>
-                <Text fontSize="xs" color="gray.400">Profile picture upload coming soon</Text>
+              <Text fontSize="sm" color="gray.500">
+                Avatar
+              </Text>
+              <Text fontSize="xs" color="gray.400">
+                Profile picture upload coming soon
+              </Text>
             </Box>
           </Flex>
 

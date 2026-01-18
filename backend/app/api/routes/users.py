@@ -13,21 +13,21 @@ from app.api.deps import (
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    Interest,
     Item,
     Message,
     UpdatePassword,
     User,
     UserCreate,
+    UserProfile,
+    UserProfileUpdate,
     UserPublic,
     UserRegister,
+    UserSettings,
+    UserSettingsUpdate,
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
-
-
-
-
-    Interest,
 )
 from app.utils import generate_new_account_email, send_email
 
