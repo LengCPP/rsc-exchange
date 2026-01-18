@@ -2,8 +2,8 @@ import { Flex, Image, useBreakpointValue } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
 
 import Logo from "/assets/images/rsc-x-logo.png"
-import UserMenu from "./UserMenu"
 import { ColorModeButton } from "../ui/color-mode"
+import UserMenu from "./UserMenu"
 
 function Navbar() {
   const display = useBreakpointValue({ base: "none", md: "flex" })

@@ -10,6 +10,12 @@ class CommunityMemberRole(str, Enum):
     MEMBER = "member"
 
 
+class CommunityMemberStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+
+
 class FriendshipStatus(str, Enum):
     PENDING = "pending"
     ACCEPTED = "accepted"
@@ -23,6 +29,7 @@ class CommunityMember(SQLModel, table=True):
         foreign_key="user.id", primary_key=True, ondelete="CASCADE"
     )
     role: CommunityMemberRole = Field(default=CommunityMemberRole.MEMBER)
+    status: CommunityMemberStatus = Field(default=CommunityMemberStatus.ACCEPTED)
 
 
 class Friendship(SQLModel, table=True):
@@ -92,6 +99,7 @@ class User(UserBase, table=True):
 class CommunityBase(SQLModel):
     name: str = Field(min_length=1, max_length=255, unique=True, index=True)
     description: str | None = Field(default=None, max_length=255)
+    is_closed: bool = Field(default=False)
 
 
 class CommunityCreate(CommunityBase):
@@ -101,6 +109,7 @@ class CommunityCreate(CommunityBase):
 class CommunityUpdate(SQLModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    is_closed: bool | None = Field(default=None)
 
 
 class Community(CommunityBase, table=True):
@@ -126,6 +135,13 @@ class UserPublic(UserBase):
     id: uuid.UUID
     public_id: str
     communities: list[CommunityPublic] = []
+    community_role: CommunityMemberRole | None = None
+    community_status: CommunityMemberStatus | None = None
+
+
+class CommunityMemberUpdate(SQLModel):
+    role: CommunityMemberRole | None = Field(default=None)
+    status: CommunityMemberStatus | None = Field(default=None)
 
 
 class FriendshipPublic(SQLModel):

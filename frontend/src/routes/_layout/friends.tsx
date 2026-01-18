@@ -1,16 +1,16 @@
 import {
+  Box,
   Button,
   Container,
   EmptyState,
   Flex,
   Heading,
+  Separator,
+  SimpleGrid,
   Text,
   VStack,
-  SimpleGrid,
-  Box,
-  Separator,
 } from "@chakra-ui/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { FiUsers } from "react-icons/fi"
 
@@ -36,7 +36,8 @@ function Friends() {
   })
 
   const acceptMutation = useMutation({
-    mutationFn: (id: string) => FriendsService.acceptFriendRequest({ friendId: id }),
+    mutationFn: (id: string) =>
+      FriendsService.acceptFriendRequest({ friendId: id }),
     onSuccess: () => {
       showSuccessToast("Friend request accepted!")
       queryClient.invalidateQueries({ queryKey: ["friends"] })
@@ -76,13 +77,27 @@ function Friends() {
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
             {requests?.data.map((user) => (
-              <Box key={user.id} p={4} borderWidth="1px" rounded="md" bg="bg.panel">
+              <Box
+                key={user.id}
+                p={4}
+                borderWidth="1px"
+                rounded="md"
+                bg="bg.panel"
+              >
                 <Text fontWeight="bold">{user.full_name || user.email}</Text>
                 <Flex mt={3} gap={2}>
-                  <Button size="sm" variant={"primary" as any} onClick={() => acceptMutation.mutate(user.id)}>
+                  <Button
+                    size="sm"
+                    variant={"primary" as any}
+                    onClick={() => acceptMutation.mutate(user.id)}
+                  >
                     Accept
                   </Button>
-                  <Button size="sm" variant={"dangerSecondary" as any} onClick={() => removeMutation.mutate(user.id)}>
+                  <Button
+                    size="sm"
+                    variant={"dangerSecondary" as any}
+                    onClick={() => removeMutation.mutate(user.id)}
+                  >
                     Decline
                   </Button>
                 </Flex>
@@ -117,9 +132,20 @@ function Friends() {
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
             {friends?.data.map((user) => (
-              <Box key={user.id} p={4} borderWidth="1px" rounded="md" bg="bg.panel">
+              <Box
+                key={user.id}
+                p={4}
+                borderWidth="1px"
+                rounded="md"
+                bg="bg.panel"
+              >
                 <Text fontWeight="bold">{user.full_name || user.email}</Text>
-                <Button mt={3} size="sm" variant={"dangerSecondary" as any} onClick={() => removeMutation.mutate(user.id)}>
+                <Button
+                  mt={3}
+                  size="sm"
+                  variant={"dangerSecondary" as any}
+                  onClick={() => removeMutation.mutate(user.id)}
+                >
                   Remove Friend
                 </Button>
               </Box>

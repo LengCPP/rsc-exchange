@@ -1,5 +1,3 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import {
   Button,
   DialogActionTrigger,
@@ -8,12 +6,14 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { Controller, type SubmitHandler, useForm } from "react-hook-form"
 import { FiPlus } from "react-icons/fi"
 
 import { CommunitiesService } from "@/client"
-import { CommunityCreateExtended } from "@/customTypes"
 import type { ApiError } from "@/client/core/ApiError"
+import type { CommunityCreateExtended } from "@/customTypes"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import { Checkbox } from "../ui/checkbox"
@@ -122,12 +122,12 @@ const AddCommunity = () => {
                 name="is_closed"
                 render={({ field }) => (
                   <Field disabled={field.disabled}>
-                     <Checkbox
-                        checked={field.value}
-                        onCheckedChange={({ checked }) => field.onChange(checked)}
-                     >
-                       Private / Closed Community
-                     </Checkbox>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={({ checked }) => field.onChange(checked)}
+                    >
+                      Private / Closed Community
+                    </Checkbox>
                   </Field>
                 )}
               />

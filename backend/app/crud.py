@@ -9,6 +9,7 @@ from app.models import (
     CommunityCreate,
     CommunityMember,
     CommunityMemberRole,
+    CommunityMemberStatus,
     Friendship,
     FriendshipStatus,
     Item,
@@ -95,10 +96,41 @@ def create_community(
 def join_community(
     *, session: Session, community_id: uuid.UUID, user_id: uuid.UUID
 ) -> CommunityMember:
-    membership = CommunityMember(community_id=community_id, user_id=user_id)
+    community = session.get(Community, community_id)
+    status = CommunityMemberStatus.ACCEPTED
+    if community and community.is_closed:
+        status = CommunityMemberStatus.PENDING
+
+    membership = CommunityMember(
+        community_id=community_id, user_id=user_id, status=status
+    )
     session.add(membership)
     session.commit()
     session.refresh(membership)
+    return membership
+
+
+def update_community_member(
+    *,
+    session: Session,
+    community_id: uuid.UUID,
+    user_id: uuid.UUID,
+    role: CommunityMemberRole | None = None,
+    status: CommunityMemberStatus | None = None,
+) -> CommunityMember | None:
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == community_id,
+        CommunityMember.user_id == user_id,
+    )
+    membership = session.exec(statement).first()
+    if membership:
+        if role:
+            membership.role = role
+        if status:
+            membership.status = status
+        session.add(membership)
+        session.commit()
+        session.refresh(membership)
     return membership
 
 

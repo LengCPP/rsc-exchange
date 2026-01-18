@@ -82,12 +82,12 @@ export const ColorModeButton = React.forwardRef<
         }}
       >
         <Flex align="center" gap={2}>
-           <ColorModeIcon />
-           {showLabel && (
-             <Text fontSize="sm">
-               Switch to {colorMode === "dark" ? "Light" : "Dark"}
-             </Text>
-           )}
+          <ColorModeIcon />
+          {showLabel && (
+            <Text fontSize="sm">
+              Switch to {colorMode === "dark" ? "Light" : "Dark"}
+            </Text>
+          )}
         </Flex>
       </IconButton>
     </ClientOnly>

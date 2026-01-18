@@ -12,6 +12,8 @@ from app.models import (
     CommunityCreate,
     CommunityMember,
     CommunityMemberRole,
+    CommunityMemberStatus,
+    CommunityMemberUpdate,
     CommunityPublic,
     CommunityUpdate,
     Message,
@@ -124,6 +126,20 @@ def join_community(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
     
+    # Check if user is already a member
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+    )
+    existing_membership = session.exec(statement).first()
+    if existing_membership:
+        if existing_membership.status == CommunityMemberStatus.PENDING:
+            raise HTTPException(status_code=400, detail="Join request already pending")
+        if existing_membership.status == CommunityMemberStatus.ACCEPTED:
+            raise HTTPException(status_code=400, detail="Already a member of this community")
+        if existing_membership.status == CommunityMemberStatus.REJECTED:
+            raise HTTPException(status_code=400, detail="Join request was rejected")
+
     crud.join_community(session=session, community_id=id, user_id=current_user.id)
     return Message(message="Joined community successfully")
 
@@ -169,17 +185,61 @@ def read_community_members(
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
-    
-    statement = select(CommunityMember).where(CommunityMember.community_id == id)
-    memberships = session.exec(statement.offset(skip).limit(limit)).all()
-    count = session.exec(select(func.count()).where(CommunityMember.community_id == id)).one()
-    
-    from app.models import User, UsersPublic
+
+    count = session.exec(
+        select(func.count()).where(CommunityMember.community_id == id)
+    ).one()
+
+    from app.models import User, UserPublic
+
     statement = (
-        select(User)
+        select(User, CommunityMember)
         .join(CommunityMember, User.id == CommunityMember.user_id)
         .where(CommunityMember.community_id == id)
     )
-    users = session.exec(statement.offset(skip).limit(limit)).all()
+    results = session.exec(statement.offset(skip).limit(limit)).all()
 
-    return UsersPublic(data=users, count=count)
+    users_with_meta = []
+    for user, membership in results:
+        user_public = UserPublic.model_validate(user)
+        user_public.community_role = membership.role
+        user_public.community_status = membership.status
+        users_with_meta.append(user_public)
+
+    return UsersPublic(data=users_with_meta, count=count)
+
+
+@router.patch("/{id}/members/{user_id}", response_model=Message)
+def update_community_member_role(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    user_id: uuid.UUID,
+    member_in: CommunityMemberUpdate,
+) -> Any:
+    """
+    Update a member's role or status in a community.
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check if current user is admin
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.role == CommunityMemberRole.ADMIN,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    crud.update_community_member(
+        session=session,
+        community_id=id,
+        user_id=user_id,
+        role=member_in.role,
+        status=member_in.status,
+    )
+    return Message(message="Member updated successfully")

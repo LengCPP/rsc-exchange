@@ -1,4 +1,4 @@
-import { CommunityCreate, CommunityPublic, UserPublic } from "./client"
+import type { CommunityCreate, CommunityPublic, UserPublic } from "./client"
 
 export interface CommunityCreateExtended extends CommunityCreate {
   is_closed?: boolean
@@ -10,4 +10,5 @@ export interface CommunityPublicExtended extends CommunityPublic {
 
 export interface UserPublicWithRole extends UserPublic {
   community_role?: "admin" | "member"
+  community_status?: "pending" | "accepted" | "rejected"
 }

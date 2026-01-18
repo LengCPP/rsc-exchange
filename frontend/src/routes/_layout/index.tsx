@@ -1,23 +1,23 @@
 import {
   Box,
   Container,
-  Text,
-  Input,
-  VStack,
-  Heading,
-  Grid,
-  Spinner,
   Flex,
+  Grid,
+  Heading,
+  Input,
+  Spinner,
+  Text,
+  VStack,
 } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
-import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 import { FiSearch } from "react-icons/fi"
 
-import useAuth from "@/hooks/useAuth"
-import { SearchService, CommunitiesService } from "@/client"
-import ItemCard from "@/components/Items/ItemCard"
+import { CommunitiesService, SearchService } from "@/client"
 import CommunityCard from "@/components/Communities/CommunityCard"
+import ItemCard from "@/components/Items/ItemCard"
+import useAuth from "@/hooks/useAuth"
 import { formatPublicId } from "@/utils"
 
 export const Route = createFileRoute("/_layout/")({
@@ -148,7 +148,9 @@ function Dashboard() {
                     searchResults?.users.length === 0 &&
                     searchResults?.items.length === 0 &&
                     searchResults?.communities.length === 0 && (
-                      <Text color="gray.500">No results found for "{debouncedSearchTerm}"</Text>
+                      <Text color="gray.500">
+                        No results found for "{debouncedSearchTerm}"
+                      </Text>
                     )}
                 </>
               )}

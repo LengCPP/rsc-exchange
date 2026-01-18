@@ -6,6 +6,7 @@ import { FiLogOut } from "react-icons/fi"
 
 import type { UserPublic } from "@/client"
 import useAuth from "@/hooks/useAuth"
+import { ColorModeButton } from "../ui/color-mode"
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -15,7 +16,6 @@ import {
   DrawerTrigger,
 } from "../ui/drawer"
 import SidebarItems from "./SidebarItems"
-import { ColorModeButton } from "../ui/color-mode"
 
 const Sidebar = () => {
   const queryClient = useQueryClient()
@@ -44,11 +44,7 @@ const Sidebar = () => {
         >
           <DrawerBackdrop />
           <DrawerTrigger asChild>
-            <IconButton
-              variant="ghost"
-              color="inherit"
-              aria-label="Open Menu"
-            >
+            <IconButton variant="ghost" color="inherit" aria-label="Open Menu">
               <FaBars />
             </IconButton>
           </DrawerTrigger>
