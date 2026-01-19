@@ -102,6 +102,21 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.middlewares=
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls=false
 
+  minio:
+    restart: "always"
+    networks:
+      - traefik-public
+      - default
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    labels:
+      - traefik.docker.network=${STACK_NAME?Variable not set}_traefik-public
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-http.middlewares=
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-https.tls=false
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-http.middlewares=
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-https.tls=false
+
   frontend:
     restart: "always"
     networks:

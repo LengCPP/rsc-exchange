@@ -46,9 +46,11 @@ const Sidebar = () => {
           <DrawerContent maxW="280px" h="full">
             <DrawerCloseTrigger />
             <DrawerBody>
-              <Flex flexDir="column" h="full">
-                <SidebarItems />
-                <Box mt={4}>
+              <Flex flexDir="column" h="full" justify="space-between">
+                <Box>
+                  <SidebarItems />
+                </Box>
+                <Box mb={4}>
                   <RouterLink to="/settings">
                     <Flex
                       alignItems="center"
@@ -65,14 +67,14 @@ const Sidebar = () => {
                       <Text>Settings</Text>
                     </Flex>
                   </RouterLink>
+                  {currentUser?.email && (
+                    <Flex alignItems="center">
+                      <Text fontSize="xs" px={4} py={2} color="gray.500">
+                        Logged in as: {currentUser.email}
+                      </Text>
+                    </Flex>
+                  )}
                 </Box>
-                {currentUser?.email && (
-                  <Flex alignItems="center">
-                    <Text fontSize="xs" p={4} color="gray.500">
-                      Logged in as: {currentUser.email}
-                    </Text>
-                  </Flex>
-                )}
               </Flex>
             </DrawerBody>
             <DrawerCloseTrigger />
@@ -92,9 +94,11 @@ const Sidebar = () => {
         h="100vh"
         p={4}
       >
-        <Flex w="100%" direction="column">
-          <SidebarItems />
-          <Box mt={4}>
+        <Flex w="100%" direction="column" justify="space-between">
+          <Box>
+            <SidebarItems />
+          </Box>
+          <Box>
             <RouterLink to="/settings">
               <Flex
                 alignItems="center"
@@ -111,14 +115,14 @@ const Sidebar = () => {
                 <Text>Settings</Text>
               </Flex>
             </RouterLink>
+            {currentUser?.email && (
+              <Flex alignItems="center">
+                <Text fontSize="xs" px={4} py={2} color="gray.500">
+                  Logged in as: {currentUser.email}
+                </Text>
+              </Flex>
+            )}
           </Box>
-          {currentUser?.email && (
-            <Flex alignItems="center">
-              <Text fontSize="xs" p={4} color="gray.500">
-                Logged in as: {currentUser.email}
-              </Text>
-            </Flex>
-          )}
         </Flex>
       </Box>
     </>

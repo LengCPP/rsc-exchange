@@ -1,3 +1,4 @@
+import json
 import secrets
 import warnings
 from typing import Annotated, Any, Literal
@@ -19,6 +20,8 @@ from typing_extensions import Self
 def parse_cors(v: Any) -> list[str] | str:
     if isinstance(v, str) and not v.startswith("["):
         return [i.strip() for i in v.split(",")]
+    elif isinstance(v, str) and v.startswith("["):
+        return json.loads(v)
     elif isinstance(v, list | str):
         return v
     raise ValueError(v)
@@ -94,6 +97,13 @@ class Settings(BaseSettings):
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
+
+    MINIO_ROOT_USER: str = "admin"
+    MINIO_ROOT_PASSWORD: str = "changethis"
+    MINIO_STORAGE_BUCKET: str = "rsc-xchange-images"
+    MINIO_ENDPOINT: str = "minio"
+    MINIO_PORT: int = 9000
+    MINIO_PUBLIC_URL: str = "http://localhost:9000"
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":

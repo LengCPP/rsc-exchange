@@ -17,6 +17,7 @@ from app.models import (
     CommunityPublic,
     CommunityUpdate,
     Message,
+    UserPublic,
     UsersPublic,
 )
 
@@ -244,7 +245,7 @@ def read_community_members(
     return UsersPublic(data=users_with_meta, count=count)
 
 
-@router.patch("/{id}/members/{user_id}", response_model=Message)
+@router.patch("/{id}/members/{user_id}", response_model=UserPublic)
 def update_community_member_role(
     *,
     session: SessionDep,
@@ -281,4 +282,9 @@ def update_community_member_role(
     if not updated_member:
         raise HTTPException(status_code=404, detail="Member not found in this community")
 
-    return Message(message=f"Member updated successfully. New role: {updated_member.role}")
+    from app.models import User
+    user = session.get(User, user_id)
+    user_public = UserPublic.model_validate(user)
+    user_public.community_role = updated_member.role
+    user_public.community_status = updated_member.status
+    return user_public

@@ -10,7 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { FiSearch } from "react-icons/fi"
 
@@ -91,19 +91,27 @@ function Dashboard() {
                         gap={4}
                       >
                         {searchResults?.users.map((user: any) => (
-                          <Box
+                          <Link
                             key={user.id}
-                            p={4}
-                            borderWidth="1px"
-                            borderRadius="lg"
+                            to="/users/$userId"
+                            params={{ userId: user.id }}
+                            style={{ textDecoration: "none" }}
                           >
-                            <Text fontWeight="bold">
-                              {user.full_name || "Anonymous"}
-                            </Text>
-                            <Text fontSize="sm" color="gray.500">
-                              ID: {formatPublicId(user.public_id)}
-                            </Text>
-                          </Box>
+                            <Box
+                              p={4}
+                              borderWidth="1px"
+                              borderRadius="lg"
+                              _hover={{ bg: "bg.muted", cursor: "pointer" }}
+                              transition="background 0.2s"
+                            >
+                              <Text fontWeight="bold">
+                                {user.full_name || "Anonymous"}
+                              </Text>
+                              <Text fontSize="sm" color="gray.500">
+                                ID: {formatPublicId(user.public_id)}
+                              </Text>
+                            </Box>
+                          </Link>
                         ))}
                       </Grid>
                     </Box>

@@ -1,9 +1,10 @@
 import type { ItemPublic } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
-import { ItemType } from "@/customTypes"
 import useAuth from "@/hooks/useAuth"
-import { Badge, Box, Card, Flex, Image, Text } from "@chakra-ui/react"
+import { Badge, Box, Card, Flex, Image, Text, HStack } from "@chakra-ui/react"
 import { useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { getImageUrl } from "@/utils"
 
 interface ItemCardProps {
   item: ItemPublic
@@ -17,8 +18,6 @@ const ItemCard = ({ item }: ItemCardProps) => {
     setIsFlipped(!isFlipped)
   }
 
-  const ownersList =
-    item.owners?.map((o) => o.full_name || o.email).join(", ") || "Unknown"
   const isOwner = item.owners?.some((o) => o.id === user?.id)
 
   return (
@@ -50,7 +49,7 @@ const ItemCard = ({ item }: ItemCardProps) => {
         >
           {item.image_url && (
             <Image
-              src={item.image_url}
+              src={getImageUrl(item.image_url)}
               alt={item.title}
               objectFit="cover"
               height="120px"
@@ -73,7 +72,7 @@ const ItemCard = ({ item }: ItemCardProps) => {
               {item.item_type}
             </Badge>
 
-            {item.item_type === ItemType.BOOK && item.extra_data?.author && (
+            {item.item_type === "book" && item.extra_data?.author && (
               <Text fontSize="sm" fontStyle="italic" color="gray.600" mb={2}>
                 By {item.extra_data.author}
               </Text>
@@ -116,7 +115,7 @@ const ItemCard = ({ item }: ItemCardProps) => {
               {item.description || "No description provided"}
             </Text>
 
-            {item.item_type === ItemType.BOOK && item.extra_data?.isbn && (
+            {item.item_type === "book" && item.extra_data?.isbn && (
               <Text fontSize="xs" color="gray.600" mb={1}>
                 ISBN: {item.extra_data.isbn}
               </Text>
@@ -126,14 +125,26 @@ const ItemCard = ({ item }: ItemCardProps) => {
               <Text fontSize="xs" fontWeight="bold" color="gray.600">
                 Owners:
               </Text>
-              <Text
-                fontSize="xs"
-                color="gray.500"
-                lineClamp={1}
-                title={ownersList}
-              >
-                {ownersList}
-              </Text>
+              <HStack gap={1} flexWrap="wrap">
+                {item.owners?.map((owner, index) => (
+                  <Link
+                    key={owner.id}
+                    to="/users/$userId"
+                    params={{ userId: owner.id }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ textDecoration: "none" }}
+                  >
+                    <Text
+                      fontSize="xs"
+                      color="blue.500"
+                      _hover={{ textDecoration: "underline" }}
+                    >
+                      {owner.full_name || owner.email}
+                      {index < item.owners.length - 1 ? "," : ""}
+                    </Text>
+                  </Link>
+                )) || <Text fontSize="xs" color="gray.500">Unknown</Text>}
+              </HStack>
             </Box>
 
             <Text fontSize="2xs" color="gray.400" fontFamily="mono" mt={1}>

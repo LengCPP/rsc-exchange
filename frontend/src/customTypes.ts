@@ -3,12 +3,17 @@ import type {
   CommunityPublic,
   CommunityUpdate,
   UserPublic,
+  ItemType,
+  InterestPublic,
+  UserProfilePublic,
+  UserSettingsPublic,
+  UserProfileUpdate,
+  UserSettingsUpdate,
+  CommunityMemberRole,
+  CommunityMemberStatus,
 } from "./client"
 
-export enum ItemType {
-  GENERAL = "general",
-  BOOK = "book",
-}
+export { type ItemType }
 
 export interface CommunityCreateExtended extends CommunityCreate {
   is_closed?: boolean
@@ -23,37 +28,17 @@ export interface CommunityPublicExtended extends CommunityPublic {
 }
 
 export interface UserPublicWithRole extends UserPublic {
-  community_role?: "admin" | "member"
-  community_status?: "pending" | "accepted" | "rejected"
+  community_role?: CommunityMemberRole
+  community_status?: CommunityMemberStatus
 }
 
-export interface InterestPublic {
-  id: string
-  name: string
-  category?: string
-}
-
-export interface UserProfilePublic {
-  bio?: string
-}
-
-export interface UserSettingsPublic {
-  theme: string
-  notifications_enabled: boolean
-}
-
-export interface UserProfileUpdate {
-  bio?: string
-  interest_ids?: string[]
-}
-
-export interface UserSettingsUpdate {
-  theme?: string
-  notifications_enabled?: boolean
+export interface UserProfilePublicExtended extends UserProfilePublic {
+  image_url?: string | null
 }
 
 export interface UserPublicExtended extends UserPublic {
-  profile?: UserProfilePublic
+  profile?: UserProfilePublicExtended
   settings?: UserSettingsPublic
   interests?: InterestPublic[]
 }
+

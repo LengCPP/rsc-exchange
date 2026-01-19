@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlmodel import col, delete, func, select
 
 from app import crud
@@ -12,6 +12,7 @@ from app.api.deps import (
 )
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app.storage import upload_image
 from app.models import (
     Interest,
     Item,
@@ -158,6 +159,29 @@ def update_user_profile(
     return current_user
 
 
+@router.post("/me/profile-picture", response_model=UserPublic)
+async def upload_user_profile_picture(
+    *, session: SessionDep, current_user: CurrentUser, file: UploadFile = File(...)
+) -> Any:
+    """
+    Upload a profile picture for the current user.
+    """
+    if not current_user.profile:
+        current_user.profile = UserProfile(user_id=current_user.id)
+        
+    contents = await file.read()
+    image_url = await upload_image(contents, file.filename, folder="profile-pictures")
+    
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+        
+    current_user.profile.image_url = image_url
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    return current_user
+
+
 @router.patch("/me/settings", response_model=UserPublic)
 def update_user_settings(
     *, session: SessionDep, settings_in: UserSettingsUpdate, current_user: CurrentUser
@@ -188,6 +212,16 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
+    
+    # Handle items ownership before deleting user
+    for item in list(current_user.items):
+        item.owners.remove(current_user)
+        item.count = max(0, item.count - 1)
+        if not item.owners:
+            session.delete(item)
+        else:
+            session.add(item)
+            
     session.delete(current_user)
     session.commit()
     return Message(message="User deleted successfully")
@@ -217,13 +251,8 @@ def read_user_by_id(
     Get a specific user by id.
     """
     user = session.get(User, user_id)
-    if user == current_user:
-        return user
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403,
-            detail="The user doesn't have enough privileges",
-        )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
@@ -273,8 +302,16 @@ def delete_user(
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    statement = delete(Item).where(col(Item.owner_id) == user_id)
-    session.exec(statement)  # type: ignore
+    
+    # Handle items ownership before deleting user
+    for item in list(user.items):
+        item.owners.remove(user)
+        item.count = max(0, item.count - 1)
+        if not item.owners:
+            session.delete(item)
+        else:
+            session.add(item)
+            
     session.delete(user)
     session.commit()
     return Message(message="User deleted successfully")

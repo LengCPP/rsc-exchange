@@ -12,8 +12,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { FiSettings, FiTrash2, FiUserMinus, FiUserPlus } from "react-icons/fi"
 
-import { CommunitiesService, FriendsService, OpenAPI } from "@/client"
-import { request as apiRequest } from "@/client/core/request"
+import { CommunitiesService, FriendsService } from "@/client"
 import EditCommunity from "@/components/Communities/EditCommunity"
 import {
   MenuContent,
@@ -112,21 +111,13 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
   // Update Member Mutation
   const updateMemberMutation = useMutation({
     mutationFn: (data: { userId: string; role?: string; status?: string }) =>
-      apiRequest(OpenAPI, {
-        method: "PATCH",
-        url: "/api/v1/communities/{id}/members/{user_id}",
-        path: {
-          id: community.id,
-          user_id: data.userId,
-        },
-        body: { role: data.role, status: data.status },
-        mediaType: "application/json",
-        errors: {
-          422: "Validation Error",
-        },
+      CommunitiesService.updateCommunityMemberRole({
+        id: community.id,
+        userId: data.userId,
+        requestBody: { role: data.role as any, status: data.status as any },
       }),
-    onSuccess: (data: any) => {
-      showSuccessToast(data.message)
+    onSuccess: () => {
+      showSuccessToast("Member updated successfully")
       queryClient.invalidateQueries({
         queryKey: ["communityMembers", community.id],
       })

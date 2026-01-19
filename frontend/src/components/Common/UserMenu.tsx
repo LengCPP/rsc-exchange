@@ -1,10 +1,10 @@
 import { Box, Button, Flex, Text } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
-import { FaUserAstronaut } from "react-icons/fa"
 import { FiLogOut, FiUser } from "react-icons/fi"
 
 import useAuth from "@/hooks/useAuth"
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
+import UserAvatar from "./UserAvatar"
 
 const UserMenu = () => {
   const { user, logout } = useAuth()
@@ -22,11 +22,13 @@ const UserMenu = () => {
             <Button
               data-testid="user-menu"
               variant="solid"
-              maxW="150px"
+              maxW="200px"
               truncate
+              gap={3}
+              px={2}
             >
-              <FaUserAstronaut fontSize="18" />
-              <Text>{user?.full_name || "User"}</Text>
+              <UserAvatar user={user as any} size="32px" fontSize="xs" />
+              <Text truncate>{user?.full_name || "User"}</Text>
             </Button>
           </MenuTrigger>
 

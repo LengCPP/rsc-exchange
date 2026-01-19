@@ -1,16 +1,19 @@
 import uuid
-from typing import Any
+import json
+from typing import Any, Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from sqlmodel import func, select, col, or_
 
 from app.api.deps import CurrentUser, SessionDep
+from app.storage import upload_image, delete_image
 from app.models import (
     Item,
     ItemCreate,
     ItemPublic,
     ItemsPublic,
     ItemUpdate,
+    ItemType,
     Message,
     Friendship,
     FriendshipStatus,
@@ -23,37 +26,51 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 @router.get("/", response_model=ItemsPublic)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep, 
+    current_user: CurrentUser, 
+    skip: int = 0, 
+    limit: int = 100,
+    owner_id: uuid.UUID | None = None
 ) -> Any:
     """
     Retrieve items.
     """
     
-    friends_stmt = select(Friendship.friend_id).where(
-        Friendship.user_id == current_user.id,
-        Friendship.status == FriendshipStatus.ACCEPTED
-    )
-    friend_ids = session.exec(friends_stmt).all()
-    
-    friends_stmt_2 = select(Friendship.user_id).where(
-        Friendship.friend_id == current_user.id,
-        Friendship.status == FriendshipStatus.ACCEPTED
-    )
-    friend_ids_2 = session.exec(friends_stmt_2).all()
-    
-    all_visible_user_ids = list(set([current_user.id] + list(friend_ids) + list(friend_ids_2)))
+    if owner_id:
+        all_visible_user_ids = [owner_id]
+    else:
+        friends_stmt = select(Friendship.friend_id).where(
+            Friendship.user_id == current_user.id,
+            Friendship.status == FriendshipStatus.ACCEPTED
+        )
+        friend_ids = session.exec(friends_stmt).all()
+        
+        friends_stmt_2 = select(Friendship.user_id).where(
+            Friendship.friend_id == current_user.id,
+            Friendship.status == FriendshipStatus.ACCEPTED
+        )
+        friend_ids_2 = session.exec(friends_stmt_2).all()
+        
+        all_visible_user_ids = list(set([current_user.id] + list(friend_ids) + list(friend_ids_2)))
 
-    query = (
-        select(Item)
+    # Get distinct item IDs first to avoid DISTINCT on all columns (which fails on JSONB)
+    item_ids_query = (
+        select(Item.id)
         .join(UserItem)
         .where(UserItem.user_id.in_(all_visible_user_ids))
-        .distinct()
     )
-    
-    items_all = session.exec(query).all()
-    count = len(items_all)
-    
-    items = session.exec(query.offset(skip).limit(limit)).all()
+    item_ids = session.exec(item_ids_query).all()
+    unique_item_ids = list(set(item_ids))
+    count = len(unique_item_ids)
+
+    # Fetch actual items with pagination
+    items_query = (
+        select(Item)
+        .where(Item.id.in_(unique_item_ids))
+        .offset(skip)
+        .limit(limit)
+    )
+    items = session.exec(items_query).all()
     
     public_items = []
     for item in items:
@@ -124,17 +141,39 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
 
 
 @router.post("/", response_model=ItemPublic)
-def create_item(
-    *, session: SessionDep, current_user: CurrentUser, item_in: ItemCreate
+async def create_item(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    title: Annotated[str, Form()],
+    description: Annotated[str | None, Form()] = None,
+    item_type: Annotated[str, Form()] = "general",
+    extra_data: Annotated[str | None, Form()] = None,
+    image: Annotated[UploadFile | None, File()] = None,
 ) -> Any:
     """
     Create new item. If item with same title exists, connect user to it and increment count.
     """
     
+    image_url = None
+    if image:
+        contents = await image.read()
+        image_url = await upload_image(contents, image.filename)
+
+    extra_data_dict = {}
+    if extra_data:
+        try:
+            extra_data_dict = json.loads(extra_data)
+        except json.JSONDecodeError:
+            pass
+
+    # Avoid enum casing issues in query by using lowercase string
+    item_type_val = item_type.lower()
+
     existing_item = session.exec(
         select(Item).where(
-            Item.title == item_in.title,
-            Item.item_type == item_in.item_type
+            Item.title == title,
+            Item.item_type == item_type_val
         )
     ).first()
     
@@ -143,12 +182,19 @@ def create_item(
         if current_user not in item.owners:
             item.owners.append(current_user)
             item.count += 1
+            # Update image if existing item doesn't have one and new one is provided
+            if not item.image_url and image_url:
+                item.image_url = image_url
             session.add(item)
             session.commit()
             session.refresh(item)
     else:
         item = Item(
-            **item_in.model_dump(),
+            title=title,
+            description=description,
+            item_type=ItemType(item_type_val),
+            extra_data=extra_data_dict,
+            image_url=image_url,
             count=1
         )
         item.owners.append(current_user)
@@ -173,12 +219,16 @@ def create_item(
 
 
 @router.put("/{id}", response_model=ItemPublic)
-def update_item(
+async def update_item(
     *,
     session: SessionDep,
     current_user: CurrentUser,
     id: uuid.UUID,
-    item_in: ItemUpdate,
+    title: Annotated[str | None, Form()] = None,
+    description: Annotated[str | None, Form()] = None,
+    item_type: Annotated[str | None, Form()] = None,
+    extra_data: Annotated[str | None, Form()] = None,
+    image: Annotated[UploadFile | None, File()] = None,
 ) -> Any:
     """
     Update an item.
@@ -191,8 +241,24 @@ def update_item(
     if not current_user.is_superuser and (current_user.id not in owner_ids):
         raise HTTPException(status_code=400, detail="Not enough permissions")
         
-    update_dict = item_in.model_dump(exclude_unset=True)
-    item.sqlmodel_update(update_dict)
+    if title is not None:
+        item.title = title
+    if description is not None:
+        item.description = description
+    if item_type is not None:
+        item.item_type = ItemType(item_type.lower())
+    if extra_data is not None:
+        try:
+            item.extra_data = json.loads(extra_data)
+        except json.JSONDecodeError:
+            pass
+    
+    if image:
+        contents = await image.read()
+        image_url = await upload_image(contents, image.filename)
+        if image_url:
+            item.image_url = image_url
+
     session.add(item)
     session.commit()
     session.refresh(item)
@@ -214,7 +280,7 @@ def update_item(
 
 
 @router.delete("/{id}")
-def delete_item(
+async def delete_item(
     session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> Message:
     """
@@ -232,6 +298,8 @@ def delete_item(
         item.count = max(0, item.count - 1)
         
         if not item.owners:
+            if item.image_url:
+                await delete_image(item.image_url)
             session.delete(item)
         else:
             session.add(item)

@@ -16,7 +16,6 @@ import { type ItemCreate, ItemsService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import { ItemType } from "@/customTypes"
 import useCustomToast from "@/hooks/useCustomToast"
-import { supabase } from "@/supabase"
 import { handleError } from "@/utils"
 import {
   DialogBody,
@@ -49,7 +48,7 @@ const AddItem = () => {
     defaultValues: {
       title: "",
       description: "",
-      item_type: ItemType.GENERAL,
+      item_type: "general",
       extra_data: {},
     },
   })
@@ -57,34 +56,7 @@ const AddItem = () => {
   const itemType = watch("item_type")
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setImageFile(e.target.files[0])
-    }
-  }
-
-  const uploadImage = async (file: File) => {
-    const fileExt = file.name.split(".").pop()
-    const fileName = `${Math.random()}.${fileExt}`
-    const filePath = `item-images/${fileName}`
-
-    const { error: uploadError } = await supabase.storage
-      .from("rsc-xchange-images")
-      .upload(filePath, file)
-
-    if (uploadError) {
-      if (uploadError.message === "Bucket not found") {
-        throw new Error(
-          "Supabase storage bucket 'rsc-xchange-images' not found. Please create it in your Supabase dashboard.",
-        )
-      }
-      throw uploadError
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("rsc-xchange-images").getPublicUrl(filePath)
-
-    return publicUrl
+    setImageFile(e.target.files?.[0] || null)
   }
 
   const mutation = useMutation({
@@ -105,16 +77,15 @@ const AddItem = () => {
   })
 
   const onSubmit: SubmitHandler<ItemCreate> = async (data) => {
-    let image_url = ""
+    const formData = new FormData()
+    formData.append("title", data.title)
+    formData.append("description", data.description || "")
+    formData.append("item_type", data.item_type || "general")
+    formData.append("extra_data", JSON.stringify(data.extra_data || {}))
     if (imageFile) {
-      try {
-        image_url = await uploadImage(imageFile)
-      } catch (err) {
-        handleError(err as ApiError)
-        return
-      }
+      formData.append("image", imageFile)
     }
-    mutation.mutate({ ...data, image_url })
+    mutation.mutate(formData as any)
   }
 
   return (
@@ -149,8 +120,8 @@ const AddItem = () => {
                     backgroundColor: "transparent",
                   }}
                 >
-                  <option value={ItemType.GENERAL}>General</option>
-                  <option value={ItemType.BOOK}>Book</option>
+                  <option value="general">General</option>
+                  <option value="book">Book</option>
                 </select>
               </Field>
 
@@ -183,7 +154,7 @@ const AddItem = () => {
                 />
               </Field>
 
-              {itemType === ItemType.BOOK && (
+              {itemType === "book" && (
                 <>
                   <Field label="Author">
                     <Input

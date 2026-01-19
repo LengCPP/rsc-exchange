@@ -1,9 +1,12 @@
 from enum import Enum
 import uuid
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlalchemy import Column, JSON
 from sqlmodel import Field, Relationship, SQLModel
+
+
+# Enums
 
 
 class CommunityMemberRole(str, Enum):
@@ -23,8 +26,8 @@ class FriendshipStatus(str, Enum):
 
 
 class ItemType(str, Enum):
-    GENERAL = "general"
-    BOOK = "book"
+    general = "general"
+    book = "book"
 
 
 # Link Models
@@ -74,6 +77,7 @@ class UserSettings(SQLModel, table=True):
 class UserProfile(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     bio: str | None = Field(default=None, max_length=500)
+    image_url: str | None = Field(default=None, max_length=512)
 
 
 # Main Models (Circular references handled by strings)
@@ -102,11 +106,29 @@ class UserCreate(SQLModel):
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
 
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def validate_full_name(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+        return v
+
 
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
     full_name: str | None = Field(default=None, max_length=255)
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def validate_full_name(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+        return v
 
 
 # Properties to receive via API on update, all are optional
@@ -117,15 +139,40 @@ class UserUpdate(SQLModel):
     is_superuser: bool | None = None
     full_name: str | None = Field(default=None, max_length=255)
 
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def validate_full_name(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+        return v
+
 
 class UserUpdateMe(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
 
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def validate_full_name(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return None
+        return v
+
 
 class UserProfileUpdate(SQLModel):
     bio: str | None = Field(default=None, max_length=500)
     interest_ids: list[uuid.UUID] | None = None
+
+    @field_validator("bio", mode="before")
+    @classmethod
+    def validate_bio(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
 
 class UserSettingsUpdate(SQLModel):
@@ -179,7 +226,7 @@ class Community(CommunityBase, table=True):
 class ItemBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
-    item_type: ItemType = Field(default=ItemType.GENERAL)
+    item_type: ItemType = Field(default=ItemType.general)
     image_url: str | None = Field(default=None, max_length=512)
     extra_data: dict = Field(default={}, sa_column=Column(JSON))
 
@@ -200,6 +247,7 @@ class InterestPublic(SQLModel):
 
 class UserProfilePublic(SQLModel):
     bio: str | None
+    image_url: str | None
 
 
 class UserSettingsPublic(SQLModel):

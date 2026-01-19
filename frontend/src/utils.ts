@@ -1,4 +1,5 @@
 import type { ApiError } from "./client"
+import { OpenAPI } from "./client"
 import useCustomToast from "./hooks/useCustomToast"
 
 export const emailPattern = {
@@ -71,4 +72,17 @@ export const handleError = (err: ApiError | Error) => {
 export const formatPublicId = (publicId: string | undefined): string => {
   if (!publicId) return ""
   return publicId.toUpperCase()
+}
+
+/**
+ * Get the full URL for an image.
+ * If it's a relative path (starting with /api), prepend OpenAPI.BASE.
+ * @param url - The image URL or path
+ * @returns The full image URL
+ */
+export const getImageUrl = (url: string | null | undefined): string | undefined => {
+  if (!url) return undefined
+  if (url.startsWith("http")) return url
+  if (url.startsWith("/api")) return `${OpenAPI.BASE}${url}`
+  return url
 }

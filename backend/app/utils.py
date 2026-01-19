@@ -1,5 +1,6 @@
 import logging
 import secrets
+import httpx
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -159,4 +160,6 @@ def generate_unique_id(prefix: str, session: Session, model: type) -> str:
         if not existing:
             return unique_id
 
-    raise ValueError(f"Failed to generate unique ID after {max_attempts} attempts")
+        raise ValueError(f"Failed to generate unique ID after {max_attempts} attempts")
+
+    

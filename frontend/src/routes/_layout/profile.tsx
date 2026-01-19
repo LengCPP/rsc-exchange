@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import UserInformation from "@/components/UserSettings/UserInformation"
 import UserProfile from "@/components/UserSettings/UserProfile"
+import UserProfilePicture from "@/components/UserSettings/UserProfilePicture"
 import useAuth from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/profile")({
@@ -23,6 +24,8 @@ function Profile() {
       </Heading>
 
       <VStack align="stretch" gap={8} maxW="3xl">
+        <UserProfilePicture />
+        <Separator />
         <UserInformation />
         <Separator />
         <UserProfile />

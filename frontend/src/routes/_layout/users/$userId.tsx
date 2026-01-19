@@ -25,14 +25,11 @@ function UserProfilePage() {
   })
 
   const { data: items, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["items"],
-    queryFn: () => ItemsService.readItems({}),
+    queryKey: ["items", userId],
+    queryFn: () => ItemsService.readItems({ ownerId: userId }),
   })
 
-  // Filter items where this user is an owner
-  const userItems =
-    items?.data.filter((item) => item.owners?.some((o) => o.id === userId)) ||
-    []
+  const userItems = items?.data || []
 
   if (isLoadingUser) return <Text p={4}>Loading profile...</Text>
   if (!user) return <Text p={4}>User not found</Text>

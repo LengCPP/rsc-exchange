@@ -16,6 +16,8 @@ from app.models import (
     ItemCreate,
     User,
     UserCreate,
+    UserProfile,
+    UserSettings,
     UserUpdate,
 )
 from app.utils import generate_unique_id
@@ -31,6 +33,13 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
         },
     )
     session.add(db_obj)
+    session.flush()  # Get ID
+
+    # Create default profile and settings using relationships
+    db_obj.profile = UserProfile(user_id=db_obj.id)
+    db_obj.settings = UserSettings(user_id=db_obj.id)
+    session.add(db_obj)
+
     session.commit()
     session.refresh(db_obj)
     return db_obj
@@ -166,11 +175,19 @@ def accept_friend_request(
         friendship.status = FriendshipStatus.ACCEPTED
         session.add(friendship)
 
-        # Also create the reverse friendship for easy querying
-        reverse_friendship = Friendship(
-            user_id=friend_id, friend_id=user_id, status=FriendshipStatus.ACCEPTED
+        # Also create the reverse friendship for easy querying if it doesn't exist
+        reverse_stmt = select(Friendship).where(
+            Friendship.user_id == friend_id, Friendship.friend_id == user_id
         )
-        session.add(reverse_friendship)
+        reverse_friendship = session.exec(reverse_stmt).first()
+        if not reverse_friendship:
+            reverse_friendship = Friendship(
+                user_id=friend_id, friend_id=user_id, status=FriendshipStatus.ACCEPTED
+            )
+            session.add(reverse_friendship)
+        elif reverse_friendship.status != FriendshipStatus.ACCEPTED:
+            reverse_friendship.status = FriendshipStatus.ACCEPTED
+            session.add(reverse_friendship)
 
         session.commit()
         session.refresh(friendship)
