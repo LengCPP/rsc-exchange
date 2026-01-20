@@ -30,8 +30,15 @@ openapi.json
 /playwright/.auth/
 
 # Testing scripts
+
 /scripts/populate_db.js
+
 /scripts/setup_communities.js
+
 /scripts/brute_admin.js
+
 /scripts/list_users.js
+
 /scripts/populate_db.sql
+
+manual-testing-scripts/
