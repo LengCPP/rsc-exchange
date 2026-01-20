@@ -13,7 +13,12 @@ import type {
   CommunityMemberStatus,
 } from "./client"
 
-export { type ItemType }
+export {
+  type ItemType,
+  type UserProfileUpdate,
+  type UserSettingsUpdate,
+  type InterestPublic,
+}
 
 export interface CommunityCreateExtended extends CommunityCreate {
   is_closed?: boolean
@@ -32,11 +37,11 @@ export interface UserPublicWithRole extends UserPublic {
   community_status?: CommunityMemberStatus
 }
 
-export interface UserProfilePublicExtended extends UserProfilePublic {
+export interface UserProfilePublicExtended extends Omit<UserProfilePublic, "image_url"> {
   image_url?: string | null
 }
 
-export interface UserPublicExtended extends UserPublic {
+export interface UserPublicExtended extends Omit<UserPublic, "profile"> {
   profile?: UserProfilePublicExtended
   settings?: UserSettingsPublic
   interests?: InterestPublic[]

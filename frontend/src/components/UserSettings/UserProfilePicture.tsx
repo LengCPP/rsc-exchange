@@ -9,9 +9,8 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
-import axios from "axios"
 
-import { OpenAPI } from "@/client"
+import { UsersService } from "@/client"
 import UserAvatar from "@/components/Common/UserAvatar"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -24,26 +23,15 @@ const UserProfilePicture = () => {
   const [isUploading, setIsUploading] = useState(false)
 
   const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData()
-      formData.append("file", file)
-      
-      const token = await (typeof OpenAPI.TOKEN === 'function' ? OpenAPI.TOKEN() : OpenAPI.TOKEN)
-      
-      const response = await axios.post(`${OpenAPI.BASE}/api/v1/users/me/profile-picture`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${token}`
-        }
-      })
-      return response.data
+    mutationFn: (file: File) => {
+      return UsersService.uploadUserProfilePicture({ formData: { file: file } })
     },
     onSuccess: () => {
       showSuccessToast("Profile picture updated successfully.")
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.detail || "Failed to upload profile picture"
+      const msg = err.body?.detail || "Failed to upload profile picture"
       showErrorToast(msg)
     },
     onSettled: () => {

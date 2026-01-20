@@ -13,7 +13,12 @@ import { useRef, useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaExchangeAlt } from "react-icons/fa"
 
-import { type ApiError, type ItemPublic, ItemsService } from "@/client"
+import {
+  type ApiError,
+  type Body_items_update_item,
+  type ItemPublic,
+  ItemsService,
+} from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
 import { getImageUrl, handleError } from "@/utils"
 import {
@@ -62,8 +67,8 @@ const EditItem = ({ item }: EditItemProps) => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: any) =>
-      ItemsService.updateItem({ id: item.id, requestBody: data }),
+    mutationFn: (data: Body_items_update_item) =>
+      ItemsService.updateItem({ id: item.id, formData: data }),
     onSuccess: () => {
       showSuccessToast("Item updated successfully.")
       reset()
@@ -79,17 +84,14 @@ const EditItem = ({ item }: EditItemProps) => {
   })
 
   const onSubmit: SubmitHandler<ItemPublic> = async (data) => {
-    const formData = new FormData()
-    if (data.title) formData.append("title", data.title)
-    if (data.description) formData.append("description", data.description)
-    if (data.item_type) formData.append("item_type", data.item_type)
-    if (data.extra_data) formData.append("extra_data", JSON.stringify(data.extra_data))
-    
-    if (imageFile) {
-      formData.append("image", imageFile)
+    const itemData: Body_items_update_item = {
+      title: data.title,
+      description: data.description,
+      item_type: data.item_type,
+      extra_data: JSON.stringify(data.extra_data || {}),
+      image: imageFile,
     }
-
-    mutation.mutate(formData as any)
+    mutation.mutate(itemData)
   }
 
   return (

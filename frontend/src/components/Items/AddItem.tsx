@@ -12,9 +12,8 @@ import {
 import { useRef, useState } from "react"
 import { FaPlus } from "react-icons/fa"
 
-import { type ItemCreate, ItemsService } from "@/client"
+import { type Body_items_create_item, ItemsService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
-import { ItemType } from "@/customTypes"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import {
@@ -27,6 +26,13 @@ import {
   DialogTrigger,
 } from "../ui/dialog"
 import { Field } from "../ui/field"
+
+interface ItemCreate {
+  title: string
+  description?: string
+  item_type?: string
+  extra_data?: Record<string, any>
+}
 
 const AddItem = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -60,8 +66,8 @@ const AddItem = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: ItemCreate) =>
-      ItemsService.createItem({ requestBody: data }),
+    mutationFn: (data: Body_items_create_item) =>
+      ItemsService.createItem({ formData: data }),
     onSuccess: () => {
       showSuccessToast("Item created successfully.")
       reset()
@@ -77,15 +83,14 @@ const AddItem = () => {
   })
 
   const onSubmit: SubmitHandler<ItemCreate> = async (data) => {
-    const formData = new FormData()
-    formData.append("title", data.title)
-    formData.append("description", data.description || "")
-    formData.append("item_type", data.item_type || "general")
-    formData.append("extra_data", JSON.stringify(data.extra_data || {}))
-    if (imageFile) {
-      formData.append("image", imageFile)
+    const itemData: Body_items_create_item = {
+      title: data.title,
+      description: data.description,
+      item_type: data.item_type,
+      extra_data: JSON.stringify(data.extra_data || {}),
+      image: imageFile,
     }
-    mutation.mutate(formData as any)
+    mutation.mutate(itemData)
   }
 
   return (

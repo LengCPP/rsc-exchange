@@ -1,10 +1,11 @@
 import type { ItemPublic } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
+import { useColorModeValue } from "@/components/ui/color-mode"
 import useAuth from "@/hooks/useAuth"
-import { Badge, Box, Card, Flex, Image, Text, HStack } from "@chakra-ui/react"
-import { useState } from "react"
-import { Link } from "@tanstack/react-router"
 import { getImageUrl } from "@/utils"
+import { Badge, Box, Card, Flex, HStack, Image, Text, VStack } from "@chakra-ui/react"
+import { Link } from "@tanstack/react-router"
+import { useState } from "react"
 
 interface ItemCardProps {
   item: ItemPublic
@@ -14,6 +15,11 @@ const ItemCard = ({ item }: ItemCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false)
   const { user } = useAuth()
 
+  // Color Mode Values
+  const bgColor = useColorModeValue("orange.50", "gray.800")
+  const textColor = useColorModeValue("gray.800", "gray.100")
+  const borderColor = useColorModeValue("orange.200", "gray.600")
+
   const handleFlip = () => {
     setIsFlipped(!isFlipped)
   }
@@ -22,111 +28,125 @@ const ItemCard = ({ item }: ItemCardProps) => {
 
   return (
     <Box
-      style={{ perspective: "1000px" }}
+      aspectRatio={2 / 3}
       width="100%"
-      height="300px"
+      minW="200px" // Ensure reasonable minimum width
       cursor="pointer"
+      perspective="1000px"
+      borderRadius="lg"
     >
       <Box
         position="relative"
         width="100%"
         height="100%"
         transition="transform 0.6s"
-        style={{
-          transformStyle: "preserve-3d",
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
+        transformStyle="preserve-3d"
+        transform={isFlipped ? "rotateY(180deg)" : "rotateY(0deg)"}
       >
+        {/* --- FRONT FACE (Cover) --- */}
         <Card.Root
           position="absolute"
           width="100%"
           height="100%"
-          style={{
-            backfaceVisibility: "hidden",
-          }}
+          backfaceVisibility="hidden"
           onClick={handleFlip}
           overflow="hidden"
+          borderRadius="lg"
+          borderWidth="0"
+          boxShadow="md"
+          bg={item.image_url ? "gray.200" : bgColor} // Fallback bg if no image
         >
-          {item.image_url && (
+          {item.image_url ? (
             <Image
               src={getImageUrl(item.image_url)}
               alt={item.title}
               objectFit="cover"
-              height="120px"
               width="100%"
+              height="100%"
             />
-          )}
-          <Card.Body p={4}>
-            <Flex justify="space-between" align="center" mb={2}>
-              <Card.Title fontSize="lg" fontWeight="bold" lineClamp={1}>
+          ) : (
+            // Fallback Cover if no image is present
+            <Flex
+              direction="column"
+              justify="center"
+              align="center"
+              height="100%"
+              p={6}
+              bg={bgColor}
+              color={textColor}
+              textAlign="center"
+              borderWidth="4px"
+              borderColor={borderColor}
+              borderStyle="double"
+            >
+              <Text fontSize="xl" fontWeight="bold" fontFamily="serif" mb={2} lineClamp={3}>
                 {item.title}
-              </Card.Title>
-              {item.count > 1 && (
-                <Badge colorPalette="teal" variant="solid">
-                  x{item.count}
-                </Badge>
+              </Text>
+              {item.item_type === "book" && item.extra_data?.author && (
+                <Text fontSize="md" fontStyle="italic">
+                  {String(item.extra_data.author)}
+                </Text>
               )}
             </Flex>
-
-            <Badge size="xs" colorPalette="blue" mb={2}>
-              {item.item_type}
-            </Badge>
-
-            {item.item_type === "book" && item.extra_data?.author && (
-              <Text fontSize="sm" fontStyle="italic" color="gray.600" mb={2}>
-                By {item.extra_data.author}
-              </Text>
-            )}
-
-            <Text color="gray.500" fontSize="xs" mt="auto">
-              Click to see details
-            </Text>
-            {isOwner && (
-              <Badge colorPalette="green" variant="subtle" mt={1}>
-                You own this
-              </Badge>
-            )}
-          </Card.Body>
+          )}
         </Card.Root>
 
+        {/* --- BACK FACE (Details) --- */}
         <Card.Root
           position="absolute"
           width="100%"
           height="100%"
-          style={{
-            backfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-          }}
+          backfaceVisibility="hidden"
+          transform="rotateY(180deg)"
           onClick={handleFlip}
+          overflow="hidden"
+          borderRadius="lg"
+          boxShadow="md"
+          bg={bgColor}
+          color={textColor}
+          borderColor={borderColor}
         >
-          <Card.Body p={4}>
-            <Box position="absolute" top={2} right={2}>
-              {isOwner && <ItemActionsMenu item={item} />}
-            </Box>
-            <Card.Title mb={2} fontSize="md" fontWeight="semibold">
-              Description
-            </Card.Title>
-            <Text
-              fontSize="sm"
-              color={!item.description ? "gray.500" : "inherit"}
-              mb={2}
-              lineClamp={4}
-            >
-              {item.description || "No description provided"}
-            </Text>
+          <Card.Body p={4} height="100%" display="flex" flexDirection="column">
+            <Flex justify="space-between" align="start" mb={2}>
+              <Badge colorPalette="teal" variant="solid" size="sm">
+                {String(item.item_type || "General")}
+              </Badge>
+              {isOwner && (
+                // Stop propagation to prevent flip when clicking menu
+                <Box onClick={(e) => e.stopPropagation()}>
+                  <ItemActionsMenu item={item} />
+                </Box>
+              )}
+            </Flex>
 
-            {item.item_type === "book" && item.extra_data?.isbn && (
-              <Text fontSize="xs" color="gray.600" mb={1}>
-                ISBN: {item.extra_data.isbn}
+            <VStack align="start" gap={1} mb={3} flex="1">
+              <Text fontSize="lg" fontWeight="bold" lineClamp={2}>
+                {item.title}
               </Text>
-            )}
+              
+              {item.item_type === "book" && item.extra_data?.author && (
+                <Text fontSize="sm" fontStyle="italic" color="gray.500" lineClamp={1}>
+                  By {String(item.extra_data.author)}
+                </Text>
+              )}
 
-            <Box mt="auto">
-              <Text fontSize="xs" fontWeight="bold" color="gray.600">
+              <Text fontSize="sm" mt={2} lineClamp={5} color="inherit" opacity={0.9}>
+                {item.description || "No description provided."}
+              </Text>
+            </VStack>
+
+            <Box mt="auto" pt={2} borderTopWidth="1px" borderColor={borderColor}>
+              {isOwner && (
+                <Badge colorPalette="yellow" variant="subtle" mb={2} width="full" justifyContent="center">
+                  You own this
+                </Badge>
+              )}
+              
+              <Text fontSize="xs" fontWeight="semibold" mb={1}>
                 Owners:
               </Text>
               <HStack gap={1} flexWrap="wrap">
-                {item.owners?.map((owner, index) => (
+                {item.owners?.map((owner, index, arr) => (
                   <Link
                     key={owner.id}
                     to="/users/$userId"
@@ -139,17 +159,19 @@ const ItemCard = ({ item }: ItemCardProps) => {
                       color="blue.500"
                       _hover={{ textDecoration: "underline" }}
                     >
-                      {owner.full_name || owner.email}
-                      {index < item.owners.length - 1 ? "," : ""}
+                      {String(owner.full_name || owner.email)}
+                      {index < arr.length - 1 ? "," : ""}
                     </Text>
                   </Link>
                 )) || <Text fontSize="xs" color="gray.500">Unknown</Text>}
               </HStack>
+              
+              {item.item_type === "book" && item.extra_data?.isbn && (
+                 <Text fontSize="2xs" color="gray.400" mt={2} fontFamily="mono">
+                   ISBN: {String(item.extra_data.isbn)}
+                 </Text>
+              )}
             </Box>
-
-            <Text fontSize="2xs" color="gray.400" fontFamily="mono" mt={1}>
-              ID: {item.id.slice(0, 8)}...
-            </Text>
           </Card.Body>
         </Card.Root>
       </Box>
