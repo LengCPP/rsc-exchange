@@ -1,9 +1,12 @@
+import logging
+import httpx
 from datetime import timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
@@ -17,6 +20,10 @@ from app.utils import (
     send_email,
     verify_password_reset_token,
 )
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["login"])
 
@@ -121,4 +128,50 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
 
     return HTMLResponse(
         content=email_data.html_content, headers={"subject:": email_data.subject}
+    )
+
+
+class GoogleToken(BaseModel):
+    token: str
+
+
+@router.post("/auth/google")
+def login_google(
+    token_data: GoogleToken, session: SessionDep
+) -> Token:
+    """
+    Login with Google
+    """
+    # TODO: Fix bug on the google log in
+    logger.info(f"Received Google token: {token_data.token[:10]}...")
+    # Verify access token via Google API
+    try:
+        response = httpx.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {token_data.token}"},
+        )
+        response.raise_for_status()
+        user_info = response.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Google API Error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid Google token")
+
+    email = user_info.get("email")
+    if not email:
+        logger.error("Google token missing email")
+        raise HTTPException(status_code=400, detail="Google token missing email")
+    
+    logger.info(f"Google login success for email: {email}")
+    
+    # Mock User Create/Get
+    # user = crud.get_user_by_email(session=session, email=email)
+    # if not user:
+    #     user = crud.create_user(session=session, user_create=UserCreate(email=email, ...))
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Mocking user ID as 1 for demonstration
+    return Token(
+        access_token=security.create_access_token(
+            1, expires_delta=access_token_expires
+        )
     )

@@ -5,6 +5,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 import React, { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
 import { routeTree } from "./routeTree.gen"
@@ -41,10 +42,12 @@ declare module "@tanstack/react-router" {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <CustomProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </CustomProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <CustomProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </CustomProvider>
+    </GoogleOAuthProvider>
   </StrictMode>,
 )

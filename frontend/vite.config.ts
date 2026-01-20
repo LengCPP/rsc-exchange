@@ -12,6 +12,11 @@ export default defineConfig({
     },
   },
   plugins: [react(), TanStackRouterVite()],
+  server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],

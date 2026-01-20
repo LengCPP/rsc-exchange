@@ -97,6 +97,8 @@ class Settings(BaseSettings):
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
+    
+    GOOGLE_CLIENT_ID: str | None = None
 
     MINIO_ROOT_USER: str = "admin"
     MINIO_ROOT_PASSWORD: str = "changethis"
