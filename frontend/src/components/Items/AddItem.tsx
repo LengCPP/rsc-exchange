@@ -32,6 +32,7 @@ interface ItemCreate {
   description?: string
   item_type?: string
   extra_data?: Record<string, any>
+  image_url?: string
 }
 
 const AddItem = () => {
@@ -56,6 +57,7 @@ const AddItem = () => {
       description: "",
       item_type: "general",
       extra_data: {},
+      image_url: "",
     },
   })
 
@@ -89,6 +91,7 @@ const AddItem = () => {
       item_type: data.item_type,
       extra_data: JSON.stringify(data.extra_data || {}),
       image: imageFile,
+      image_url: data.image_url,
     }
     mutation.mutate(itemData)
   }
@@ -176,7 +179,7 @@ const AddItem = () => {
                 </>
               )}
 
-              <Field label="Image">
+              <Field label="Upload Image">
                 <Input
                   type="file"
                   accept="image/*"
@@ -184,8 +187,16 @@ const AddItem = () => {
                   ref={fileInputRef}
                 />
               </Field>
+
+              <Field label="Image URL (alternative)">
+                <Input
+                  placeholder="https://example.com/image.jpg"
+                  {...register("image_url")}
+                />
+              </Field>
             </VStack>
           </DialogBody>
+
 
           <DialogFooter gap={2}>
             <DialogActionTrigger asChild>

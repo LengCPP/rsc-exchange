@@ -6,6 +6,7 @@ export type Body_items_create_item = {
     item_type?: string;
     extra_data?: (string | null);
     image?: ((Blob | File) | null);
+    image_url?: (string | null);
 };
 
 export type Body_items_update_item = {
@@ -14,6 +15,7 @@ export type Body_items_update_item = {
     item_type?: (string | null);
     extra_data?: (string | null);
     image?: ((Blob | File) | null);
+    image_url?: (string | null);
 };
 
 export type Body_login_login_access_token = {

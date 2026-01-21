@@ -150,15 +150,16 @@ async def create_item(
     item_type: Annotated[str, Form()] = "general",
     extra_data: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
+    image_url: Annotated[str | None, Form()] = None,
 ) -> Any:
     """
     Create new item. If item with same title exists, connect user to it and increment count.
     """
     
-    image_url = None
+    final_image_url = image_url
     if image:
         contents = await image.read()
-        image_url = await upload_image(contents, image.filename)
+        final_image_url = await upload_image(contents, image.filename)
 
     extra_data_dict = {}
     if extra_data:
@@ -183,8 +184,8 @@ async def create_item(
             item.owners.append(current_user)
             item.count += 1
             # Update image if existing item doesn't have one and new one is provided
-            if not item.image_url and image_url:
-                item.image_url = image_url
+            if not item.image_url and final_image_url:
+                item.image_url = final_image_url
             session.add(item)
             session.commit()
             session.refresh(item)
@@ -194,7 +195,7 @@ async def create_item(
             description=description,
             item_type=ItemType(item_type_val),
             extra_data=extra_data_dict,
-            image_url=image_url,
+            image_url=final_image_url,
             count=1
         )
         item.owners.append(current_user)
@@ -229,6 +230,7 @@ async def update_item(
     item_type: Annotated[str | None, Form()] = None,
     extra_data: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
+    image_url: Annotated[str | None, Form()] = None,
 ) -> Any:
     """
     Update an item.
@@ -253,11 +255,14 @@ async def update_item(
         except json.JSONDecodeError:
             pass
     
+    if image_url is not None:
+        item.image_url = image_url
+
     if image:
         contents = await image.read()
-        image_url = await upload_image(contents, image.filename)
-        if image_url:
-            item.image_url = image_url
+        final_image_url = await upload_image(contents, image.filename)
+        if final_image_url:
+            item.image_url = final_image_url
 
     session.add(item)
     session.commit()

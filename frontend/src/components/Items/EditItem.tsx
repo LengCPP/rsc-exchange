@@ -57,6 +57,7 @@ const EditItem = ({ item }: EditItemProps) => {
     defaultValues: {
       ...item,
       description: item.description ?? undefined,
+      image_url: item.image_url ?? "",
     },
   })
 
@@ -90,6 +91,7 @@ const EditItem = ({ item }: EditItemProps) => {
       item_type: data.item_type,
       extra_data: JSON.stringify(data.extra_data || {}),
       image: imageFile,
+      image_url: data.image_url,
     }
     mutation.mutate(itemData)
   }
@@ -177,7 +179,7 @@ const EditItem = ({ item }: EditItemProps) => {
                 </>
               )}
 
-              <Field label="Image">
+              <Field label="Upload New Image">
                 {item.image_url && !imageFile && (
                   <Box mb={2}>
                     <Image
@@ -196,8 +198,16 @@ const EditItem = ({ item }: EditItemProps) => {
                   ref={fileInputRef}
                 />
               </Field>
+
+              <Field label="Image URL">
+                <Input
+                  placeholder="https://example.com/image.jpg"
+                  {...register("image_url")}
+                />
+              </Field>
             </VStack>
           </DialogBody>
+
 
           <DialogFooter gap={2}>
             <ButtonGroup>
