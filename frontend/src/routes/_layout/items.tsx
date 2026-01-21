@@ -15,6 +15,7 @@ import { ItemsService } from "@/client"
 import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
 import PendingItems from "@/components/Pending/PendingItems"
+import { useColorModeValue } from "@/components/ui/color-mode"
 import {
   PaginationItems,
   PaginationNextTrigger,
@@ -26,28 +27,29 @@ const itemsSearchSchema = z.object({
   page: z.number().catch(1),
   sort_by: z.string().catch("created_at"),
   sort_order: z.string().catch("desc"),
+  limit: z.number().catch(8),
 })
-
-const PER_PAGE = 5
 
 function getItemsQueryOptions({ 
   page, 
   sort_by, 
-  sort_order 
+  sort_order,
+  limit
 }: { 
   page: number, 
   sort_by: string, 
-  sort_order: string 
+  sort_order: string,
+  limit: number
 }) {
   return {
     queryFn: () =>
       ItemsService.readItems({ 
-        skip: (page - 1) * PER_PAGE, 
-        limit: PER_PAGE,
+        skip: (page - 1) * limit, 
+        limit: limit,
         sortBy: sort_by,
         sortOrder: sort_order
       }),
-    queryKey: ["items", { page, sort_by, sort_order }],
+    queryKey: ["items", { page, sort_by, sort_order, limit }],
   }
 }
 
@@ -58,7 +60,7 @@ export const Route = createFileRoute("/_layout/items")({
 
 function SortingControls() {
   const navigate = useNavigate({ from: Route.fullPath })
-  const { sort_by, sort_order } = Route.useSearch()
+  const { sort_by, sort_order, limit } = Route.useSearch()
 
   const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     navigate({
@@ -72,23 +74,40 @@ function SortingControls() {
     })
   }
 
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    navigate({
+      search: (prev: any) => ({ ...prev, limit: Number(e.target.value), page: 1 }),
+    })
+  }
+
+  const selectBg = useColorModeValue("white", "gray.800")
+  const selectColor = useColorModeValue("black", "white")
+  const selectBorder = useColorModeValue("#ccc", "gray.600")
+
   const selectStyle = {
     padding: "8px",
     borderRadius: "4px",
-    border: "1px solid #ccc",
-    backgroundColor: "transparent",
+    border: `1px solid ${selectBorder}`,
+    backgroundColor: selectBg,
+    color: selectColor,
     fontSize: "14px",
   }
 
   return (
-    <Flex gap={2} align="center">
+    <Flex gap={2} align="center" wrap="wrap">
       <select value={sort_by} onChange={handleSortByChange} style={selectStyle}>
-        <option value="created_at">Date Created</option>
-        <option value="title">Name</option>
+        <option value="created_at" style={{ backgroundColor: selectBg }}>Date Created</option>
+        <option value="title" style={{ backgroundColor: selectBg }}>Name</option>
       </select>
       <select value={sort_order} onChange={handleSortOrderChange} style={selectStyle}>
-        <option value="desc">Descending</option>
-        <option value="asc">Ascending</option>
+        <option value="desc" style={{ backgroundColor: selectBg }}>Descending</option>
+        <option value="asc" style={{ backgroundColor: selectBg }}>Ascending</option>
+      </select>
+      <select value={limit} onChange={handleLimitChange} style={selectStyle}>
+        <option value={4} style={{ backgroundColor: selectBg }}>4 per page</option>
+        <option value={8} style={{ backgroundColor: selectBg }}>8 per page</option>
+        <option value={12} style={{ backgroundColor: selectBg }}>12 per page</option>
+        <option value={10000} style={{ backgroundColor: selectBg }}>All</option>
       </select>
     </Flex>
   )
@@ -96,10 +115,10 @@ function SortingControls() {
 
 function ItemsTable() {
   const navigate = useNavigate({ from: Route.fullPath })
-  const { page, sort_by, sort_order } = Route.useSearch()
+  const { page, sort_by, sort_order, limit } = Route.useSearch()
 
   const { data, isLoading, isPlaceholderData } = useQuery({
-    ...getItemsQueryOptions({ page, sort_by, sort_order }),
+    ...getItemsQueryOptions({ page, sort_by, sort_order, limit }),
     placeholderData: (prevData) => prevData,
   })
 
@@ -153,7 +172,7 @@ function ItemsTable() {
       <Flex justifyContent="center" mt={8}>
         <PaginationRoot
           count={count}
-          pageSize={PER_PAGE}
+          pageSize={limit}
           onPageChange={({ page }) => setPage(page)}
         >
           <Flex>

@@ -28,9 +28,9 @@ const ItemCard = ({ item }: ItemCardProps) => {
 
   return (
     <Box
-      aspectRatio={2 / 3}
+      aspectRatio={3 / 4}
       width="100%"
-      minW="200px" // Ensure reasonable minimum width
+      minW="160px" // Ensure reasonable minimum width
       cursor="pointer"
       perspective="1000px"
       borderRadius="lg"

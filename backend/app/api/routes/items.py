@@ -145,7 +145,8 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         image_url=item.image_url,
         extra_data=item.extra_data,
         count=item.count,
-        owners=owners_public
+        owners=owners_public,
+        created_at=item.created_at
     )
 
 
@@ -224,7 +225,8 @@ async def create_item(
         image_url=item.image_url,
         extra_data=item.extra_data,
         count=item.count,
-        owners=owners_public
+        owners=owners_public,
+        created_at=item.created_at
     )
 
 
@@ -289,7 +291,8 @@ async def update_item(
         image_url=item.image_url,
         extra_data=item.extra_data,
         count=item.count,
-        owners=owners_public
+        owners=owners_public,
+        created_at=item.created_at
     )
 
 
