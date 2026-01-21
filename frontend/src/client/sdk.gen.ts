@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, NotificationsReadNotificationsData, NotificationsReadNotificationsResponse, NotificationsMarkNotificationAsReadData, NotificationsMarkNotificationAsReadResponse, NotificationsMarkAllNotificationsAsReadResponse, NotificationsDeleteNotificationData, NotificationsDeleteNotificationResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class CommunitiesService {
     /**
@@ -582,6 +582,87 @@ export class LoginService {
             url: '/api/v1/auth/google',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+}
+
+export class NotificationsService {
+    /**
+     * Read Notifications
+     * Retrieve notifications.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns NotificationsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readNotifications(data: NotificationsReadNotificationsData = {}): CancelablePromise<NotificationsReadNotificationsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/notifications/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Mark Notification As Read
+     * Mark a notification as read.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns NotificationPublic Successful Response
+     * @throws ApiError
+     */
+    public static markNotificationAsRead(data: NotificationsMarkNotificationAsReadData): CancelablePromise<NotificationsMarkNotificationAsReadResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/notifications/{id}/read',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Mark All Notifications As Read
+     * Mark all notifications as read.
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static markAllNotificationsAsRead(): CancelablePromise<NotificationsMarkAllNotificationsAsReadResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/notifications/read-all'
+        });
+    }
+    
+    /**
+     * Delete Notification
+     * Delete a notification.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteNotification(data: NotificationsDeleteNotificationData): CancelablePromise<NotificationsDeleteNotificationResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/notifications/{id}',
+            path: {
+                id: data.id
+            },
             errors: {
                 422: 'Validation Error'
             }

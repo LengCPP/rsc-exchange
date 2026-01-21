@@ -31,6 +31,13 @@ class ItemType(str, Enum):
     book = "book"
 
 
+class NotificationType(str, Enum):
+    INFO = "info"
+    SUCCESS = "success"
+    WARNING = "warning"
+    ERROR = "error"
+
+
 # Link Models
 class CommunityMember(SQLModel, table=True):
     community_id: uuid.UUID = Field(
@@ -79,6 +86,21 @@ class UserProfile(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     bio: str | None = Field(default=None, max_length=500)
     image_url: str | None = Field(default=None, max_length=512)
+
+
+class Notification(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    recipient_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    title: str = Field(max_length=255)
+    message: str = Field(max_length=512)
+    type: NotificationType = Field(default=NotificationType.INFO)
+    is_read: bool = Field(default=False)
+    link: str | None = Field(default=None, max_length=512)
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+
+    recipient: "User" = Relationship(back_populates="notifications")
 
 
 # Main Models (Circular references handled by strings)
@@ -197,6 +219,7 @@ class User(UserBase, table=True):
     settings: UserSettings | None = Relationship(sa_relationship_kwargs={"uselist": False})
     profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False})
     interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
+    notifications: list["Notification"] = Relationship(back_populates="recipient", cascade_delete=True)
 
 
 class CommunityBase(SQLModel):
@@ -279,6 +302,7 @@ class UserPublic(UserBase):
     profile: UserProfilePublic | None = None
     settings: UserSettingsPublic | None = None
     interests: list[InterestPublic] = []
+    friendship_status: FriendshipStatus | None = None
 
 
 class CommunityMemberUpdate(SQLModel):
@@ -325,6 +349,22 @@ class ItemPublic(ItemBase):
 class ItemsPublic(SQLModel):
     data: list[ItemPublic]
     count: int
+
+
+class NotificationPublic(SQLModel):
+    id: uuid.UUID
+    title: str
+    message: str
+    type: NotificationType
+    is_read: bool
+    link: str | None
+    created_at: datetime
+
+
+class NotificationsPublic(SQLModel):
+    data: list[NotificationPublic]
+    count: int
+    unread_count: int
 
 
 class SearchResults(SQLModel):

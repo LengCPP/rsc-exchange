@@ -14,6 +14,8 @@ from app.models import (
     FriendshipStatus,
     Item,
     ItemCreate,
+    Notification,
+    NotificationType,
     User,
     UserCreate,
     UserProfile,
@@ -21,6 +23,28 @@ from app.models import (
     UserUpdate,
 )
 from app.utils import generate_unique_id
+
+
+def create_notification(
+    *,
+    session: Session,
+    recipient_id: uuid.UUID,
+    title: str,
+    message: str,
+    type: NotificationType = NotificationType.INFO,
+    link: str | None = None,
+) -> Notification:
+    db_notification = Notification(
+        recipient_id=recipient_id,
+        title=title,
+        message=message,
+        type=type,
+        link=link,
+    )
+    session.add(db_notification)
+    session.commit()
+    session.refresh(db_notification)
+    return db_notification
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:

@@ -103,13 +103,34 @@ function Dashboard() {
                               borderRadius="lg"
                               _hover={{ bg: "bg.muted", cursor: "pointer" }}
                               transition="background 0.2s"
+                              position="relative"
                             >
-                              <Text fontWeight="bold">
-                                {user.full_name || "Anonymous"}
-                              </Text>
-                              <Text fontSize="sm" color="gray.500">
-                                ID: {formatPublicId(user.public_id)}
-                              </Text>
+                              <Flex justify="space-between" align="center">
+                                <Box>
+                                  <Text fontWeight="bold">
+                                    {user.full_name || "Anonymous"}
+                                  </Text>
+                                  <Text fontSize="sm" color="gray.500">
+                                    ID: {formatPublicId(user.public_id)}
+                                  </Text>
+                                </Box>
+                                {user.friendship_status && (
+                                  <Box
+                                    color={
+                                      user.friendship_status === "accepted"
+                                        ? "green.500"
+                                        : "orange.500"
+                                    }
+                                    title={
+                                      user.friendship_status === "accepted"
+                                        ? "Friends"
+                                        : "Friend Request Pending"
+                                    }
+                                  >
+                                    <FiUserPlus />
+                                  </Box>
+                                )}
+                              </Flex>
                             </Box>
                           </Link>
                         ))}

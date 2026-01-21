@@ -6,6 +6,7 @@ from sqlmodel import func, select
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
+from app.api.websocket_manager import notification_manager
 from app.models import (
     CommunitiesPublic,
     Community,
@@ -16,7 +17,10 @@ from app.models import (
     CommunityMemberUpdate,
     CommunityPublic,
     CommunityUpdate,
+    Friendship,
+    FriendshipStatus,
     Message,
+    NotificationType,
     UserPublic,
     UsersPublic,
 )
@@ -138,7 +142,7 @@ def delete_community(
 
 
 @router.post("/{id}/join", response_model=Message)
-def join_community(
+async def join_community(
     session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> Any:
     """
@@ -163,6 +167,28 @@ def join_community(
             raise HTTPException(status_code=400, detail="Join request was rejected")
 
     crud.join_community(session=session, community_id=id, user_id=current_user.id)
+
+    # If closed, notify admins
+    if community.is_closed:
+        admin_statement = select(CommunityMember).where(
+            CommunityMember.community_id == id,
+            CommunityMember.role == CommunityMemberRole.ADMIN
+        )
+        admins = session.exec(admin_statement).all()
+        for admin in admins:
+            crud.create_notification(
+                session=session,
+                recipient_id=admin.user_id,
+                title="New Join Request",
+                message=f"{current_user.full_name or current_user.email} wants to join {community.name}.",
+                type=NotificationType.INFO,
+                link=f"/communities/{id}"
+            )
+            await notification_manager.send_personal_message(
+                {"type": "new_notification"},
+                admin.user_id
+            )
+
     return Message(message="Joined community successfully")
 
 
@@ -235,18 +261,39 @@ def read_community_members(
     )
     results = session.exec(statement.offset(skip).limit(limit)).all()
 
+    # Get friendship statuses for members
+    member_ids = [u.id for u, m in results]
+    friendship_map = {}
+    if member_ids:
+        friendships = session.exec(
+            select(Friendship).where(
+                Friendship.user_id == current_user.id,
+                Friendship.friend_id.in_(member_ids)
+            )
+        ).all()
+        friendship_map = {f.friend_id: f.status for f in friendships}
+
     users_with_meta = []
     for user, membership in results:
         user_public = UserPublic.model_validate(user)
         user_public.community_role = membership.role
         user_public.community_status = membership.status
+        
+        status = friendship_map.get(user.id)
+        user_public.friendship_status = status
+        
+        # Restrict data if not friends
+        if user.id != current_user.id and status != FriendshipStatus.ACCEPTED:
+            user_public.communities = []
+            user_public.interests = []
+            
         users_with_meta.append(user_public)
 
     return UsersPublic(data=users_with_meta, count=count)
 
 
 @router.patch("/{id}/members/{user_id}", response_model=UserPublic)
-def update_community_member_role(
+async def update_community_member_role(
     *,
     session: SessionDep,
     current_user: CurrentUser,
@@ -281,6 +328,34 @@ def update_community_member_role(
     
     if not updated_member:
         raise HTTPException(status_code=404, detail="Member not found in this community")
+
+    # Notify user of status/role change
+    if member_in.status == CommunityMemberStatus.ACCEPTED:
+        crud.create_notification(
+            session=session,
+            recipient_id=user_id,
+            title="Community Request Accepted",
+            message=f"You are now a member of {community.name}.",
+            type=NotificationType.SUCCESS,
+            link=f"/communities/{id}"
+        )
+        await notification_manager.send_personal_message(
+            {"type": "new_notification"},
+            user_id
+        )
+    elif member_in.role:
+        crud.create_notification(
+            session=session,
+            recipient_id=user_id,
+            title="Community Role Updated",
+            message=f"Your role in {community.name} has been updated to {member_in.role}.",
+            type=NotificationType.INFO,
+            link=f"/communities/{id}"
+        )
+        await notification_manager.send_personal_message(
+            {"type": "new_notification"},
+            user_id
+        )
 
     from app.models import User
     user = session.get(User, user_id)

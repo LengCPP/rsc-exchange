@@ -4,7 +4,15 @@ from fastapi import APIRouter
 from sqlmodel import col, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Community, Item, SearchResults, User
+from app.models import (
+    Community,
+    Friendship,
+    FriendshipStatus,
+    Item,
+    SearchResults,
+    User,
+    UserPublic,
+)
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -27,6 +35,31 @@ def search(
         .limit(limit)
     )
     users = session.exec(user_statement).all()
+
+    # Get friendship statuses for found users
+    user_ids = [u.id for u in users]
+    friendship_map = {}
+    if user_ids:
+        friendships = session.exec(
+            select(Friendship).where(
+                Friendship.user_id == current_user.id,
+                Friendship.friend_id.in_(user_ids)
+            )
+        ).all()
+        friendship_map = {f.friend_id: f.status for f in friendships}
+
+    users_public = []
+    for user in users:
+        u_pub = UserPublic.model_validate(user)
+        status = friendship_map.get(user.id)
+        u_pub.friendship_status = status
+        
+        # Restrict data if not friends
+        if user.id != current_user.id and status != FriendshipStatus.ACCEPTED:
+            u_pub.communities = []
+            u_pub.interests = []
+            
+        users_public.append(u_pub)
 
     # Search Items by name (partial matching)
     # If superuser, search all items. Otherwise, search only owned items? 
@@ -51,7 +84,7 @@ def search(
     communities = session.exec(community_statement).all()
 
     return SearchResults(
-        users=users,
+        users=users_public,
         items=items,
         communities=communities,
     )

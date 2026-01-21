@@ -70,6 +70,8 @@ export type CommunityUpdate = {
     is_closed?: (boolean | null);
 };
 
+export type FriendshipStatus = 'pending' | 'accepted';
+
 export type GoogleToken = {
     token: string;
 };
@@ -119,6 +121,24 @@ export type NewPassword = {
     token: string;
     new_password: string;
 };
+
+export type NotificationPublic = {
+    id: string;
+    title: string;
+    message: string;
+    type: NotificationType;
+    is_read: boolean;
+    link: (string | null);
+    created_at: string;
+};
+
+export type NotificationsPublic = {
+    data: Array<NotificationPublic>;
+    count: number;
+    unread_count: number;
+};
+
+export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 
 export type PrivateUserCreate = {
     email: string;
@@ -174,6 +194,7 @@ export type UserPublic = {
     profile?: (UserProfilePublic | null);
     settings?: (UserSettingsPublic | null);
     interests?: Array<InterestPublic>;
+    friendship_status?: (FriendshipStatus | null);
 };
 
 export type UserRegister = {
@@ -382,6 +403,27 @@ export type LoginLoginGoogleData = {
 };
 
 export type LoginLoginGoogleResponse = (Token);
+
+export type NotificationsReadNotificationsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type NotificationsReadNotificationsResponse = (NotificationsPublic);
+
+export type NotificationsMarkNotificationAsReadData = {
+    id: string;
+};
+
+export type NotificationsMarkNotificationAsReadResponse = (NotificationPublic);
+
+export type NotificationsMarkAllNotificationsAsReadResponse = (Message);
+
+export type NotificationsDeleteNotificationData = {
+    id: string;
+};
+
+export type NotificationsDeleteNotificationResponse = (Message);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

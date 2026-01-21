@@ -10,7 +10,13 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
-import { FiSettings, FiTrash2, FiUserMinus, FiUserPlus } from "react-icons/fi"
+import {
+  FiSettings,
+  FiTrash2,
+  FiUserCheck,
+  FiUserMinus,
+  FiUserPlus,
+} from "react-icons/fi"
 
 import { CommunitiesService, FriendsService } from "@/client"
 import EditCommunity from "@/components/Communities/EditCommunity"
@@ -35,18 +41,6 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
   const [showMembers, setShowMembers] = useState(false)
 
   const isClosed = community.is_closed
-
-  // Fetch friends list for the current user
-  const { data: friendsData, isLoading: isLoadingFriends } = useQuery({
-    queryKey: ["currentUserFriends"],
-    queryFn: () => FriendsService.readFriends(),
-    enabled: showMembers && !!currentUser?.id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  })
-
-  const friendIds = useMemo(() => {
-    return new Set(friendsData?.data.map((friend) => friend.id) || [])
-  }, [friendsData])
 
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["communityMembers", community.id],
@@ -220,7 +214,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           <Text fontWeight="bold" fontSize="sm">
             Members:
           </Text>
-          {isLoadingMembers || isLoadingFriends ? (
+          {isLoadingMembers ? (
             <Text fontSize="xs">Loading...</Text>
           ) : (
             members?.data
@@ -232,7 +226,7 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
                   (member.id === community.created_by ? "admin" : "member")
                 const status = member.community_status
                 const isCreator = member.id === community.created_by
-                const isFriend = friendIds.has(member.id)
+                const isFriend = member.friendship_status === "accepted"
 
                 return (
                   <Flex
@@ -349,14 +343,36 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
                         </Button>
                       )}
 
-                      {member.id !== currentUser?.id && !isFriend && (
+                      {member.id !== currentUser?.id && (
                         <Button
                           size="xs"
                           variant="ghost"
-                          onClick={() => friendMutation.mutate(member.id)}
-                          title="Add Friend"
+                          onClick={() => {
+                            if (!member.friendship_status) {
+                              friendMutation.mutate(member.id)
+                            }
+                          }}
+                          colorPalette={
+                            member.friendship_status === "pending"
+                              ? "orange"
+                              : member.friendship_status === "accepted"
+                                ? "green"
+                                : "gray"
+                          }
+                          title={
+                            member.friendship_status === "pending"
+                              ? "Friend Request Pending"
+                              : member.friendship_status === "accepted"
+                                ? "Already Friends"
+                                : "Add Friend"
+                          }
+                          disabled={!!member.friendship_status}
                         >
-                          <FiUserPlus />
+                          {member.friendship_status === "accepted" ? (
+                            <FiUserCheck />
+                          ) : (
+                            <FiUserPlus />
+                          )}
                         </Button>
                       )}
                     </Flex>

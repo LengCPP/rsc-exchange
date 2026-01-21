@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router"
 
 import Logo from "/assets/images/rsc-x-logo.png"
 import { ColorModeButton } from "../ui/color-mode"
+import NotificationsMenu from "./NotificationsMenu"
 import UserMenu from "./UserMenu"
 
 function Navbar() {
@@ -25,6 +26,7 @@ function Navbar() {
       </Link>
       <Flex gap={2} alignItems="center">
         <ColorModeButton />
+        <NotificationsMenu />
         <UserMenu />
       </Flex>
     </Flex>

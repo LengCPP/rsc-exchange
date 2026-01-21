@@ -14,7 +14,7 @@ const UserAvatar = ({ user, size = "40px", fontSize = "md" }: UserAvatarProps) =
   
   return (
     <Avatar.Root boxSize={size}>
-      <Avatar.Fallback name={fullName} fontSize={fontSize} />
+      <Avatar.Fallback name={fullName} fontSize={fontSize} bg="orange.400" color="white" />
       <Avatar.Image src={imageUrl || undefined} />
     </Avatar.Root>
   )

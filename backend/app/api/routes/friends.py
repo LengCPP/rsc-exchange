@@ -6,11 +6,13 @@ from sqlmodel import func, select, or_
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
+from app.api.websocket_manager import notification_manager
 from app.models import (
     Friendship,
     FriendshipPublic,
     FriendshipStatus,
     Message,
+    NotificationType,
     User,
     UsersPublic,
 )
@@ -79,7 +81,7 @@ def read_friend_requests(
 
 
 @router.post("/request/{friend_id}", response_model=Message)
-def create_friend_request(
+async def create_friend_request(
     *, session: SessionDep, current_user: CurrentUser, friend_id: uuid.UUID
 ) -> Any:
     """
@@ -98,11 +100,26 @@ def create_friend_request(
         raise HTTPException(status_code=400, detail="Friendship already exists or request pending")
     
     crud.create_friend_request(session=session, user_id=current_user.id, friend_id=friend_id)
+
+    # Notify friend
+    crud.create_notification(
+        session=session,
+        recipient_id=friend_id,
+        title="New Friend Request",
+        message=f"{current_user.full_name or current_user.email} sent you a friend request.",
+        type=NotificationType.INFO,
+        link="/friends/requests"
+    )
+    await notification_manager.send_personal_message(
+        {"type": "new_notification"},
+        friend_id
+    )
+
     return Message(message="Friend request sent")
 
 
 @router.post("/accept/{friend_id}", response_model=Message)
-def accept_friend_request(
+async def accept_friend_request(
     *, session: SessionDep, current_user: CurrentUser, friend_id: uuid.UUID
 ) -> Any:
     """
@@ -112,6 +129,20 @@ def accept_friend_request(
     if not friendship:
         raise HTTPException(status_code=404, detail="Friend request not found")
     
+    # Notify sender that request was accepted
+    crud.create_notification(
+        session=session,
+        recipient_id=friend_id,
+        title="Friend Request Accepted",
+        message=f"{current_user.full_name or current_user.email} accepted your friend request.",
+        type=NotificationType.SUCCESS,
+        link="/friends"
+    )
+    await notification_manager.send_personal_message(
+        {"type": "new_notification"},
+        friend_id
+    )
+
     return Message(message="Friend request accepted")
 
 

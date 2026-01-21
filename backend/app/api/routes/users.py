@@ -14,6 +14,8 @@ from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.storage import upload_image
 from app.models import (
+    Friendship,
+    FriendshipStatus,
     Interest,
     Item,
     Message,
@@ -253,7 +255,25 @@ def read_user_by_id(
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    
+    # Check friendship status
+    statement = select(Friendship).where(
+        Friendship.user_id == current_user.id,
+        Friendship.friend_id == user_id
+    )
+    friendship = session.exec(statement).first()
+    
+    user_public = UserPublic.model_validate(user)
+    user_public.friendship_status = friendship.status if friendship else None
+    
+    # Restrict data if not friends (and not the same user, though this route is for "other" users)
+    if user_id != current_user.id and (not friendship or friendship.status != FriendshipStatus.ACCEPTED):
+        user_public.communities = []
+        user_public.interests = []
+        # We don't have items in UserPublic directly yet based on models.py but it has Relationship.
+        # If UserPublic had items, we'd clear them here too.
+        
+    return user_public
 
 
 @router.patch(
