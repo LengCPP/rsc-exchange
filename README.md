@@ -13,7 +13,7 @@ RSC-Xchange follows a modern, containerized monorepo architecture designed for s
 - **Frontend**: A single-page application (SPA) built with **React** and **TypeScript**, powered by **Vite**. It uses **Chakra UI** for styling, **TanStack Router** for navigation, and **TanStack Query** for data fetching.
 - **Backend**: A high-performance asynchronous API built with **FastAPI**. It utilizes **SQLModel** (combining SQLAlchemy and Pydantic) for database interactions and data validation.
 - **Database**: **PostgreSQL** serves as the primary relational database for structured data.
-- **Storage**: **Supabase Storage** is integrated for handling image and file uploads.
+- **Storage**: **MinIO** is integrated for handling image and file uploads.
 - **Reverse Proxy**: **Traefik** manages routing between the frontend and backend, handles SSL/TLS termination, and provides a monitoring dashboard.
 - **Deployment**: The entire stack is orchestrated using **Docker Compose**, ensuring consistency across development, staging, and production environments.
 
@@ -40,7 +40,7 @@ RSC-Xchange follows a modern, containerized monorepo architecture designed for s
 ### Infrastructure & Tools
 - 🐋 [**Docker Compose**](https://www.docker.com) - Container orchestration.
 - 📞 [**Traefik**](https://traefik.io) - Cloud-native reverse proxy.
-- ☁️ [**Supabase**](https://supabase.com) - Object storage for images.
+- 📦 [**MinIO**](https://min.io/) - High-performance object storage.
 - 🔒 **JWT Authentication** - Secure token-based access control.
 
 ---
@@ -57,13 +57,9 @@ Copy the template `.env` file and update the variables:
 ```bash
 cp .env.example .env
 ```
-Ensure you update `SECRET_KEY`, `POSTGRES_PASSWORD`, and Supabase credentials.
+Ensure you update `SECRET_KEY`, `POSTGRES_PASSWORD`, and MinIO credentials.
 
-### 3. Supabase Storage Setup
-1. Create a public bucket named `rsc-xchange-images`.
-2. Add a Storage Policy for `INSERT` and `SELECT` operations for the `anon` role, restricted to this bucket.
-
-### 4. Running with Docker
+### 3. Running with Docker
 Start the entire stack with a single command:
 ```bash
 docker compose up -d
@@ -72,8 +68,9 @@ docker compose up -d
 - **Backend API**: [http://localhost:8000](http://localhost:8000)
 - **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Traefik Dashboard**: [http://localhost:8090](http://localhost:8090)
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001)
 
-### 5. Database Migrations
+### 4. Database Migrations
 Run migrations to set up the database schema:
 ```bash
 docker compose exec backend alembic upgrade head
@@ -102,7 +99,6 @@ We welcome contributions! Please follow these steps:
 For more detailed information, refer to the individual service READMEs:
 - [Backend Documentation](./backend/README.md)
 - [Frontend Documentation](./frontend/README.md)
-- [General Development Guide](./development.md)
 
 ## License
 

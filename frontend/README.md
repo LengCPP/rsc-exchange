@@ -74,30 +74,19 @@ But it would be only to clean them up, leaving them won't really have any effect
 
 ## Generate Client
 
-### Automatically
+To generate the frontend client, ensure the backend is running and then follow these steps:
 
-* Activate the backend virtual environment.
-* From the top level project directory, run the script:
+1.  **Start the Docker Compose stack** (if not already running).
+2.  **Navigate to the frontend directory**:
+    ```bash
+    cd frontend
+    ```
+3.  **Run the generate script**:
+    ```bash
+    npm run generate-client
+    ```
 
-```bash
-./scripts/generate-client.sh
-```
-
-* Commit the changes.
-
-### Manually
-
-* Start the Docker Compose stack.
-
-* Download the OpenAPI JSON file from `http://localhost/api/v1/openapi.json` and copy it to a new file `openapi.json` at the root of the `frontend` directory.
-
-* To generate the frontend client, run:
-
-```bash
-npm run generate-client
-```
-
-* Commit the changes.
+This command will fetch the OpenAPI schema from the running backend and update the generated client in `src/client`. Commit the changes to your repository.
 
 Notice that everytime the backend changes (changing the OpenAPI schema), you should follow these steps again to update the frontend client.
 
@@ -121,7 +110,8 @@ The frontend code is structured as follows:
 * `frontend/src/components` -  The different components of the frontend.
 * `frontend/src/hooks` - Custom hooks.
 * `frontend/src/routes` - The different routes of the frontend which include the pages.
-* `theme.tsx` - The Chakra UI custom theme.
+* `frontend/src/theme.tsx` - The Chakra UI custom theme.
+* `frontend/src/theme/` - Specific theme customizations (recipes, etc.).
 
 ## End-to-End Testing with Playwright
 

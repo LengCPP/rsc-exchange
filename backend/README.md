@@ -7,7 +7,17 @@
 
 ## Docker Compose
 
-Start the local development environment with Docker Compose following the guide in [../development.md](../development.md).
+Start the local development environment with Docker Compose:
+
+```console
+$ docker compose up -d
+```
+
+For development with live reload, you can use:
+
+```console
+$ docker compose watch
+```
 
 ## General Workflow
 
