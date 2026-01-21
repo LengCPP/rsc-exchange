@@ -70,6 +70,10 @@ export type CommunityUpdate = {
     is_closed?: (boolean | null);
 };
 
+export type GoogleToken = {
+    token: string;
+};
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -96,6 +100,7 @@ export type ItemPublic = {
     };
     id: string;
     count: number;
+    created_at: string;
     owners?: Array<ItemOwnerPublic>;
 };
 
@@ -315,6 +320,8 @@ export type ItemsReadItemsData = {
     limit?: number;
     ownerId?: (string | null);
     skip?: number;
+    sortBy?: string;
+    sortOrder?: string;
 };
 
 export type ItemsReadItemsResponse = (ItemsPublic);
@@ -369,6 +376,12 @@ export type LoginRecoverPasswordHtmlContentData = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
+
+export type LoginLoginGoogleData = {
+    requestBody: GoogleToken;
+};
+
+export type LoginLoginGoogleResponse = (Token);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

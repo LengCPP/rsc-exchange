@@ -1,8 +1,9 @@
+from datetime import datetime, timezone
 from enum import Enum
 import uuid
 
 from pydantic import EmailStr, field_validator
-from sqlalchemy import Column, JSON
+from sqlalchemy import Column, JSON, DateTime, func
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -235,6 +236,9 @@ class Item(ItemBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str = Field(max_length=255, index=True)
     count: int = Field(default=1)
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
     owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
 
 
@@ -314,6 +318,7 @@ class ItemOwnerPublic(SQLModel):
 class ItemPublic(ItemBase):
     id: uuid.UUID
     count: int
+    created_at: datetime
     owners: list[ItemOwnerPublic] = []
 
 

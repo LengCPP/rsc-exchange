@@ -24,15 +24,30 @@ import {
 
 const itemsSearchSchema = z.object({
   page: z.number().catch(1),
+  sort_by: z.string().catch("created_at"),
+  sort_order: z.string().catch("desc"),
 })
 
 const PER_PAGE = 5
 
-function getItemsQueryOptions({ page }: { page: number }) {
+function getItemsQueryOptions({ 
+  page, 
+  sort_by, 
+  sort_order 
+}: { 
+  page: number, 
+  sort_by: string, 
+  sort_order: string 
+}) {
   return {
     queryFn: () =>
-      ItemsService.readItems({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
-    queryKey: ["items", { page }],
+      ItemsService.readItems({ 
+        skip: (page - 1) * PER_PAGE, 
+        limit: PER_PAGE,
+        sortBy: sort_by,
+        sortOrder: sort_order
+      }),
+    queryKey: ["items", { page, sort_by, sort_order }],
   }
 }
 
@@ -41,28 +56,66 @@ export const Route = createFileRoute("/_layout/items")({
   validateSearch: (search) => itemsSearchSchema.parse(search),
 })
 
+function SortingControls() {
+  const navigate = useNavigate({ from: Route.fullPath })
+  const { sort_by, sort_order } = Route.useSearch()
+
+  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    navigate({
+      search: (prev: any) => ({ ...prev, sort_by: e.target.value, page: 1 }),
+    })
+  }
+
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    navigate({
+      search: (prev: any) => ({ ...prev, sort_order: e.target.value, page: 1 }),
+    })
+  }
+
+  const selectStyle = {
+    padding: "8px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    backgroundColor: "transparent",
+    fontSize: "14px",
+  }
+
+  return (
+    <Flex gap={2} align="center">
+      <select value={sort_by} onChange={handleSortByChange} style={selectStyle}>
+        <option value="created_at">Date Created</option>
+        <option value="title">Name</option>
+      </select>
+      <select value={sort_order} onChange={handleSortOrderChange} style={selectStyle}>
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+    </Flex>
+  )
+}
+
 function ItemsTable() {
   const navigate = useNavigate({ from: Route.fullPath })
-  const { page } = Route.useSearch()
+  const { page, sort_by, sort_order } = Route.useSearch()
 
   const { data, isLoading, isPlaceholderData } = useQuery({
-    ...getItemsQueryOptions({ page }),
+    ...getItemsQueryOptions({ page, sort_by, sort_order }),
     placeholderData: (prevData) => prevData,
   })
 
   const setPage = (page: number) =>
     navigate({
-      search: (prev: { [key: string]: string }) => ({ ...prev, page }),
+      search: (prev: any) => ({ ...prev, page }),
     })
 
-  const items = data?.data.slice(0, PER_PAGE) ?? []
+  const items = data?.data ?? []
   const count = data?.count ?? 0
 
   if (isLoading) {
     return <PendingItems />
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && page === 1) {
     return (
       <EmptyState.Root>
         <EmptyState.Content>
@@ -117,10 +170,13 @@ function ItemsTable() {
 function Items() {
   return (
     <Container maxW="full">
-      <Heading size="lg" pt={12}>
-        Items Management
-      </Heading>
-      <AddItem />
+      <Flex pt={12} justify="space-between" align="center" wrap="wrap" gap={4}>
+        <Heading size="lg">Items Management</Heading>
+        <Flex gap={4} align="center">
+          <SortingControls />
+          <AddItem />
+        </Flex>
+      </Flex>
       <ItemsTable />
     </Container>
   )

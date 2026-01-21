@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class CommunitiesService {
     /**
@@ -362,6 +362,8 @@ export class ItemsService {
      * @param data.skip
      * @param data.limit
      * @param data.ownerId
+     * @param data.sortBy
+     * @param data.sortOrder
      * @returns ItemsPublic Successful Response
      * @throws ApiError
      */
@@ -372,7 +374,9 @@ export class ItemsService {
             query: {
                 skip: data.skip,
                 limit: data.limit,
-                owner_id: data.ownerId
+                owner_id: data.ownerId,
+                sort_by: data.sortBy,
+                sort_order: data.sortOrder
             },
             errors: {
                 422: 'Validation Error'
@@ -558,6 +562,26 @@ export class LoginService {
             path: {
                 email: data.email
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Login Google
+     * Login with Google
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Token Successful Response
+     * @throws ApiError
+     */
+    public static loginGoogle(data: LoginLoginGoogleData): CancelablePromise<LoginLoginGoogleResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/auth/google',
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }

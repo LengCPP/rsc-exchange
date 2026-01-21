@@ -30,7 +30,9 @@ def read_items(
     current_user: CurrentUser, 
     skip: int = 0, 
     limit: int = 100,
-    owner_id: uuid.UUID | None = None
+    owner_id: uuid.UUID | None = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc"
 ) -> Any:
     """
     Retrieve items.
@@ -53,7 +55,7 @@ def read_items(
         
         all_visible_user_ids = list(set([current_user.id] + list(friend_ids) + list(friend_ids_2)))
 
-    # Get distinct item IDs first to avoid DISTINCT on all columns (which fails on JSONB)
+    # Get distinct item IDs first
     item_ids_query = (
         select(Item.id)
         .join(UserItem)
@@ -63,14 +65,20 @@ def read_items(
     unique_item_ids = list(set(item_ids))
     count = len(unique_item_ids)
 
-    # Fetch actual items with pagination
-    items_query = (
-        select(Item)
-        .where(Item.id.in_(unique_item_ids))
-        .offset(skip)
-        .limit(limit)
-    )
-    items = session.exec(items_query).all()
+    # Fetch actual items with pagination and sorting
+    items_query = select(Item).where(Item.id.in_(unique_item_ids))
+    
+    # Apply sorting
+    sort_column = Item.created_at
+    if sort_by == "title":
+        sort_column = Item.title
+        
+    if sort_order == "desc":
+        items_query = items_query.order_by(sort_column.desc())
+    else:
+        items_query = items_query.order_by(sort_column.asc())
+
+    items = session.exec(items_query.offset(skip).limit(limit)).all()
     
     public_items = []
     for item in items:
@@ -87,7 +95,8 @@ def read_items(
                 image_url=item.image_url,
                 extra_data=item.extra_data,
                 count=item.count,
-                owners=owners_public
+                owners=owners_public,
+                created_at=item.created_at
             )
         )
 
