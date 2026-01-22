@@ -149,8 +149,8 @@ const ItemCard = ({ item }: ItemCardProps) => {
                 {item.owners?.map((owner, index, arr) => (
                   <Link
                     key={owner.id}
-                    to="/users/$userId"
-                    params={{ userId: owner.id }}
+                    to={owner.id === user?.id ? "/profile" : "/users/$userId"}
+                    params={owner.id === user?.id ? {} : { userId: owner.id }}
                     onClick={(e) => e.stopPropagation()}
                     style={{ textDecoration: "none" }}
                   >

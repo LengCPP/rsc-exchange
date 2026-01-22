@@ -14,10 +14,41 @@ from app.models import (
     Message,
     NotificationType,
     User,
+    UserPublic,
     UsersPublic,
 )
 
 router = APIRouter()
+
+
+@router.get("/search-user", response_model=UserPublic)
+def search_user_by_id(
+    *, session: SessionDep, current_user: CurrentUser, public_id: str
+) -> Any:
+    """
+    Search for a user by their unique public ID.
+    """
+    normalized_id = public_id.lower().strip()
+    if not normalized_id.startswith("u-"):
+        normalized_id = f"u-{normalized_id}"
+        
+    user = session.exec(
+        select(User).where(User.public_id == normalized_id)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if already friends
+    statement = select(Friendship).where(
+        Friendship.user_id == current_user.id,
+        Friendship.friend_id == user.id
+    )
+    friendship = session.exec(statement).first()
+    
+    user_public = UserPublic.model_validate(user)
+    user_public.friendship_status = friendship.status if friendship else None
+    
+    return user_public
 
 
 @router.get("/", response_model=UsersPublic)

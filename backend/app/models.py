@@ -180,17 +180,7 @@ class UserUpdate(SQLModel):
 
 
 class UserUpdateMe(SQLModel):
-    full_name: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
-
-    @field_validator("full_name", mode="before")
-    @classmethod
-    def validate_full_name(cls, v: str | None) -> str | None:
-        if isinstance(v, str):
-            v = v.strip()
-            if not v:
-                return None
-        return v
+    pass
 
 
 class UserProfileUpdate(SQLModel):

@@ -93,8 +93,8 @@ function Dashboard() {
                         {searchResults?.users.map((user: any) => (
                           <Link
                             key={user.id}
-                            to="/users/$userId"
-                            params={{ userId: user.id }}
+                            to={user.id === currentUser?.id ? "/profile" : "/users/$userId"}
+                            params={user.id === currentUser?.id ? {} : { userId: user.id }}
                             style={{ textDecoration: "none" }}
                           >
                             <Box

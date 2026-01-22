@@ -55,13 +55,6 @@ def test_accept_friend_request_avoids_duplicates(session: Session):
     assert len(all_friendships) == 2
 
 def test_user_input_validation():
-    # Test full_name validation
-    user_update = UserUpdateMe(full_name="  John Doe  ")
-    assert user_update.full_name == "John Doe"
-    
-    user_update_empty = UserUpdateMe(full_name="   ")
-    assert user_update_empty.full_name is None
-    
     # Test bio validation
     profile_update = UserProfileUpdate(bio="  My bio  ")
     assert profile_update.bio == "My bio"

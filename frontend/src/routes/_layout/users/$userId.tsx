@@ -10,11 +10,13 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { FiUserCheck, FiUserPlus } from "react-icons/fi"
 
 import { FriendsService, ItemsService, UsersService } from "@/client"
 import ItemCard from "@/components/Items/ItemCard"
+import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 
 export const Route = createFileRoute("/_layout/users/$userId")({
@@ -23,8 +25,16 @@ export const Route = createFileRoute("/_layout/users/$userId")({
 
 function UserProfilePage() {
   const { userId } = Route.useParams()
+  const { user: currentUser } = useAuth()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+
+  useEffect(() => {
+    if (currentUser && currentUser.id === userId) {
+      navigate({ to: "/profile", replace: true })
+    }
+  }, [currentUser, userId, navigate])
 
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ["user", userId],

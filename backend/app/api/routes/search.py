@@ -29,13 +29,54 @@ def search(
     """
     Search for users, items, and communities.
     """
-    # 1. Search Users by public_id (exact or partial) using SQL
-    user_statement = (
-        select(User)
-        .where(col(User.public_id).ilike(f"%{q}%"))
-        .limit(limit)
+    from app.models import CommunityMember
+    
+    # 1. Search Users
+    # Case A: Accurate match by public_id (Global)
+    user_ids_to_fetch = set()
+    
+    normalized_q = q.lower().strip()
+    # Try exact match with given input
+    exact_user = session.exec(
+        select(User).where(User.public_id == normalized_q)
+    ).first()
+    
+    # Try adding prefix if not present
+    if not exact_user and not normalized_q.startswith("u-"):
+        exact_user = session.exec(
+            select(User).where(User.public_id == f"u-{normalized_q}")
+        ).first()
+        
+    if exact_user:
+        user_ids_to_fetch.add(exact_user.id)
+
+    # Case B: Search by name (ONLY if in same community)
+    # Find communities the current user is in
+    my_communities_stmt = select(CommunityMember.community_id).where(
+        CommunityMember.user_id == current_user.id
     )
-    users = session.exec(user_statement).all()
+    my_community_ids = session.exec(my_communities_stmt).all()
+    
+    if my_community_ids:
+        # Find users in those same communities whose name matches
+        same_comm_users_stmt = (
+            select(User.id)
+            .join(CommunityMember, User.id == CommunityMember.user_id)
+            .where(
+                CommunityMember.community_id.in_(my_community_ids),
+                col(User.full_name).ilike(f"%{q}%"),
+                User.id != current_user.id
+            )
+        )
+        same_comm_user_ids = session.exec(same_comm_users_stmt).all()
+        for uid in same_comm_user_ids:
+            user_ids_to_fetch.add(uid)
+
+    users = []
+    if user_ids_to_fetch:
+        users = session.exec(
+            select(User).where(User.id.in_(list(user_ids_to_fetch))).limit(limit)
+        ).all()
 
     # Get friendship statuses for found users
     user_ids = [u.id for u in users]
