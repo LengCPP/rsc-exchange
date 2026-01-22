@@ -95,6 +95,7 @@ export type ItemOwnerPublic = {
 export type ItemPublic = {
     title: string;
     description?: (string | null);
+    author?: (string | null);
     item_type?: ItemType;
     image_url?: (string | null);
     extra_data?: {
@@ -173,17 +174,14 @@ export type UserCreate = {
 
 export type UserProfilePublic = {
     bio: (string | null);
+    alias: (string | null);
     image_url: (string | null);
 };
 
 export type UserProfileUpdate = {
     bio?: (string | null);
+    alias?: (string | null);
     interest_ids?: (Array<(string)> | null);
-};
-
-export type UserSettingsSchema = {
-    autocomplete_enabled?: boolean;
-    theme_mode?: string;
 };
 
 export type UserPublic = {
@@ -208,13 +206,14 @@ export type UserRegister = {
     full_name?: (string | null);
 };
 
+export type UserSettingsSchema = {
+    autocomplete_enabled?: boolean;
+    theme_mode?: string;
+};
+
 export type UsersPublic = {
     data: Array<UserPublic>;
     count: number;
-};
-
-export type UsersUpdateUserSettingsData = {
-    requestBody: UserSettingsSchema;
 };
 
 export type UserUpdate = {
@@ -296,6 +295,12 @@ export type CommunitiesUpdateCommunityMemberRoleData = {
 };
 
 export type CommunitiesUpdateCommunityMemberRoleResponse = (UserPublic);
+
+export type FriendsSearchUserByIdData = {
+    publicId: string;
+};
+
+export type FriendsSearchUserByIdResponse = (UserPublic);
 
 export type FriendsReadFriendsData = {
     limit?: number;
@@ -498,8 +503,10 @@ export type UsersUploadUserProfilePictureData = {
 
 export type UsersUploadUserProfilePictureResponse = (UserPublic);
 
+export type UsersReadUserSettingsMeResponse = (UserSettingsSchema);
+
 export type UsersUpdateUserSettingsData = {
-    requestBody: UserSettingsUpdate;
+    requestBody: UserSettingsSchema;
 };
 
 export type UsersUpdateUserSettingsResponse = (UserPublic);

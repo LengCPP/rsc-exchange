@@ -1,4 +1,4 @@
-import { Box, Button, Flex, HStack, Text, VStack } from "@chakra-ui/react"
+import { Box, Button, HStack, Text, VStack } from "@chakra-ui/react"
 import { Link } from "@tanstack/react-router"
 import { FiChevronDown, FiLogOut, FiSettings, FiUser } from "react-icons/fi"
 
@@ -31,12 +31,20 @@ const UserMenu = () => {
             px={2}
             py={1}
             h="auto"
-            _hover={{ bg: "gray.100" }}
+            _hover={{ bg: "blackAlpha.50" }}
             data-testid="user-menu"
           >
             <HStack gap={2}>
-              <Box rounded="full" overflow="hidden" border="2px solid" borderColor="orange.400">
+              <Box position="relative" role="group">
                 <UserAvatar user={user as any} size="32px" />
+                <Box
+                  position="absolute"
+                  inset="2px"
+                  bg="blackAlpha.200"
+                  display="none"
+                  _groupHover={{ display: "flex" }}
+                  borderRadius="full"
+                />
               </Box>
               <FiChevronDown color="gray.500" />
             </HStack>
@@ -51,10 +59,10 @@ const UserMenu = () => {
         >
           <Box px={4} py={3} mb={1}>
             <VStack align="start" gap={0}>
-              <Text fontWeight="600" color="gray.800" fontSize="sm" truncate maxW="180px">
+              <Text fontWeight="600" fontSize="sm" truncate maxW="180px">
                 {name}
               </Text>
-              <Text fontSize="xs" color="gray.500" truncate maxW="180px">
+              <Text fontSize="xs" color="fg.muted" truncate maxW="180px">
                 {user?.email}
               </Text>
             </VStack>
@@ -70,7 +78,7 @@ const UserMenu = () => {
               gap={3}
               py={2.5}
               cursor="pointer"
-              _hover={{ bg: "orange.50", color: "orange.600" }}
+              _hover={{ bg: "ui.hover", color: "white" }}
             >
               <FiUser />
               <Text fontWeight="500">My Profile</Text>
@@ -85,7 +93,7 @@ const UserMenu = () => {
               gap={3}
               py={2.5}
               cursor="pointer"
-              _hover={{ bg: "orange.50", color: "orange.600" }}
+              _hover={{ bg: "ui.hover", color: "white" }}
             >
               <FiSettings />
               <Text fontWeight="500">Settings</Text>
@@ -101,8 +109,8 @@ const UserMenu = () => {
             gap={3}
             py={2.5}
             cursor="pointer"
-            color="red.500"
-            _hover={{ bg: "red.50", color: "red.600" }}
+            color="ui.danger"
+            _hover={{ bg: "ui.danger", color: "white" }}
             onClick={handleLogout}
           >
             <FiLogOut />

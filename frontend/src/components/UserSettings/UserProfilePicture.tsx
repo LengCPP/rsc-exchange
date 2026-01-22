@@ -2,21 +2,23 @@ import {
   Box,
   Button,
   Flex,
-  Heading,
   Input,
   Text,
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
+import { FiCamera } from "react-icons/fi"
 
 import { UsersService } from "@/client"
 import UserAvatar from "@/components/Common/UserAvatar"
+import type { UserPublicExtended } from "@/customTypes"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 
 const UserProfilePicture = () => {
-  const { user } = useAuth()
+  const { user: currentUserData } = useAuth()
+  const currentUser = currentUserData as UserPublicExtended
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -53,20 +55,63 @@ const UserProfilePicture = () => {
 
   return (
     <Box>
-      <Heading size="md" mb={4}>Profile Picture</Heading>
       <Flex align="center" gap={6} direction={{ base: "column", sm: "row" }}>
-        <UserAvatar user={user as any} size="100px" />
+        <Box position="relative" role="group" onClick={handleButtonClick} cursor="pointer">
+          <UserAvatar user={currentUser as any} size="100px" />
+          <Box
+            position="absolute"
+            inset="2px" // Account for the ring in UserAvatar
+            bg="blackAlpha.400"
+            display="none"
+            _groupHover={{ display: "flex" }}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius="full"
+          >
+            <FiCamera color="white" size="24px" />
+          </Box>
+        </Box>
         <VStack align="start" gap={2}>
-          <Text fontSize="sm" color="gray.500">
-            JPG, GIF or PNG. Max size of 2MB
-          </Text>
+          <VStack align="start" gap={0}>
+            <Text fontSize="xl" fontWeight="bold">
+              {currentUser?.full_name || currentUser?.email}
+            </Text>
+            {currentUser?.profile?.alias && (
+              <Text fontSize="sm" color="fg.muted">
+                @{currentUser.profile.alias}
+              </Text>
+            )}
+          </VStack>
+          
+          <Flex gap={2} wrap="wrap">
+            {currentUser?.interests?.length ? (
+              currentUser.interests.map((i) => (
+                <Box
+                  key={i.id}
+                  px={2}
+                  py={0.5}
+                  bg="teal.subtle"
+                  color="teal.fg"
+                  borderRadius="full"
+                  fontSize="xs"
+                  fontWeight="medium"
+                >
+                  {i.name}
+                </Box>
+              ))
+            ) : (
+              <Text fontSize="xs" color="fg.muted">No interests selected</Text>
+            )}
+          </Flex>
+
           <Button
-            size="sm"
+            size="xs"
+            variant="ghost"
             onClick={handleButtonClick}
             loading={isUploading}
-            variant="outline"
+            colorPalette="teal"
           >
-            Upload New Photo
+            Change Photo
           </Button>
           <Input
             type="file"

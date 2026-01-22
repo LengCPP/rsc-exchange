@@ -92,6 +92,7 @@ class UserSettingsSchema(SQLModel):
 class UserProfile(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
     bio: str | None = Field(default=None, max_length=500)
+    alias: str | None = Field(default=None, max_length=255)
     image_url: str | None = Field(default=None, max_length=512)
 
 
@@ -180,11 +181,13 @@ class UserUpdate(SQLModel):
 
 
 class UserUpdateMe(SQLModel):
-    pass
+    full_name: str | None = Field(default=None, max_length=255)
+    email: EmailStr | None = Field(default=None, max_length=255)
 
 
 class UserProfileUpdate(SQLModel):
     bio: str | None = Field(default=None, max_length=500)
+    alias: str | None = Field(default=None, max_length=255)
     interest_ids: list[uuid.UUID] | None = None
 
     @field_validator("bio", mode="before")
@@ -267,6 +270,7 @@ class InterestPublic(SQLModel):
 
 class UserProfilePublic(SQLModel):
     bio: str | None
+    alias: str | None
     image_url: str | None
 
 

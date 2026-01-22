@@ -49,6 +49,14 @@ services:
       # Overriding the redirect middleware to do nothing locally
       - traefik.http.middlewares.https-redirect.headers.customrequestheaders.X-Forwarded-Proto=http
 
+  prestart:
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    networks:
+      - traefik-public
+      - default
+
   backend:
     restart: "always"
     networks:
@@ -60,6 +68,9 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=false
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/.venv
     build:
       context: ./backend
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing

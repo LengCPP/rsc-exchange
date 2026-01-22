@@ -140,6 +140,9 @@ def update_user_profile(
     
     if profile_in.bio is not None:
         current_user.profile.bio = profile_in.bio
+    
+    if profile_in.alias is not None:
+        current_user.profile.alias = profile_in.alias
         
     if profile_in.interest_ids is not None:
         current_user.interests.clear()

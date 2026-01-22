@@ -1,100 +1,59 @@
 import {
   Box,
   Container,
-  Flex,
   Heading,
-  IconButton,
   Text,
+  VStack,
+  SimpleGrid,
 } from "@chakra-ui/react"
-import { FaShare, FaUserCircle } from "react-icons/fa"
 
-import {
-  type ApiError,
-} from "@/client"
+import type { UserPublicExtended } from "@/customTypes"
 import useAuth from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { formatPublicId, handleError } from "@/utils"
 import { Field } from "../ui/field"
 
 const UserInformation = () => {
-  const { showSuccessToast } = useCustomToast()
-  const { user: currentUser } = useAuth()
-
-  const handleShareId = async () => {
-    const formattedId = formatPublicId(currentUser?.public_id)
-    try {
-      await navigator.clipboard.writeText(formattedId)
-      showSuccessToast("User ID copied to clipboard!")
-    } catch (err) {
-      handleError({ message: "Failed to copy to clipboard" } as ApiError)
-    }
-  }
+  const { user: currentUserData } = useAuth()
+  const currentUser = currentUserData as UserPublicExtended
 
   return (
-    <>
-      <Container maxW="full">
-        <Heading size="sm" py={4}>
-          User Information
-        </Heading>
-        <Box
-          w={{ sm: "full", md: "50%" }}
-        >
-          <Flex align="center" mb={6} gap={4}>
-            <FaUserCircle size="60px" color="gray" />
-            <Box>
-              <Text fontSize="sm" color="gray.500">
-                Avatar
-              </Text>
-              <Text fontSize="xs" color="gray.400">
-                Profile picture upload coming soon
-              </Text>
-            </Box>
-          </Flex>
-
-          <Field label="User ID">
-            <Flex align="center" gap={2}>
-              <Text
-                fontSize="md"
-                py={2}
-                fontWeight="semibold"
-                letterSpacing="wide"
-                fontFamily="mono"
-              >
-                {formatPublicId(currentUser?.public_id)}
-              </Text>
-              <IconButton
-                aria-label="Share User ID"
-                size="sm"
-                variant="ghost"
-                onClick={handleShareId}
-                title="Copy ID to share with friends"
-              >
-                <FaShare />
-              </IconButton>
-            </Flex>
-          </Field>
-          <Field mt={4} label="Full name">
-            <Text
-              fontSize="md"
-              py={2}
-              color={!currentUser?.full_name ? "gray" : "inherit"}
-              truncate
-              maxWidth="250px"
-            >
-              {currentUser?.full_name || "N/A"}
-            </Text>
-          </Field>
-          <Field
-            mt={4}
-            label="Email"
+    <Container maxW="full" p={0}>
+      <VStack align="stretch" gap={10}>
+        <Box>
+          <Heading size="sm" mb={6}>
+            About Me
+          </Heading>
+          <Box
+            p={4}
+            bg="bg.subtle"
+            borderRadius="md"
+            borderWidth="1px"
+            maxH="150px" // Height for roughly 5-6 lines
+            overflowY="auto"
+            whiteSpace="pre-wrap"
+            color={!currentUser?.profile?.bio ? "fg.muted" : "inherit"}
+            css={{
+              "&::-webkit-scrollbar": { width: "4px" },
+              "&::-webkit-scrollbar-thumb": { background: "gray.300", borderRadius: "full" },
+            }}
           >
-            <Text fontSize="md" py={2} truncate maxWidth="250px">
-              {currentUser?.email}
-            </Text>
-          </Field>
+            {currentUser?.profile?.bio || "No bio set."}
+          </Box>
         </Box>
-      </Container>
-    </>
+
+        <Box pt={4} pb={8}>
+          <Heading size="sm" mb={6}>
+            Contact Details
+          </Heading>
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
+            <Field label="Email Address">
+              <Text fontSize="md" py={2}>
+                {currentUser?.email}
+              </Text>
+            </Field>
+          </SimpleGrid>
+        </Box>
+      </VStack>
+    </Container>
   )
 }
 
