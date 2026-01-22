@@ -4,6 +4,7 @@ import uuid
 
 from pydantic import EmailStr, field_validator
 from sqlalchemy import Column, JSON, DateTime, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -76,10 +77,16 @@ class UserItem(SQLModel, table=True):
 
 
 # Support Models
-class UserSettings(SQLModel, table=True):
-    user_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True, ondelete="CASCADE")
-    theme: str = Field(default="system")
-    notifications_enabled: bool = Field(default=True)
+class UserSettingsSchema(SQLModel):
+    autocomplete_enabled: bool = Field(default=True)
+    theme_mode: str = Field(default="system")
+
+    @field_validator("theme_mode")
+    @classmethod
+    def validate_theme_mode(cls, v: str) -> str:
+        if v not in ["light", "dark", "system"]:
+            raise ValueError("theme_mode must be one of 'light', 'dark', 'system'")
+        return v
 
 
 class UserProfile(SQLModel, table=True):
@@ -198,11 +205,6 @@ class UserProfileUpdate(SQLModel):
         return v
 
 
-class UserSettingsUpdate(SQLModel):
-    theme: str | None = None
-    notifications_enabled: bool | None = None
-
-
 class UpdatePassword(SQLModel):
     current_password: str = Field(min_length=8, max_length=40)
     new_password: str = Field(min_length=8, max_length=40)
@@ -216,7 +218,7 @@ class User(UserBase, table=True):
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
-    settings: UserSettings | None = Relationship(sa_relationship_kwargs={"uselist": False})
+    settings: dict = Field(default={}, sa_column=Column(JSONB))
     profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False})
     interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
     notifications: list["Notification"] = Relationship(back_populates="recipient", cascade_delete=True)
@@ -250,6 +252,7 @@ class Community(CommunityBase, table=True):
 class ItemBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    author: str | None = Field(default=None, max_length=255)
     item_type: ItemType = Field(default=ItemType.general)
     image_url: str | None = Field(default=None, max_length=512)
     extra_data: dict = Field(default={}, sa_column=Column(JSON))
@@ -277,11 +280,6 @@ class UserProfilePublic(SQLModel):
     image_url: str | None
 
 
-class UserSettingsPublic(SQLModel):
-    theme: str
-    notifications_enabled: bool
-
-
 class CommunityPublic(CommunityBase):
     id: uuid.UUID
     created_by: uuid.UUID
@@ -300,7 +298,7 @@ class UserPublic(UserBase):
     community_role: CommunityMemberRole | None = None
     community_status: CommunityMemberStatus | None = None
     profile: UserProfilePublic | None = None
-    settings: UserSettingsPublic | None = None
+    settings: UserSettingsSchema | None = None
     interests: list[InterestPublic] = []
     friendship_status: FriendshipStatus | None = None
 
@@ -325,9 +323,14 @@ class ItemCreate(ItemBase):
     pass
 
 
+class BookCreate(ItemCreate):
+    pass
+
+
 class ItemUpdate(SQLModel):
     title: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    author: str | None = Field(default=None, max_length=255)
     item_type: ItemType | None = None
     image_url: str | None = None
     extra_data: dict | None = None
@@ -344,6 +347,15 @@ class ItemPublic(ItemBase):
     count: int
     created_at: datetime
     owners: list[ItemOwnerPublic] = []
+
+
+class BookPublic(ItemPublic):
+    pass
+
+
+class BooksPublic(SQLModel):
+    data: list[BookPublic]
+    count: int
 
 
 class ItemsPublic(SQLModel):

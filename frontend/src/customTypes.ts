@@ -6,9 +6,8 @@ import type {
   ItemType,
   InterestPublic,
   UserProfilePublic,
-  UserSettingsPublic,
+  UserSettingsSchema,
   UserProfileUpdate,
-  UserSettingsUpdate,
   CommunityMemberRole,
   CommunityMemberStatus,
 } from "./client"
@@ -16,7 +15,7 @@ import type {
 export {
   type ItemType,
   type UserProfileUpdate,
-  type UserSettingsUpdate,
+  type UserSettingsSchema as UserSettingsUpdate,
   type InterestPublic,
 }
 
@@ -43,7 +42,7 @@ export interface UserProfilePublicExtended extends Omit<UserProfilePublic, "imag
 
 export interface UserPublicExtended extends Omit<UserPublic, "profile"> {
   profile?: UserProfilePublicExtended
-  settings?: UserSettingsPublic
+  settings?: UserSettingsSchema
   interests?: InterestPublic[]
 }
 

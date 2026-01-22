@@ -100,6 +100,9 @@ class Settings(BaseSettings):
     
     GOOGLE_CLIENT_ID: str | None = None
 
+    MEILI_URL: str = "http://meilisearch:7700"
+    MEILI_MASTER_KEY: str = "changethis"
+
     MINIO_ROOT_USER: str = "admin"
     MINIO_ROOT_PASSWORD: str = "changethis"
     MINIO_STORAGE_BUCKET: str = "rsc-xchange-images"

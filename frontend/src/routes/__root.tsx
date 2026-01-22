@@ -2,6 +2,7 @@ import { Outlet, createRootRoute } from "@tanstack/react-router"
 import React, { Suspense } from "react"
 
 import NotFound from "@/components/Common/NotFound"
+import { SyncColorMode } from "@/components/ui/color-mode"
 
 const loadDevtools = () =>
   Promise.all([
@@ -25,6 +26,7 @@ const TanStackDevtools = import.meta.env.PROD
 export const Route = createRootRoute({
   component: () => (
     <>
+      <SyncColorMode />
       <Outlet />
       <Suspense>
         <TanStackDevtools />

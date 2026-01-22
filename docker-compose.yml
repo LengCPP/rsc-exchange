@@ -53,7 +53,7 @@ services:
       db:
         condition: service_healthy
         restart: true
-    command: bash scripts/prestart.sh
+    command: bash /app/scripts/prestart.sh
     env_file:
       - .env
     environment:
@@ -74,6 +74,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
 
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
@@ -107,6 +108,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
@@ -214,9 +216,39 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    restart: always
+    networks:
+      - traefik-public
+      - default
+    volumes:
+      - app-meilisearch-data:/meili_data
+    env_file:
+      - .env
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_ENV=development
+    ports:
+      - "7700:7700"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.services.${STACK_NAME?Variable not set}-meili.loadbalancer.server.port=7700
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.rule=Host(`search.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.rule=Host(`search.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.tls.certresolver=le
+
 volumes:
   app-db-data:
   app-minio-data:
+  app-meilisearch-data:
 
 networks:
   traefik-public:

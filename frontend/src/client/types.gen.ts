@@ -181,6 +181,11 @@ export type UserProfileUpdate = {
     interest_ids?: (Array<(string)> | null);
 };
 
+export type UserSettingsSchema = {
+    autocomplete_enabled?: boolean;
+    theme_mode?: string;
+};
+
 export type UserPublic = {
     email: string;
     is_active?: boolean;
@@ -192,7 +197,7 @@ export type UserPublic = {
     community_role?: (CommunityMemberRole | null);
     community_status?: (CommunityMemberStatus | null);
     profile?: (UserProfilePublic | null);
-    settings?: (UserSettingsPublic | null);
+    settings?: (UserSettingsSchema | null);
     interests?: Array<InterestPublic>;
     friendship_status?: (FriendshipStatus | null);
 };
@@ -203,19 +208,13 @@ export type UserRegister = {
     full_name?: (string | null);
 };
 
-export type UserSettingsPublic = {
-    theme: string;
-    notifications_enabled: boolean;
-};
-
-export type UserSettingsUpdate = {
-    theme?: (string | null);
-    notifications_enabled?: (boolean | null);
-};
-
 export type UsersPublic = {
     data: Array<UserPublic>;
     count: number;
+};
+
+export type UsersUpdateUserSettingsData = {
+    requestBody: UserSettingsSchema;
 };
 
 export type UserUpdate = {

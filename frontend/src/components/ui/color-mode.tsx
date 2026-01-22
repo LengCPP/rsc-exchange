@@ -6,8 +6,32 @@ import { ThemeProvider, useTheme } from "next-themes"
 import type { ThemeProviderProps } from "next-themes"
 import * as React from "react"
 import { LuMoon, LuSun } from "react-icons/lu"
+import useAuth from "@/hooks/useAuth"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { UsersService } from "@/client"
 
 export interface ColorModeProviderProps extends ThemeProviderProps {}
+
+export function SyncColorMode() {
+  const { theme, setTheme } = useTheme()
+  const { user } = useAuth()
+  const lastSyncedUserId = React.useRef<string | null>(null)
+
+  React.useEffect(() => {
+    if (user?.id && user.settings?.theme_mode) {
+      if (lastSyncedUserId.current !== user.id) {
+        if (user.settings.theme_mode !== theme) {
+          setTheme(user.settings.theme_mode)
+        }
+        lastSyncedUserId.current = user.id
+      }
+    } else if (!user) {
+      lastSyncedUserId.current = null
+    }
+  }, [user, theme, setTheme])
+
+  return null
+}
 
 export function ColorModeProvider(props: ColorModeProviderProps) {
   return (
@@ -16,7 +40,7 @@ export function ColorModeProvider(props: ColorModeProviderProps) {
       disableTransitionOnChange
       defaultTheme="system"
       enableSystem
-      storageKey="theme" // Explicitly setting storage key for clarity
+      storageKey="theme"
       {...props}
     />
   )
@@ -31,13 +55,34 @@ export interface UseColorModeReturn {
 }
 
 export function useColorMode(): UseColorModeReturn {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme, theme } = useTheme()
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  const mutation = useMutation({
+    mutationFn: (newTheme: string) =>
+      UsersService.updateUserSettings({
+        requestBody: { theme_mode: newTheme },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+    },
+  })
+
   const toggleColorMode = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark"
+    setTheme(newTheme)
+    if (user) {
+      mutation.mutate(newTheme)
+    }
   }
+
   return {
     colorMode: resolvedTheme as ColorMode,
-    setColorMode: setTheme,
+    setColorMode: (newTheme: ColorMode) => {
+      setTheme(newTheme)
+      if (user) mutation.mutate(newTheme)
+    },
     toggleColorMode,
   }
 }

@@ -7,6 +7,7 @@ from sqlmodel import func, select, col, or_
 
 from app.api.deps import CurrentUser, SessionDep
 from app.storage import upload_image, delete_image
+from app.search import sync_item_to_search, delete_item_from_search
 from app.models import (
     Item,
     ItemCreate,
@@ -199,6 +200,7 @@ async def create_item(
             session.add(item)
             session.commit()
             session.refresh(item)
+            sync_item_to_search(item)
     else:
         item = Item(
             title=title,
@@ -212,6 +214,7 @@ async def create_item(
         session.add(item)
         session.commit()
         session.refresh(item)
+        sync_item_to_search(item)
 
     owners_public = [
         ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
@@ -278,6 +281,7 @@ async def update_item(
     session.add(item)
     session.commit()
     session.refresh(item)
+    sync_item_to_search(item)
     
     owners_public = [
         ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
@@ -318,6 +322,7 @@ async def delete_item(
             if item.image_url:
                 await delete_image(item.image_url)
             session.delete(item)
+            delete_item_from_search(id)
         else:
             session.add(item)
             

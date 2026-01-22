@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    BookCreate,
     Community,
     CommunityCreate,
     CommunityMember,
@@ -19,10 +20,17 @@ from app.models import (
     User,
     UserCreate,
     UserProfile,
-    UserSettings,
     UserUpdate,
 )
 from app.utils import generate_unique_id
+from app.search import (
+    sync_book_to_search, 
+    delete_book_from_search,
+    sync_item_to_search,
+    delete_item_from_search,
+    sync_community_to_search,
+    delete_community_from_search
+)
 
 
 def create_notification(
@@ -59,9 +67,8 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     session.add(db_obj)
     session.flush()  # Get ID
 
-    # Create default profile and settings using relationships
+    # Create default profile using relationship
     db_obj.profile = UserProfile(user_id=db_obj.id)
-    db_obj.settings = UserSettings(user_id=db_obj.id)
     session.add(db_obj)
 
     session.commit()
@@ -103,6 +110,7 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     session.add(db_item)
     session.commit()
     session.refresh(db_item)
+    sync_item_to_search(db_item)
     return db_item
 
 
@@ -123,6 +131,7 @@ def create_community(
     session.add(membership)
     session.commit()
 
+    sync_community_to_search(db_community)
     return db_community
 
 
@@ -216,3 +225,44 @@ def accept_friend_request(
         session.commit()
         session.refresh(friendship)
     return friendship
+
+
+def create_book(*, session: Session, book_in: BookCreate, owner_id: uuid.UUID) -> Item:
+    from app.models import ItemType, UserItem, Item
+    db_book = Item.model_validate(book_in, update={"item_type": ItemType.book})
+    session.add(db_book)
+    session.flush()
+    
+    # Add ownership
+    user_item = UserItem(user_id=owner_id, item_id=db_book.id)
+    session.add(user_item)
+    
+    session.commit()
+    session.refresh(db_book)
+    
+    sync_item_to_search(db_book)
+    return db_book
+
+
+def delete_book(*, session: Session, book_id: uuid.UUID) -> None:
+    db_book = session.get(Item, book_id)
+    if db_book:
+        session.delete(db_book)
+        session.commit()
+        delete_item_from_search(book_id)
+
+
+def delete_item(*, session: Session, item_id: uuid.UUID) -> None:
+    db_item = session.get(Item, item_id)
+    if db_item:
+        session.delete(db_item)
+        session.commit()
+        delete_item_from_search(item_id)
+
+
+def delete_community(*, session: Session, community_id: uuid.UUID) -> None:
+    db_community = session.get(Community, community_id)
+    if db_community:
+        session.delete(db_community)
+        session.commit()
+        delete_community_from_search(community_id)

@@ -3,8 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTheme } from "next-themes"
 import { useEffect } from "react"
 
-import { OpenAPI } from "@/client"
-import { request as apiRequest } from "@/client/core/request"
+import { UsersService } from "@/client"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Radio, RadioGroup } from "@/components/ui/radio"
 import type { UserPublicExtended, UserSettingsUpdate } from "@/customTypes"
@@ -20,12 +19,7 @@ const UserPreferences = () => {
 
   const mutation = useMutation({
     mutationFn: (data: UserSettingsUpdate) =>
-      apiRequest(OpenAPI, {
-        method: "PATCH",
-        url: "/api/v1/users/me/settings",
-        body: data,
-        mediaType: "application/json",
-      }),
+      UsersService.updateUserSettings({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Preferences updated.")
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
@@ -36,22 +30,24 @@ const UserPreferences = () => {
   })
 
   // Sync backend theme to local theme on load if different
-  // Only if backend has a value.
   useEffect(() => {
-    if (currentUser?.settings?.theme && currentUser.settings.theme !== theme) {
-      setTheme(currentUser.settings.theme)
+    if (
+      currentUser?.settings?.theme_mode &&
+      currentUser.settings.theme_mode !== theme
+    ) {
+      setTheme(currentUser.settings.theme_mode)
     }
-  }, [currentUser?.settings?.theme, setTheme, theme])
+  }, [currentUser?.settings?.theme_mode, setTheme, theme])
 
   const handleThemeChange = (value: string) => {
     setTheme(value)
-    mutation.mutate({ theme: value })
+    mutation.mutate({ theme_mode: value })
   }
 
-  const handleNotificationChange = (details: {
+  const handleAutocompleteChange = (details: {
     checked: boolean | "indeterminate"
   }) => {
-    mutation.mutate({ notifications_enabled: !!details.checked })
+    mutation.mutate({ autocomplete_enabled: !!details.checked })
   }
 
   return (
@@ -77,12 +73,12 @@ const UserPreferences = () => {
         </VStack>
 
         <VStack align="start" gap={2}>
-          <Heading size="xs">Notifications</Heading>
+          <Heading size="xs">General</Heading>
           <Checkbox
-            checked={currentUser?.settings?.notifications_enabled ?? true}
-            onCheckedChange={handleNotificationChange}
+            checked={currentUser?.settings?.autocomplete_enabled ?? true}
+            onCheckedChange={handleAutocompleteChange}
           >
-            Enable Notifications
+            Enable Autocomplete
           </Checkbox>
         </VStack>
       </VStack>

@@ -43,11 +43,11 @@ declare module "@tanstack/react-router" {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <CustomProvider>
-        <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <CustomProvider>
           <RouterProvider router={router} />
-        </QueryClientProvider>
-      </CustomProvider>
+        </CustomProvider>
+      </QueryClientProvider>
     </GoogleOAuthProvider>
   </StrictMode>,
 )

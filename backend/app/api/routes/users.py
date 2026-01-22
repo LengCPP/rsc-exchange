@@ -26,8 +26,7 @@ from app.models import (
     UserProfileUpdate,
     UserPublic,
     UserRegister,
-    UserSettings,
-    UserSettingsUpdate,
+    UserSettingsSchema,
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
@@ -184,21 +183,26 @@ async def upload_user_profile_picture(
     return current_user
 
 
+@router.get("/me/settings", response_model=UserSettingsSchema)
+def read_user_settings_me(current_user: CurrentUser) -> Any:
+    """
+    Get current user settings.
+    """
+    return current_user.settings
+
+
 @router.patch("/me/settings", response_model=UserPublic)
 def update_user_settings(
-    *, session: SessionDep, settings_in: UserSettingsUpdate, current_user: CurrentUser
+    *, session: SessionDep, settings_in: UserSettingsSchema, current_user: CurrentUser
 ) -> Any:
     """
     Update own user settings.
     """
-    if not current_user.settings:
-        current_user.settings = UserSettings(user_id=current_user.id)
-        
-    if settings_in.theme is not None:
-        current_user.settings.theme = settings_in.theme
-    if settings_in.notifications_enabled is not None:
-        current_user.settings.notifications_enabled = settings_in.notifications_enabled
-        
+    current_settings = current_user.settings or {}
+    new_settings = settings_in.model_dump(exclude_unset=True)
+    updated_settings = {**current_settings, **new_settings}
+    
+    current_user.settings = updated_settings
     session.add(current_user)
     session.commit()
     session.refresh(current_user)

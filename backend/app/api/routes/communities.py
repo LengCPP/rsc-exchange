@@ -7,6 +7,7 @@ from sqlmodel import func, select
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
 from app.api.websocket_manager import notification_manager
+from app.search import sync_community_to_search, delete_community_from_search
 from app.models import (
     CommunitiesPublic,
     Community,
@@ -118,6 +119,7 @@ def update_community(
     session.add(community)
     session.commit()
     session.refresh(community)
+    sync_community_to_search(community)
     return community
 
 
@@ -138,6 +140,7 @@ def delete_community(
     
     session.delete(community)
     session.commit()
+    delete_community_from_search(id)
     return Message(message="Community deleted successfully")
 
 
