@@ -19,6 +19,15 @@ RSC-Xchange follows a modern, containerized monorepo architecture designed for s
 
 ---
 
+## Recent Features
+
+- **Enhanced Profile Management**: Users can now update their bio, alias, contact details, and interests through a unified modal interface.
+- **Standardized Avatar Styling**: A deterministic, color-coded avatar system with a themed orange ring for a consistent visual identity.
+- **Profile Customization**: Direct photo upload and real-time preview integrated into the profile view.
+- **Responsive Layout**: A mobile-first, grid-based profile page with scrollable content areas.
+
+---
+
 ## Technology Stack
 
 ### Backend
