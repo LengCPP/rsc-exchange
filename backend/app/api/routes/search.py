@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from sqlmodel import col, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.search import client as meili_client
 from app.models import (
     Community,
     Friendship,
@@ -28,7 +29,7 @@ def search(
     """
     Search for users, items, and communities.
     """
-    # Search Users by public_id (exact or partial)
+    # 1. Search Users by public_id (exact or partial) using SQL
     user_statement = (
         select(User)
         .where(col(User.public_id).ilike(f"%{q}%"))
@@ -61,30 +62,52 @@ def search(
             
         users_public.append(u_pub)
 
-    # Search Items by name (partial matching)
-    # If superuser, search all items. Otherwise, search only owned items? 
-    # The requirement says "items by name", usually search engine on dashboard implies global search if it's a marketplace-like app.
-    # Looking at items.py, read_items filters by owner_id for non-superusers.
-    # However, if it's a "search engine", maybe it should be global?
-    # Given the previous context was about communities and friends, it might be a social/exchange app.
-    # Let's assume global search for items if it's meant to be a search engine.
-    item_statement = (
-        select(Item)
-        .where(col(Item.title).ilike(f"%{q}%"))
-        .limit(limit)
-    )
-    items = session.exec(item_statement).all()
+    # 2. Search Items using Meilisearch
+    meili_items = []
+    try:
+        item_index = meili_client.index("items")
+        # matchingStrategy: 'all' ensures better precision, but 'last' can be more permissive.
+        # We'll use default but rely on the improved typo tolerance settings.
+        search_res = item_index.search(q, {
+            "limit": limit,
+            "attributesToSearchOn": ["title", "author", "description"]
+        })
+        item_ids = [hit["id"] for hit in search_res["hits"]]
+        if item_ids:
+            meili_items = session.exec(
+                select(Item).where(col(Item.id).in_(item_ids))
+            ).all()
+            # Sort results back to match Meilisearch relevance
+            id_to_item = {str(item.id): item for item in meili_items}
+            meili_items = [id_to_item[id_str] for id_str in item_ids if id_str in id_to_item]
+    except Exception:
+        # Fallback to SQL if Meilisearch fails
+        item_statement = select(Item).where(col(Item.title).ilike(f"%{q}%")).limit(limit)
+        meili_items = session.exec(item_statement).all()
 
-    # Search Communities by name (partial matching)
-    community_statement = (
-        select(Community)
-        .where(col(Community.name).ilike(f"%{q}%"))
-        .limit(limit)
-    )
-    communities = session.exec(community_statement).all()
+    # 3. Search Communities using Meilisearch
+    meili_communities = []
+    try:
+        comm_index = meili_client.index("communities")
+        search_res = comm_index.search(q, {
+            "limit": limit,
+            "attributesToSearchOn": ["name", "description"]
+        })
+        comm_ids = [hit["id"] for hit in search_res["hits"]]
+        if comm_ids:
+            meili_communities = session.exec(
+                select(Community).where(col(Community.id).in_(comm_ids))
+            ).all()
+            # Sort results back to match Meilisearch relevance
+            id_to_comm = {str(c.id): c for c in meili_communities}
+            meili_communities = [id_to_comm[id_str] for id_str in comm_ids if id_str in id_to_comm]
+    except Exception:
+        # Fallback to SQL if Meilisearch fails
+        community_statement = select(Community).where(col(Community.name).ilike(f"%{q}%")).limit(limit)
+        meili_communities = session.exec(community_statement).all()
 
     return SearchResults(
         users=users_public,
-        items=items,
-        communities=communities,
+        items=meili_items,
+        communities=meili_communities,
     )
