@@ -12,7 +12,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
-import { FiSearch } from "react-icons/fi"
+import { FiSearch, FiUserPlus } from "react-icons/fi"
 
 import { CommunitiesService, SearchService } from "@/client"
 import CommunityCard from "@/components/Communities/CommunityCard"
