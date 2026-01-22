@@ -36,7 +36,7 @@ const UserMenu = () => {
           >
             <HStack gap={2}>
               <Box rounded="full" overflow="hidden" border="2px solid" borderColor="orange.400">
-                <UserAvatar user={user as any} size="32px" fontSize="xs" />
+                <UserAvatar user={user as any} size="32px" />
               </Box>
               <FiChevronDown color="gray.500" />
             </HStack>

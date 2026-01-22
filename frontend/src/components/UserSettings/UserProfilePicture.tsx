@@ -55,7 +55,7 @@ const UserProfilePicture = () => {
     <Box>
       <Heading size="md" mb={4}>Profile Picture</Heading>
       <Flex align="center" gap={6} direction={{ base: "column", sm: "row" }}>
-        <UserAvatar user={user as any} size="100px" fontSize="2xl" />
+        <UserAvatar user={user as any} size="100px" />
         <VStack align="start" gap={2}>
           <Text fontSize="sm" color="gray.500">
             JPG, GIF or PNG. Max size of 2MB
