@@ -24,6 +24,7 @@ import { Route as LayoutFriendsImport } from './routes/_layout/friends'
 import { Route as LayoutCommunitiesImport } from './routes/_layout/communities'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 import { Route as LayoutUsersUserIdImport } from './routes/_layout/users/$userId'
+import { Route as LayoutCollectionsCollectionIdImport } from './routes/_layout/collections/$collectionId'
 
 // Create/Update Routes
 
@@ -92,6 +93,12 @@ const LayoutUsersUserIdRoute = LayoutUsersUserIdImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutCollectionsCollectionIdRoute =
+  LayoutCollectionsCollectionIdImport.update({
+    path: '/collections/$collectionId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -144,6 +151,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/collections/$collectionId': {
+      preLoaderRoute: typeof LayoutCollectionsCollectionIdImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/users/$userId': {
       preLoaderRoute: typeof LayoutUsersUserIdImport
       parentRoute: typeof LayoutImport
@@ -162,6 +173,7 @@ export const routeTree = rootRoute.addChildren([
     LayoutProfileRoute,
     LayoutSettingsRoute,
     LayoutIndexRoute,
+    LayoutCollectionsCollectionIdRoute,
     LayoutUsersUserIdRoute,
   ]),
   LoginRoute,

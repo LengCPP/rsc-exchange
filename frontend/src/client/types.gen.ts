@@ -35,6 +35,34 @@ export type Body_users_upload_user_profile_picture = {
     file: (Blob | File);
 };
 
+export type CollectionCreate = {
+    title: string;
+    description?: (string | null);
+    collection_type?: CollectionType;
+};
+
+export type CollectionPublic = {
+    title: string;
+    description?: (string | null);
+    collection_type?: CollectionType;
+    id: string;
+    owner_id: string;
+    items?: Array<ItemPublic>;
+};
+
+export type CollectionsPublic = {
+    data: Array<CollectionPublic>;
+    count: number;
+};
+
+export type CollectionType = 'general' | 'library';
+
+export type CollectionUpdate = {
+    title?: (string | null);
+    description?: (string | null);
+    collection_type?: (CollectionType | null);
+};
+
 export type CommunitiesPublic = {
     data: Array<CommunityPublic>;
     count: number;
@@ -234,6 +262,52 @@ export type ValidationError = {
     msg: string;
     type: string;
 };
+
+export type CollectionsReadCollectionsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type CollectionsReadCollectionsResponse = (CollectionsPublic);
+
+export type CollectionsCreateCollectionData = {
+    requestBody: CollectionCreate;
+};
+
+export type CollectionsCreateCollectionResponse = (CollectionPublic);
+
+export type CollectionsReadCollectionData = {
+    id: string;
+};
+
+export type CollectionsReadCollectionResponse = (CollectionPublic);
+
+export type CollectionsUpdateCollectionData = {
+    id: string;
+    requestBody: CollectionUpdate;
+};
+
+export type CollectionsUpdateCollectionResponse = (CollectionPublic);
+
+export type CollectionsDeleteCollectionData = {
+    id: string;
+};
+
+export type CollectionsDeleteCollectionResponse = (Message);
+
+export type CollectionsAddItemToCollectionData = {
+    id: string;
+    itemId: string;
+};
+
+export type CollectionsAddItemToCollectionResponse = (Message);
+
+export type CollectionsRemoveItemFromCollectionData = {
+    id: string;
+    itemId: string;
+};
+
+export type CollectionsRemoveItemFromCollectionResponse = (Message);
 
 export type CommunitiesReadCommunitiesData = {
     limit?: number;

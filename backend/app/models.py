@@ -32,6 +32,11 @@ class ItemType(str, Enum):
     book = "book"
 
 
+class CollectionType(str, Enum):
+    GENERAL = "general"
+    LIBRARY = "library"
+
+
 class NotificationType(str, Enum):
     INFO = "info"
     SUCCESS = "success"
@@ -40,6 +45,15 @@ class NotificationType(str, Enum):
 
 
 # Link Models
+class CollectionItem(SQLModel, table=True):
+    collection_id: uuid.UUID = Field(
+        foreign_key="collection.id", primary_key=True, ondelete="CASCADE"
+    )
+    item_id: uuid.UUID = Field(
+        foreign_key="item.id", primary_key=True, ondelete="CASCADE"
+    )
+
+
 class CommunityMember(SQLModel, table=True):
     community_id: uuid.UUID = Field(
         foreign_key="community.id", primary_key=True, ondelete="CASCADE"
@@ -104,7 +118,8 @@ class Notification(SQLModel, table=True):
     type: NotificationType = Field(default=NotificationType.INFO)
     is_read: bool = Field(default=False)
     link: str | None = Field(default=None, max_length=512)
-    created_at: datetime = Field(
+    created_at: datetime | None = Field(
+        default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
 
@@ -208,6 +223,7 @@ class User(UserBase, table=True):
     public_id: str | None = Field(default=None, unique=True, index=True, max_length=8)
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owners", link_model=UserItem)
+    collections: list["Collection"] = Relationship(back_populates="owner")
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
@@ -242,6 +258,23 @@ class Community(CommunityBase, table=True):
     interests: list["Interest"] = Relationship(back_populates="communities", link_model=CommunityInterest)
 
 
+class CollectionBase(SQLModel):
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=512)
+    collection_type: CollectionType = Field(default=CollectionType.GENERAL)
+
+
+class Collection(CollectionBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+    items: list["Item"] = Relationship(link_model=CollectionItem)
+    owner: User = Relationship(back_populates="collections")
+
+
 class ItemBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
@@ -255,7 +288,8 @@ class Item(ItemBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     title: str = Field(max_length=255, index=True)
     count: int = Field(default=1)
-    created_at: datetime = Field(
+    created_at: datetime | None = Field(
+        default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
     owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
@@ -310,6 +344,27 @@ class FriendshipPublic(SQLModel):
 
 class UsersPublic(SQLModel):
     data: list[UserPublic]
+    count: int
+
+
+class CollectionCreate(CollectionBase):
+    pass
+
+
+class CollectionUpdate(SQLModel):
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=512)
+    collection_type: CollectionType | None = None
+
+
+class CollectionPublic(CollectionBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    items: list["ItemPublic"] = []
+
+
+class CollectionsPublic(SQLModel):
+    data: list[CollectionPublic]
     count: int
 
 

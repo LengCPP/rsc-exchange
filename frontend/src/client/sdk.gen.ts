@@ -3,7 +3,165 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsSearchUserByIdData, FriendsSearchUserByIdResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, NotificationsReadNotificationsData, NotificationsReadNotificationsResponse, NotificationsMarkNotificationAsReadData, NotificationsMarkNotificationAsReadResponse, NotificationsMarkAllNotificationsAsReadResponse, NotificationsDeleteNotificationData, NotificationsDeleteNotificationResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersReadUserSettingsMeResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { CollectionsReadCollectionsData, CollectionsReadCollectionsResponse, CollectionsCreateCollectionData, CollectionsCreateCollectionResponse, CollectionsReadCollectionData, CollectionsReadCollectionResponse, CollectionsUpdateCollectionData, CollectionsUpdateCollectionResponse, CollectionsDeleteCollectionData, CollectionsDeleteCollectionResponse, CollectionsAddItemToCollectionData, CollectionsAddItemToCollectionResponse, CollectionsRemoveItemFromCollectionData, CollectionsRemoveItemFromCollectionResponse, CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsSearchUserByIdData, FriendsSearchUserByIdResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, NotificationsReadNotificationsData, NotificationsReadNotificationsResponse, NotificationsMarkNotificationAsReadData, NotificationsMarkNotificationAsReadResponse, NotificationsMarkAllNotificationsAsReadResponse, NotificationsDeleteNotificationData, NotificationsDeleteNotificationResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersReadUserSettingsMeResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class CollectionsService {
+    /**
+     * Read Collections
+     * Retrieve collections for the current user.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns CollectionsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readCollections(data: CollectionsReadCollectionsData = {}): CancelablePromise<CollectionsReadCollectionsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/collections/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Collection
+     * Create new collection.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns CollectionPublic Successful Response
+     * @throws ApiError
+     */
+    public static createCollection(data: CollectionsCreateCollectionData): CancelablePromise<CollectionsCreateCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/collections/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Collection
+     * Get collection by ID.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns CollectionPublic Successful Response
+     * @throws ApiError
+     */
+    public static readCollection(data: CollectionsReadCollectionData): CancelablePromise<CollectionsReadCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/collections/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Collection
+     * Update a collection.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns CollectionPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateCollection(data: CollectionsUpdateCollectionData): CancelablePromise<CollectionsUpdateCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/collections/{id}',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Collection
+     * Delete a collection.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteCollection(data: CollectionsDeleteCollectionData): CancelablePromise<CollectionsDeleteCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/collections/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Add Item To Collection
+     * Add an item to a collection.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.itemId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static addItemToCollection(data: CollectionsAddItemToCollectionData): CancelablePromise<CollectionsAddItemToCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/collections/{id}/items/{item_id}',
+            path: {
+                id: data.id,
+                item_id: data.itemId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Remove Item From Collection
+     * Remove an item from a collection.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.itemId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static removeItemFromCollection(data: CollectionsRemoveItemFromCollectionData): CancelablePromise<CollectionsRemoveItemFromCollectionResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/collections/{id}/items/{item_id}',
+            path: {
+                id: data.id,
+                item_id: data.itemId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+}
 
 export class CommunitiesService {
     /**

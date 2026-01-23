@@ -1,9 +1,11 @@
 import {
+  Box,
   Container,
   EmptyState,
   Flex,
   Grid,
   Heading,
+  HStack,
   VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -11,9 +13,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
-import { ItemsService } from "@/client"
+import { CollectionsService, ItemsService } from "@/client"
 import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
+import CollectionCard from "@/components/Collections/CollectionCard"
+import AddCollection from "@/components/Collections/AddCollection"
 import PendingItems from "@/components/Pending/PendingItems"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import {
@@ -57,6 +61,38 @@ export const Route = createFileRoute("/_layout/items")({
   component: Items,
   validateSearch: (search) => itemsSearchSchema.parse(search),
 })
+
+function CollectionsTable() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["collections"],
+    queryFn: () => CollectionsService.readCollections({}),
+  })
+
+  if (isLoading) return <PendingItems />
+
+  const collections = data?.data ?? []
+
+  if (collections.length === 0) return null
+
+  return (
+    <Box mt={8}>
+      <Heading size="md" mb={4}>My Collections & Libraries</Heading>
+      <Grid
+        templateColumns={{
+          base: "1fr",
+          sm: "repeat(2, 1fr)",
+          md: "repeat(3, 1fr)",
+          lg: "repeat(4, 1fr)",
+        }}
+        gap={6}
+      >
+        {collections.map((collection) => (
+          <CollectionCard key={collection.id} collection={collection} />
+        ))}
+      </Grid>
+    </Box>
+  )
+}
 
 function SortingControls() {
   const navigate = useNavigate({ from: Route.fullPath })
@@ -153,7 +189,8 @@ function ItemsTable() {
   }
 
   return (
-    <>
+    <Box mt={8}>
+      <Heading size="md" mb={4}>My Items</Heading>
       <Grid
         templateColumns={{
           base: "1fr",
@@ -162,7 +199,6 @@ function ItemsTable() {
           lg: "repeat(4, 1fr)",
         }}
         gap={6}
-        mt={6}
         opacity={isPlaceholderData ? 0.5 : 1}
       >
         {items?.map((item) => (
@@ -182,20 +218,24 @@ function ItemsTable() {
           </Flex>
         </PaginationRoot>
       </Flex>
-    </>
+    </Box>
   )
 }
 
 function Items() {
   return (
     <Container maxW="full">
-      <Flex pt={12} justify="space-between" align="center" wrap="wrap" gap={4}>
-        <Heading size="lg">Items Management</Heading>
-        <Flex gap={4} align="center">
+      <VStack pt={12} align="start" gap={6}>
+        <Flex justify="space-between" align="center" width="full" wrap="wrap" gap={4}>
+          <Heading size="lg">Items Management</Heading>
           <SortingControls />
-          <AddItem />
         </Flex>
-      </Flex>
+        <HStack gap={4}>
+          <AddCollection />
+          <AddItem />
+        </HStack>
+      </VStack>
+      <CollectionsTable />
       <ItemsTable />
     </Container>
   )
