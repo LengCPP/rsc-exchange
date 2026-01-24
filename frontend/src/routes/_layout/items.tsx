@@ -26,6 +26,7 @@ import {
   PaginationPrevTrigger,
   PaginationRoot,
 } from "@/components/ui/pagination.tsx"
+import useAuth from "@/hooks/useAuth"
 
 const itemsSearchSchema = z.object({
   page: z.number().catch(1),
@@ -39,11 +40,13 @@ function getItemsQueryOptions({
   sort_by,
   sort_order,
   limit,
+  ownerId,
 }: {
   page: number
   sort_by: string
   sort_order: string
   limit: number
+  ownerId?: string
 }) {
   return {
     queryFn: () =>
@@ -53,10 +56,11 @@ function getItemsQueryOptions({
         sortBy: sort_by,
         sortOrder: sort_order,
         excludeCollections: true,
+        ownerId: ownerId,
       }),
     queryKey: [
       "items",
-      { page, sort_by, sort_order, limit, excludeCollections: true },
+      { page, sort_by, sort_order, limit, excludeCollections: true, ownerId },
     ],
   }
 }
@@ -182,10 +186,18 @@ function SortingControls() {
 function ItemsTable() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { page, sort_by, sort_order, limit } = Route.useSearch()
+  const { user } = useAuth()
 
   const { data, isLoading, isPlaceholderData } = useQuery({
-    ...getItemsQueryOptions({ page, sort_by, sort_order, limit }),
+    ...getItemsQueryOptions({
+      page,
+      sort_by,
+      sort_order,
+      limit,
+      ownerId: user?.id,
+    }),
     placeholderData: (prevData) => prevData,
+    enabled: !!user,
   })
 
   const setPage = (page: number) =>

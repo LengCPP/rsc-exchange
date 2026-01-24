@@ -6,6 +6,7 @@ export interface BookResult {
   description: string
   isbn: string
   thumbnail: string
+  categories: string[]
 }
 
 export const useBookSearch = (query: string) => {
@@ -37,6 +38,7 @@ export const useBookSearch = (query: string) => {
           description: volumeInfo.description || "",
           isbn: isbn13 || isbn10 || "",
           thumbnail: volumeInfo.imageLinks?.thumbnail || "",
+          categories: volumeInfo.categories || [],
         }
       }) as BookResult[]
     },

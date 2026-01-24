@@ -35,6 +35,7 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
   const bgColor = useColorModeValue("orange.50", "gray.800")
   const textColor = useColorModeValue("gray.800", "gray.100")
   const borderColor = useColorModeValue("orange.200", "gray.600")
+  const scrollbarColor = useColorModeValue("orange.200", "gray.600")
 
   const handleFlip = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -53,13 +54,18 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
 
   const isOwner = item.owners?.some((o) => o.id === user?.id)
   const isBorrowing =
-    !!loan && loan.requester_id === user?.id && loan.status === "active"
+    !!loan &&
+    loan.requester_id === user?.id &&
+    ["active", "return_pending"].includes(loan.status)
+
+  const isBook = item.item_type === "book"
+  const extraData = (item.extra_data as any) || {}
 
   return (
     <Box
-      aspectRatio={3 / 4}
+      aspectRatio={isBook ? 2 / 3 : 3 / 4}
       width="100%"
-      minW="160px" // Ensure reasonable minimum width
+      minW="160px"
       cursor="pointer"
       perspective="1000px"
       borderRadius="lg"
@@ -83,13 +89,13 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
           borderRadius="lg"
           borderWidth="0"
           boxShadow="md"
-          bg={item.image_url ? "gray.200" : bgColor} // Fallback bg if no image
+          bg={item.image_url ? "black" : bgColor} // Black bg for covers to avoid white gaps
         >
           {item.image_url ? (
             <Image
               src={getImageUrl(item.image_url)}
               alt={item.title}
-              objectFit={item.item_type === "book" ? "contain" : "cover"}
+              objectFit="cover" // Cover entire area to avoid white spaces
               width="100%"
               height="100%"
             />
@@ -117,9 +123,9 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               >
                 {item.title}
               </Text>
-              {item.item_type === "book" && item.extra_data?.author && (
+              {isBook && extraData.author && (
                 <Text fontSize="md" fontStyle="italic">
-                  {String(item.extra_data.author)}
+                  {String(extraData.author)}
                 </Text>
               )}
             </Flex>
@@ -186,31 +192,55 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               </HStack>
             </Flex>
 
-            <VStack align="start" gap={1} mb={3} flex="1">
+            <VStack align="start" gap={1} mb={3} flex="1" overflow="hidden">
               <Text fontSize="lg" fontWeight="bold" lineClamp={2}>
                 {item.title}
               </Text>
 
-              {item.item_type === "book" && item.extra_data?.author && (
+              {isBook && extraData.author && (
                 <Text
                   fontSize="sm"
                   fontStyle="italic"
                   color="gray.500"
                   lineClamp={1}
                 >
-                  By {String(item.extra_data.author)}
+                  By {String(extraData.author)}
                 </Text>
               )}
 
-              <Text
-                fontSize="sm"
+              {isBook && (extraData.category || extraData.genre) && (
+                <HStack gap={1} mt={1} wrap="wrap">
+                  {extraData.category && (
+                    <Badge variant="outline" size="xs" colorPalette="blue">
+                      {extraData.category}
+                    </Badge>
+                  )}
+                  {extraData.genre && (
+                    <Badge variant="outline" size="xs" colorPalette="purple">
+                      {extraData.genre}
+                    </Badge>
+                  )}
+                </HStack>
+              )}
+
+              <Box
                 mt={2}
-                lineClamp={5}
-                color="inherit"
-                opacity={0.9}
+                flex="1"
+                overflowY="auto"
+                width="full"
+                pr={1}
+                css={{
+                  "&::-webkit-scrollbar": { width: "4px" },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: scrollbarColor,
+                    borderRadius: "full",
+                  },
+                }}
               >
-                {item.description || "No description provided."}
-              </Text>
+                <Text fontSize="xs" color="inherit" opacity={0.9}>
+                  {item.description || "No description provided."}
+                </Text>
+              </Box>
             </VStack>
 
             <Box
@@ -235,27 +265,42 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                 </VStack>
               )}
 
-              {!item.is_available && !loan && (
+              {isOwner ? (
                 <Badge
-                  colorPalette="red"
+                  colorPalette={item.is_available ? "green" : "red"}
                   variant="solid"
                   mb={2}
                   width="full"
                   justifyContent="center"
                 >
-                  On Loan
+                  {item.is_available ? "Available" : "On Loan"}
                 </Badge>
-              )}
-              {isOwner && (
+              ) : isBorrowing ? (
                 <Badge
-                  colorPalette="yellow"
-                  variant="subtle"
+                  colorPalette={
+                    loan?.status === "return_pending" ? "blue" : "green"
+                  }
+                  variant="solid"
                   mb={2}
                   width="full"
                   justifyContent="center"
                 >
-                  You own this
+                  {loan?.status === "return_pending"
+                    ? "Return Pending"
+                    : "In your possession"}
                 </Badge>
+              ) : (
+                !item.is_available && (
+                  <Badge
+                    colorPalette="red"
+                    variant="solid"
+                    mb={2}
+                    width="full"
+                    justifyContent="center"
+                  >
+                    On Loan
+                  </Badge>
+                )
               )}
 
               <Text fontSize="xs" fontWeight="semibold" mb={1}>
@@ -305,9 +350,9 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                 )}
               </HStack>
 
-              {item.item_type === "book" && item.extra_data?.isbn && (
+              {isBook && extraData.isbn && (
                 <Text fontSize="2xs" color="gray.400" mt={2} fontFamily="mono">
-                  ISBN: {String(item.extra_data.isbn)}
+                  ISBN: {String(extraData.isbn)}
                 </Text>
               )}
             </Box>

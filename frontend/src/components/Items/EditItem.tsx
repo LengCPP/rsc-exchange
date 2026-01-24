@@ -3,9 +3,11 @@ import {
   Button,
   ButtonGroup,
   DialogActionTrigger,
+  HStack,
   Image,
   Input,
   Text,
+  Textarea,
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -19,6 +21,7 @@ import {
   type ItemPublic,
   ItemsService,
 } from "@/client"
+import { useColorModeValue } from "@/components/ui/color-mode"
 import useCustomToast from "@/hooks/useCustomToast"
 import { getImageUrl, handleError } from "@/utils"
 import {
@@ -37,6 +40,54 @@ interface EditItemProps {
   item: ItemPublic
 }
 
+const BOOK_CLASSIFICATION: Record<string, string[]> = {
+  Fiction: [
+    "Fantasy",
+    "Science Fiction (Sci-Fi)",
+    "Mystery & Crime",
+    "Thriller & Suspense",
+    "Romance",
+    "Historical Fiction",
+    "Horror",
+    "Literary Fiction",
+    "Adventure",
+    "Dystopian",
+    "Graphic Novels & Comics",
+    "Westerns",
+  ],
+  "Non-Fiction": [
+    "Biography & Memoir",
+    "Self-Help & Personal Development",
+    "History",
+    "Science & Nature",
+    "Business & Money",
+    "Health & Fitness",
+    "Travel",
+    "Cookbooks & Food",
+    "Religion & Spirituality",
+    "Philosophy",
+    "Politics & Social Sciences",
+    "True Crime",
+    "Art & Photography",
+    "Essays & Criticism",
+  ],
+  "Children's & Young Adult": [
+    "Board Books",
+    "Picture Books",
+    "Early Readers",
+    "Middle Grade",
+    "Young Adult (YA)",
+  ],
+  "Academic & Professional": [
+    "Textbooks",
+    "Reference (Dictionaries, Encyclopedias)",
+    "Medical",
+    "Law",
+    "Computer Science & Technology",
+    "Engineering",
+  ],
+}
+
 const EditItem = ({ item }: EditItemProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
@@ -44,6 +95,11 @@ const EditItem = ({ item }: EditItemProps) => {
 
   const [imageFile, setImageFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Color mode responsive styles for raw HTML elements
+  const selectBg = useColorModeValue("white", "gray.800")
+  const selectColor = useColorModeValue("black", "white")
+  const selectBorder = useColorModeValue("#ccc", "gray.600")
 
   const {
     register,
@@ -62,6 +118,8 @@ const EditItem = ({ item }: EditItemProps) => {
   })
 
   const itemType = watch("item_type")
+  const description = watch("description") || ""
+  const selectedCategory = watch("extra_data.category" as any)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImageFile(e.target.files?.[0] || null)
@@ -96,6 +154,15 @@ const EditItem = ({ item }: EditItemProps) => {
     mutation.mutate(itemData)
   }
 
+  const selectStyle = {
+    width: "100%",
+    padding: "8px",
+    borderRadius: "4px",
+    border: `1px solid ${selectBorder}`,
+    backgroundColor: selectBg,
+    color: selectColor,
+  }
+
   return (
     <DialogRoot
       size={{ base: "xs", md: "md" }}
@@ -118,18 +185,13 @@ const EditItem = ({ item }: EditItemProps) => {
             <Text mb={4}>Update the item details below.</Text>
             <VStack gap={4}>
               <Field label="Item Type">
-                <select
-                  {...register("item_type")}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  <option value="general">General</option>
-                  <option value="book">Book</option>
+                <select {...register("item_type")} style={selectStyle}>
+                  <option value="general" style={{ backgroundColor: selectBg }}>
+                    General
+                  </option>
+                  <option value="book" style={{ backgroundColor: selectBg }}>
+                    Book
+                  </option>
                 </select>
               </Field>
 
@@ -153,12 +215,28 @@ const EditItem = ({ item }: EditItemProps) => {
                 invalid={!!errors.description}
                 errorText={errors.description?.message}
                 label="Description"
+                helperText={
+                  <HStack justify="space-between" width="full">
+                    <Text fontSize="xs">Brief summary of the item.</Text>
+                    <Text
+                      fontSize="xs"
+                      color={description.length > 1000 ? "red.500" : "inherit"}
+                    >
+                      {description.length}/1000
+                    </Text>
+                  </HStack>
+                }
               >
-                <Input
+                <Textarea
                   id="description"
-                  {...register("description")}
+                  {...register("description", {
+                    maxLength: {
+                      value: 1000,
+                      message: "Maximum 1000 characters",
+                    },
+                  })}
                   placeholder="Description"
-                  type="text"
+                  rows={5}
                 />
               </Field>
 
@@ -176,6 +254,50 @@ const EditItem = ({ item }: EditItemProps) => {
                       {...register("extra_data.isbn" as any)}
                     />
                   </Field>
+                  <HStack width="full" gap={4}>
+                    <Field label="Category" flex={1}>
+                      <select
+                        {...register("extra_data.category" as any)}
+                        style={selectStyle}
+                      >
+                        <option value="" style={{ backgroundColor: selectBg }}>
+                          Select Category
+                        </option>
+                        {Object.keys(BOOK_CLASSIFICATION).map((cat) => (
+                          <option
+                            key={cat}
+                            value={cat}
+                            style={{ backgroundColor: selectBg }}
+                          >
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Genre" flex={1}>
+                      <select
+                        {...register("extra_data.genre" as any)}
+                        style={selectStyle}
+                        disabled={!selectedCategory}
+                      >
+                        <option value="" style={{ backgroundColor: selectBg }}>
+                          Select Genre
+                        </option>
+                        {selectedCategory &&
+                          BOOK_CLASSIFICATION[selectedCategory].map(
+                            (genre) => (
+                              <option
+                                key={genre}
+                                value={genre}
+                                style={{ backgroundColor: selectBg }}
+                              >
+                                {genre}
+                              </option>
+                            ),
+                          )}
+                      </select>
+                    </Field>
+                  </HStack>
                 </>
               )}
 
@@ -219,7 +341,12 @@ const EditItem = ({ item }: EditItemProps) => {
                   Cancel
                 </Button>
               </DialogActionTrigger>
-              <Button variant="solid" type="submit" loading={isSubmitting}>
+              <Button
+                variant="solid"
+                type="submit"
+                loading={isSubmitting}
+                disabled={description.length > 1000}
+              >
                 Save
               </Button>
             </ButtonGroup>
