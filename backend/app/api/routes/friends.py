@@ -86,7 +86,7 @@ def read_friend_requests(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> Any:
     """
-    Retrieve pending friend requests sent to current user.
+    Retrieve pending friend requests sent to current user (Incoming).
     """
     statement = (
         select(User)
@@ -101,6 +101,36 @@ def read_friend_requests(
         .select_from(Friendship)
         .where(
             Friendship.friend_id == current_user.id,
+            Friendship.status == FriendshipStatus.PENDING,
+        )
+    )
+    
+    count = session.exec(count_statement).one()
+    users = session.exec(statement.offset(skip).limit(limit)).all()
+
+    return UsersPublic(data=users, count=count)
+
+
+@router.get("/requests/sent", response_model=UsersPublic)
+def read_sent_friend_requests(
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+) -> Any:
+    """
+    Retrieve pending friend requests sent by current user (Outgoing).
+    """
+    statement = (
+        select(User)
+        .join(Friendship, User.id == Friendship.friend_id)
+        .where(
+            Friendship.user_id == current_user.id,
+            Friendship.status == FriendshipStatus.PENDING,
+        )
+    )
+    count_statement = (
+        select(func.count())
+        .select_from(Friendship)
+        .where(
+            Friendship.user_id == current_user.id,
             Friendship.status == FriendshipStatus.PENDING,
         )
     )

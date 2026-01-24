@@ -13,12 +13,14 @@ import { FiCamera } from "react-icons/fi"
 import { UsersService } from "@/client"
 import UserAvatar from "@/components/Common/UserAvatar"
 import type { UserPublicExtended } from "@/customTypes"
-import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 
-const UserProfilePicture = () => {
-  const { user: currentUserData } = useAuth()
-  const currentUser = currentUserData as UserPublicExtended
+interface UserProfilePictureProps {
+  user: UserPublicExtended
+  isReadOnly?: boolean
+}
+
+const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -50,42 +52,46 @@ const UserProfilePicture = () => {
   }
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click()
+    if (!isReadOnly) {
+      fileInputRef.current?.click()
+    }
   }
 
   return (
     <Box>
       <Flex align="center" gap={6} direction={{ base: "column", sm: "row" }}>
-        <Box position="relative" role="group" onClick={handleButtonClick} cursor="pointer">
-          <UserAvatar user={currentUser as any} size="100px" />
-          <Box
-            position="absolute"
-            inset="2px" // Account for the ring in UserAvatar
-            bg="blackAlpha.400"
-            display="none"
-            _groupHover={{ display: "flex" }}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius="full"
-          >
-            <FiCamera color="white" size="24px" />
-          </Box>
+        <Box position="relative" role="group" onClick={handleButtonClick} cursor={isReadOnly ? "default" : "pointer"}>
+          <UserAvatar user={user as any} size="100px" />
+          {!isReadOnly && (
+            <Box
+              position="absolute"
+              inset="2px" // Account for the ring in UserAvatar
+              bg="blackAlpha.400"
+              display="none"
+              _groupHover={{ display: "flex" }}
+              alignItems="center"
+              justifyContent="center"
+              borderRadius="full"
+            >
+              <FiCamera color="white" size="24px" />
+            </Box>
+          )}
         </Box>
         <VStack align="start" gap={2}>
           <VStack align="start" gap={0}>
             <Text fontSize="xl" fontWeight="bold">
-              {currentUser?.full_name || currentUser?.email}
+              {user?.full_name || user?.email}
             </Text>
-            {currentUser?.profile?.alias && (
+            {user?.profile?.alias && (
               <Text fontSize="sm" color="fg.muted">
-                @{currentUser.profile.alias}
+                @{user.profile.alias}
               </Text>
             )}
           </VStack>
           
           <Flex gap={2} wrap="wrap">
-            {currentUser?.interests?.length ? (
-              currentUser.interests.map((i) => (
+            {user?.interests?.length ? (
+              user.interests.map((i) => (
                 <Box
                   key={i.id}
                   px={2}
@@ -104,22 +110,26 @@ const UserProfilePicture = () => {
             )}
           </Flex>
 
-          <Button
-            size="xs"
-            variant="ghost"
-            onClick={handleButtonClick}
-            loading={isUploading}
-            colorPalette="teal"
-          >
-            Change Photo
-          </Button>
-          <Input
-            type="file"
-            display="none"
-            ref={fileInputRef}
-            accept="image/*"
-            onChange={handleFileChange}
-          />
+          {!isReadOnly && (
+            <>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={handleButtonClick}
+                loading={isUploading}
+                colorPalette="teal"
+              >
+                Change Photo
+              </Button>
+              <Input
+                type="file"
+                display="none"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </>
+          )}
         </VStack>
       </Flex>
     </Box>

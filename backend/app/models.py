@@ -37,6 +37,15 @@ class CollectionType(str, Enum):
     LIBRARY = "library"
 
 
+class LoanStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    ACTIVE = "active"  # Ratified by requester
+    RETURN_PENDING = "return_pending" # Requester signaled return
+    RETURNED = "returned"
+
+
 class NotificationType(str, Enum):
     INFO = "info"
     SUCCESS = "success"
@@ -124,6 +133,28 @@ class Notification(SQLModel, table=True):
     )
 
     recipient: "User" = Relationship(back_populates="notifications")
+
+
+class Loan(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    item_id: uuid.UUID = Field(foreign_key="item.id", ondelete="CASCADE")
+    owner_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    requester_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    status: LoanStatus = Field(default=LoanStatus.PENDING)
+    start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+
+    item: "Item" = Relationship(back_populates="loans")
+    owner: "User" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "Loan.owner_id", "back_populates": "loans_out"}
+    )
+    requester: "User" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "Loan.requester_id", "back_populates": "loans_in"}
+    )
 
 
 # Main Models (Circular references handled by strings)
@@ -231,6 +262,14 @@ class User(UserBase, table=True):
     profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False})
     interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
     notifications: list["Notification"] = Relationship(back_populates="recipient", cascade_delete=True)
+    loans_out: list["Loan"] = Relationship(
+        back_populates="owner",
+        sa_relationship_kwargs={"foreign_keys": "Loan.owner_id"}
+    )
+    loans_in: list["Loan"] = Relationship(
+        back_populates="requester",
+        sa_relationship_kwargs={"foreign_keys": "Loan.requester_id"}
+    )
 
 
 class CommunityBase(SQLModel):
@@ -293,6 +332,7 @@ class Item(ItemBase, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
     owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
+    loans: list["Loan"] = Relationship(back_populates="item")
 
 
 # API Models (Public)
@@ -396,7 +436,87 @@ class ItemPublic(ItemBase):
     count: int
     created_at: datetime
     owners: list[ItemOwnerPublic] = []
+    collection_id: uuid.UUID | None = None
+    is_available: bool = True
 
+
+class BookPublic(ItemPublic):
+    pass
+
+
+class BooksPublic(SQLModel):
+    data: list[BookPublic]
+    count: int
+
+
+class ItemsPublic(SQLModel):
+    data: list[ItemPublic]
+    count: int
+
+
+class LoanCreate(SQLModel):
+    item_id: uuid.UUID
+    start_date: datetime
+    end_date: datetime
+
+
+class LoanPublic(SQLModel):
+    id: uuid.UUID
+    item_id: uuid.UUID
+    owner_id: uuid.UUID
+    requester_id: uuid.UUID
+    status: LoanStatus
+    start_date: datetime
+    end_date: datetime
+    created_at: datetime
+    item: ItemPublic
+    owner: UserPublic
+    requester: UserPublic
+
+
+class LoansPublic(SQLModel):
+    data: list[LoanPublic]
+    count: int
+
+
+class NotificationPublic(SQLModel):
+    id: uuid.UUID
+    title: str
+    message: str
+    type: NotificationType
+    is_read: bool
+    link: str | None
+    created_at: datetime
+
+
+class NotificationsPublic(SQLModel):
+    data: list[NotificationPublic]
+    count: int
+    unread_count: int
+
+
+class SearchResults(SQLModel):
+    users: list[UserPublic]
+    items: list[ItemPublic]
+    communities: list[CommunityPublic]
+
+
+class Message(SQLModel):
+    message: str
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenPayload(SQLModel):
+    sub: str | None = None
+
+
+class NewPassword(SQLModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=40)
 
 class BookPublic(ItemPublic):
     pass

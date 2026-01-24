@@ -1,12 +1,13 @@
 import { Badge, Container, Flex, Heading, Table } from "@chakra-ui/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { type UserPublic, UsersService } from "@/client"
+import { UsersService } from "@/client"
 import AddUser from "@/components/Admin/AddUser"
 import { UserActionsMenu } from "@/components/Common/UserActionsMenu"
 import PendingUsers from "@/components/Pending/PendingUsers"
+import useAuth from "@/hooks/useAuth"
 import {
   PaginationItems,
   PaginationNextTrigger,
@@ -34,8 +35,7 @@ export const Route = createFileRoute("/_layout/admin")({
 })
 
 function UsersTable() {
-  const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const { user: currentUser } = useAuth()
   const navigate = useNavigate({ from: Route.fullPath })
   const { page } = Route.useSearch()
 

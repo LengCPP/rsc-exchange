@@ -51,9 +51,10 @@ function getItemsQueryOptions({
         skip: (page - 1) * limit, 
         limit: limit,
         sortBy: sort_by,
-        sortOrder: sort_order
+        sortOrder: sort_order,
+        excludeCollections: true
       }),
-    queryKey: ["items", { page, sort_by, sort_order, limit }],
+    queryKey: ["items", { page, sort_by, sort_order, limit, excludeCollections: true }],
   }
 }
 

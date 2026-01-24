@@ -17,6 +17,7 @@ import {
 import { formatPublicId, handleError } from "@/utils"
 import useCustomToast from "@/hooks/useCustomToast"
 import type { ApiError } from "@/client"
+import type { UserPublicExtended } from "@/customTypes"
 
 export const Route = createFileRoute("/_layout/profile")({
   component: Profile,
@@ -63,9 +64,9 @@ function Profile() {
       </Flex>
 
       <VStack align="stretch" gap={8} maxW="3xl">
-        <UserProfilePicture />
+        <UserProfilePicture user={currentUser as UserPublicExtended} />
         <Separator />
-        <UserInformation />
+        <UserInformation user={currentUser as UserPublicExtended} />
       </VStack>
 
       <EditProfileModal

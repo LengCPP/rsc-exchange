@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Button,
   Container,
   Flex,
   Grid,
@@ -43,8 +44,8 @@ function CollectionDetail() {
 
   // Get user's items to allow adding them if owner
   const { data: userItemsData } = useQuery({
-    queryKey: ["items", "me"],
-    queryFn: () => ItemsService.readItems({ limit: 100 }),
+    queryKey: ["items", "me", { excludeCollections: true }],
+    queryFn: () => ItemsService.readItems({ limit: 100, excludeCollections: true }),
     enabled: !!user && collection?.owner_id === user.id,
   })
 
@@ -88,7 +89,7 @@ function CollectionDetail() {
 
   // Filter out items already in collection
   const availableItems = userItemsData?.data.filter(
-    (item) => !collection.items.some((ci) => ci.id === item.id)
+    (item) => !collection.items?.some((ci) => ci.id === item.id)
   ) || []
 
   return (
@@ -97,7 +98,7 @@ function CollectionDetail() {
         <HStack width="full" justify="space-between">
           <HStack gap={4}>
             <IconButton asChild variant="ghost" colorPalette="orange">
-               <Link to="/items">
+               <Link to={isOwner ? "/items" : "/users/$userId"} params={isOwner ? {} : { userId: collection.owner_id }}>
                 <FiChevronLeft />
                </Link>
             </IconButton>
@@ -127,7 +128,7 @@ function CollectionDetail() {
           {/* Items Grid */}
           <Box>
             <Heading size="md" mb={4}>Items in this {collection.collection_type === 'library' ? 'Library' : 'Collection'}</Heading>
-            {collection.items.length === 0 ? (
+            {!collection.items || collection.items.length === 0 ? (
                <Flex direction="column" align="center" justify="center" p={10} bg={bgColor} borderRadius="lg" border="2px dashed" borderColor={borderColor}>
                   <Text color="gray.500">No items in this collection yet.</Text>
                </Flex>

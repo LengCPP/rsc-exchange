@@ -133,6 +133,8 @@ export type ItemPublic = {
     count: number;
     created_at: string;
     owners?: Array<ItemOwnerPublic>;
+    collection_id?: (string | null);
+    is_available?: boolean;
 };
 
 export type ItemsPublic = {
@@ -141,6 +143,33 @@ export type ItemsPublic = {
 };
 
 export type ItemType = 'general' | 'book';
+
+export type LoanCreate = {
+    item_id: string;
+    start_date: string;
+    end_date: string;
+};
+
+export type LoanPublic = {
+    id: string;
+    item_id: string;
+    owner_id: string;
+    requester_id: string;
+    status: LoanStatus;
+    start_date: string;
+    end_date: string;
+    created_at: string;
+    item: ItemPublic;
+    owner: UserPublic;
+    requester: UserPublic;
+};
+
+export type LoansPublic = {
+    data: Array<LoanPublic>;
+    count: number;
+};
+
+export type LoanStatus = 'pending' | 'accepted' | 'rejected' | 'active' | 'return_pending' | 'returned';
 
 export type Message = {
     message: string;
@@ -265,6 +294,7 @@ export type ValidationError = {
 
 export type CollectionsReadCollectionsData = {
     limit?: number;
+    ownerId?: (string | null);
     skip?: number;
 };
 
@@ -390,6 +420,13 @@ export type FriendsReadFriendRequestsData = {
 
 export type FriendsReadFriendRequestsResponse = (UsersPublic);
 
+export type FriendsReadSentFriendRequestsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type FriendsReadSentFriendRequestsResponse = (UsersPublic);
+
 export type FriendsCreateFriendRequestData = {
     friendId: string;
 };
@@ -416,6 +453,7 @@ export type InterestsReadInterestsData = {
 export type InterestsReadInterestsResponse = (Array<InterestPublic>);
 
 export type ItemsReadItemsData = {
+    excludeCollections?: boolean;
     limit?: number;
     ownerId?: (string | null);
     skip?: number;
@@ -449,6 +487,52 @@ export type ItemsDeleteItemData = {
 };
 
 export type ItemsDeleteItemResponse = (Message);
+
+export type LoansCreateLoanRequestData = {
+    requestBody: LoanCreate;
+};
+
+export type LoansCreateLoanRequestResponse = (LoanPublic);
+
+export type LoansReadIncomingLoanRequestsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type LoansReadIncomingLoanRequestsResponse = (LoansPublic);
+
+export type LoansReadOutgoingLoanRequestsData = {
+    limit?: number;
+    skip?: number;
+    status?: LoanStatus;
+};
+
+export type LoansReadOutgoingLoanRequestsResponse = (LoansPublic);
+
+export type LoansRespondToLoanRequestData = {
+    accept: boolean;
+    id: string;
+};
+
+export type LoansRespondToLoanRequestResponse = (LoanPublic);
+
+export type LoansRatifyLoanData = {
+    id: string;
+};
+
+export type LoansRatifyLoanResponse = (LoanPublic);
+
+export type LoansSignalReturnData = {
+    id: string;
+};
+
+export type LoansSignalReturnResponse = (LoanPublic);
+
+export type LoansReturnLoanData = {
+    id: string;
+};
+
+export type LoansReturnLoanResponse = (LoanPublic);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;

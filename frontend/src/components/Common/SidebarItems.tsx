@@ -1,5 +1,4 @@
 import { Box, Flex, Icon, Text } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
 import { Link as RouterLink } from "@tanstack/react-router"
 import {
   FiBriefcase,
@@ -7,16 +6,18 @@ import {
   FiHome,
   FiUserPlus,
   FiUsers,
+  FiBookOpen,
 } from "react-icons/fi"
 import type { IconType } from "react-icons/lib"
 
-import type { UserPublic } from "@/client"
+import useAuth from "@/hooks/useAuth"
 
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiBriefcase, title: "Items", path: "/items" },
   { icon: FiGlobe, title: "Communities", path: "/communities" },
   { icon: FiUserPlus, title: "Friends", path: "/friends" },
+  { icon: FiBookOpen, title: "Loans", path: "/loans" },
 ]
 
 interface SidebarItemsProps {
@@ -30,8 +31,7 @@ interface Item {
 }
 
 const SidebarItems = ({ onClose }: SidebarItemsProps) => {
-  const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const { user: currentUser } = useAuth()
 
   const finalItems: Item[] = currentUser?.is_superuser
     ? [...items, { icon: FiUsers, title: "Admin", path: "/admin" }]

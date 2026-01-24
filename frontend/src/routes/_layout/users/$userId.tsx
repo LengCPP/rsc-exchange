@@ -8,16 +8,32 @@ import {
   SimpleGrid,
   Text,
   VStack,
+  Separator,
+  HStack,
+  IconButton,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
-import { FiUserCheck, FiUserPlus } from "react-icons/fi"
+import { useEffect, useState } from "react"
+import { FiUserCheck, FiUserPlus, FiShare2 } from "react-icons/fi"
+import { BsThreeDotsVertical } from "react-icons/bs"
 
-import { FriendsService, ItemsService, UsersService } from "@/client"
+import { FriendsService, ItemsService, UsersService, CollectionsService } from "@/client"
 import ItemCard from "@/components/Items/ItemCard"
+import UserInformation from "@/components/UserSettings/UserInformation"
+import UserProfilePicture from "@/components/UserSettings/UserProfilePicture"
+import CollectionCard from "@/components/Collections/CollectionCard"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
+import { formatPublicId, handleError } from "@/utils"
+import { useColorModeValue } from "@/components/ui/color-mode"
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from "@/components/ui/menu"
+import type { UserPublicExtended } from "@/customTypes"
 
 export const Route = createFileRoute("/_layout/users/$userId")({
   component: UserProfilePage,
@@ -29,6 +45,23 @@ function UserProfilePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+  
+  const [sortBy, setSortBy] = useState("created_at")
+  const [sortOrder, setSortOrder] = useState("desc")
+
+  const borderColor = useColorModeValue("orange.200", "gray.600")
+  const selectBg = useColorModeValue("white", "gray.800")
+  const selectColor = useColorModeValue("black", "white")
+  const selectBorder = useColorModeValue("#ccc", "gray.600")
+
+  const selectStyle = {
+    padding: "6px 10px",
+    borderRadius: "4px",
+    border: `1px solid ${selectBorder}`,
+    backgroundColor: selectBg,
+    color: selectColor,
+    fontSize: "12px",
+  }
 
   useEffect(() => {
     if (currentUser && currentUser.id === userId) {
@@ -43,9 +76,20 @@ function UserProfilePage() {
 
   const isFriend = user?.friendship_status === "accepted"
 
+  const { data: collections } = useQuery({
+    queryKey: ["user-collections", userId],
+    queryFn: () => CollectionsService.readCollections({ ownerId: userId }),
+    enabled: isFriend,
+  })
+
   const { data: items, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["items", userId],
-    queryFn: () => ItemsService.readItems({ ownerId: userId }),
+    queryKey: ["items", userId, { excludeCollections: true, sortBy, sortOrder }],
+    queryFn: () => ItemsService.readItems({ 
+      ownerId: userId, 
+      excludeCollections: true,
+      sortBy,
+      sortOrder
+    }),
     enabled: isFriend,
   })
 
@@ -59,21 +103,28 @@ function UserProfilePage() {
     onError: () => showErrorToast("Failed to send friend request"),
   })
 
+  const handleCopyId = async () => {
+    const formattedId = formatPublicId(user?.public_id)
+    try {
+      await navigator.clipboard.writeText(formattedId)
+      showSuccessToast("User ID copied to clipboard!")
+    } catch (err) {
+      handleError({ message: "Failed to copy to clipboard" } as any)
+    }
+  }
+
   const userItems = items?.data || []
 
   if (isLoadingUser) return <Text p={4}>Loading profile...</Text>
   if (!user) return <Text p={4}>User not found</Text>
 
   return (
-    <Container maxW="full" py={8}>
-      <VStack align="start" gap={4} mb={8}>
-        <Flex justify="space-between" align="center" w="full">
-          <VStack align="start" gap={1}>
-            <Heading size="xl">{user.full_name || "User"}</Heading>
-            <Text color="gray.500">{user.email}</Text>
-          </VStack>
-          
+    <Container maxW="full" pb={20}>
+      <Flex align="center" justify="space-between" py={12}>
+        <Heading size="lg">User Profile</Heading>
+        <HStack gap={4}>
           <Button
+            size="sm"
             onClick={() => {
               if (!user.friendship_status) {
                 friendMutation.mutate(user.id)
@@ -104,30 +155,74 @@ function UserProfilePage() {
               </>
             )}
           </Button>
-        </Flex>
 
-        {user.profile?.bio && (
-          <Box p={4} borderWidth="1px" borderRadius="md" w="full" bg="bg.panel">
-            <Text fontStyle="italic">"{user.profile.bio}"</Text>
-          </Box>
-        )}
+          <MenuRoot>
+            <MenuTrigger asChild>
+              <IconButton variant="ghost" aria-label="Profile Options">
+                <BsThreeDotsVertical />
+              </IconButton>
+            </MenuTrigger>
+            <MenuContent>
+              <MenuItem value="copy-id" onClick={handleCopyId}>
+                <FiShare2 style={{ marginRight: "8px" }} /> Copy User ID
+              </MenuItem>
+            </MenuContent>
+          </MenuRoot>
+        </HStack>
+      </Flex>
 
-        {!isFriend && (
-          <Badge colorPalette="orange" variant="subtle" p={2} rounded="md">
-            You must be friends to see more details and items.
-          </Badge>
-        )}
+      <VStack align="stretch" gap={8} maxW="3xl" mb={12}>
+        <UserProfilePicture user={user as UserPublicExtended} isReadOnly />
+        <Separator borderColor={borderColor} />
+        <UserInformation user={user as UserPublicExtended} />
       </VStack>
 
-      <Heading size="lg" mb={4}>
-        Items Owned
-      </Heading>
+      {isFriend && collections?.data && collections.data.length > 0 && (
+        <Box mb={12}>
+          <Heading size="lg" mb={6}>Collections & Libraries</Heading>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
+            {collections.data.map((c) => (
+              <CollectionCard key={c.id} collection={c} />
+            ))}
+          </SimpleGrid>
+        </Box>
+      )}
+
+      <Flex justify="space-between" align="center" mb={6} wrap="wrap" gap={4}>
+        <Heading size="lg">
+          Other Items
+        </Heading>
+        
+        {isFriend && (
+          <HStack gap={2}>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)} 
+              style={selectStyle}
+            >
+              <option value="created_at">Date Created</option>
+              <option value="title">Name</option>
+            </select>
+            <select 
+              value={sortOrder} 
+              onChange={(e) => setSortOrder(e.target.value)} 
+              style={selectStyle}
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </HStack>
+        )}
+      </Flex>
+
       {!isFriend ? (
-        <Text color="gray.500">Items are hidden. Send a friend request to see them!</Text>
+        <Box p={10} textAlign="center" borderWidth="1px" borderStyle="dashed" borderRadius="lg" borderColor={borderColor}>
+          <Text color="gray.500">Items are hidden. Send a friend request to see them!</Text>
+        </Box>
       ) : isLoadingItems ? (
         <Text>Loading items...</Text>
       ) : userItems.length === 0 ? (
-        <Text color="gray.500">No items found.</Text>
+        <Text color="gray.500">No other items found.</Text>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
           {userItems.map((item) => (
@@ -138,3 +233,4 @@ function UserProfilePage() {
     </Container>
   )
 }
+

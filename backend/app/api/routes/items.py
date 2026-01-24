@@ -20,9 +20,24 @@ from app.models import (
     FriendshipStatus,
     ItemOwnerPublic,
     UserItem,
+    Loan,
+    LoanStatus,
 )
 
 router = APIRouter(prefix="/items", tags=["items"])
+
+
+def check_item_availability(session: SessionDep, item_id: uuid.UUID) -> bool:
+    """
+    Check if an item is available (not currently loaned out).
+    """
+    active_loan = session.exec(
+        select(Loan).where(
+            Loan.item_id == item_id,
+            Loan.status == LoanStatus.ACTIVE
+        )
+    ).first()
+    return active_loan is None
 
 
 @router.get("/", response_model=ItemsPublic)
@@ -33,7 +48,8 @@ def read_items(
     limit: int = 100,
     owner_id: uuid.UUID | None = None,
     sort_by: str = "created_at",
-    sort_order: str = "desc"
+    sort_order: str = "desc",
+    exclude_collections: bool = False
 ) -> Any:
     """
     Retrieve items.
@@ -62,6 +78,17 @@ def read_items(
         .join(UserItem)
         .where(UserItem.user_id.in_(all_visible_user_ids))
     )
+
+    if exclude_collections:
+        from app.models import CollectionItem, Collection
+        # Subquery for items that ARE in a collection owned by any of the visible users
+        in_collections_stmt = (
+            select(CollectionItem.item_id)
+            .join(Collection)
+            .where(Collection.owner_id.in_(all_visible_user_ids))
+        )
+        item_ids_query = item_ids_query.where(Item.id.not_in(in_collections_stmt))
+
     item_ids = session.exec(item_ids_query).all()
     unique_item_ids = list(set(item_ids))
     count = len(unique_item_ids)
@@ -87,6 +114,9 @@ def read_items(
             ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
             for owner in item.owners
         ]
+        
+        is_available = check_item_availability(session, item.id)
+        
         public_items.append(
             ItemPublic(
                 id=item.id,
@@ -97,7 +127,8 @@ def read_items(
                 extra_data=item.extra_data,
                 count=item.count,
                 owners=owners_public,
-                created_at=item.created_at
+                created_at=item.created_at,
+                is_available=is_available
             )
         )
 
@@ -138,6 +169,9 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
         for owner in item.owners
     ]
+    
+    is_available = check_item_availability(session, item.id)
+    
     return ItemPublic(
         id=item.id,
         title=item.title,
@@ -147,7 +181,8 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         extra_data=item.extra_data,
         count=item.count,
         owners=owners_public,
-        created_at=item.created_at
+        created_at=item.created_at,
+        is_available=is_available
     )
 
 
@@ -229,7 +264,8 @@ async def create_item(
         extra_data=item.extra_data,
         count=item.count,
         owners=owners_public,
-        created_at=item.created_at
+        created_at=item.created_at,
+        is_available=True
     )
 
 
@@ -287,6 +323,9 @@ async def update_item(
         ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
         for owner in item.owners
     ]
+    
+    is_available = check_item_availability(session, item.id)
+    
     return ItemPublic(
         id=item.id,
         title=item.title,
@@ -296,7 +335,8 @@ async def update_item(
         extra_data=item.extra_data,
         count=item.count,
         owners=owners_public,
-        created_at=item.created_at
+        created_at=item.created_at,
+        is_available=is_available
     )
 
 

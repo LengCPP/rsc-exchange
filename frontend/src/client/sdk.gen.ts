@@ -3,15 +3,16 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { CollectionsReadCollectionsData, CollectionsReadCollectionsResponse, CollectionsCreateCollectionData, CollectionsCreateCollectionResponse, CollectionsReadCollectionData, CollectionsReadCollectionResponse, CollectionsUpdateCollectionData, CollectionsUpdateCollectionResponse, CollectionsDeleteCollectionData, CollectionsDeleteCollectionResponse, CollectionsAddItemToCollectionData, CollectionsAddItemToCollectionResponse, CollectionsRemoveItemFromCollectionData, CollectionsRemoveItemFromCollectionResponse, CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsSearchUserByIdData, FriendsSearchUserByIdResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, NotificationsReadNotificationsData, NotificationsReadNotificationsResponse, NotificationsMarkNotificationAsReadData, NotificationsMarkNotificationAsReadResponse, NotificationsMarkAllNotificationsAsReadResponse, NotificationsDeleteNotificationData, NotificationsDeleteNotificationResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersReadUserSettingsMeResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { CollectionsReadCollectionsData, CollectionsReadCollectionsResponse, CollectionsCreateCollectionData, CollectionsCreateCollectionResponse, CollectionsReadCollectionData, CollectionsReadCollectionResponse, CollectionsUpdateCollectionData, CollectionsUpdateCollectionResponse, CollectionsDeleteCollectionData, CollectionsDeleteCollectionResponse, CollectionsAddItemToCollectionData, CollectionsAddItemToCollectionResponse, CollectionsRemoveItemFromCollectionData, CollectionsRemoveItemFromCollectionResponse, CommunitiesReadCommunitiesData, CommunitiesReadCommunitiesResponse, CommunitiesCreateCommunityData, CommunitiesCreateCommunityResponse, CommunitiesReadCommunityData, CommunitiesReadCommunityResponse, CommunitiesUpdateCommunityData, CommunitiesUpdateCommunityResponse, CommunitiesDeleteCommunityData, CommunitiesDeleteCommunityResponse, CommunitiesJoinCommunityData, CommunitiesJoinCommunityResponse, CommunitiesLeaveCommunityData, CommunitiesLeaveCommunityResponse, CommunitiesReadCommunityMembersData, CommunitiesReadCommunityMembersResponse, CommunitiesUpdateCommunityMemberRoleData, CommunitiesUpdateCommunityMemberRoleResponse, FriendsSearchUserByIdData, FriendsSearchUserByIdResponse, FriendsReadFriendsData, FriendsReadFriendsResponse, FriendsReadFriendRequestsData, FriendsReadFriendRequestsResponse, FriendsReadSentFriendRequestsData, FriendsReadSentFriendRequestsResponse, FriendsCreateFriendRequestData, FriendsCreateFriendRequestResponse, FriendsAcceptFriendRequestData, FriendsAcceptFriendRequestResponse, FriendsRemoveFriendData, FriendsRemoveFriendResponse, InterestsReadInterestsData, InterestsReadInterestsResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoansCreateLoanRequestData, LoansCreateLoanRequestResponse, LoansReadIncomingLoanRequestsData, LoansReadIncomingLoanRequestsResponse, LoansReadOutgoingLoanRequestsData, LoansReadOutgoingLoanRequestsResponse, LoansRespondToLoanRequestData, LoansRespondToLoanRequestResponse, LoansRatifyLoanData, LoansRatifyLoanResponse, LoansSignalReturnData, LoansSignalReturnResponse, LoansReturnLoanData, LoansReturnLoanResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, LoginLoginGoogleData, LoginLoginGoogleResponse, NotificationsReadNotificationsData, NotificationsReadNotificationsResponse, NotificationsMarkNotificationAsReadData, NotificationsMarkNotificationAsReadResponse, NotificationsMarkAllNotificationsAsReadResponse, NotificationsDeleteNotificationData, NotificationsDeleteNotificationResponse, PrivateCreateUserData, PrivateCreateUserResponse, SearchSearchData, SearchSearchResponse, StorageUploadData, StorageUploadResponse, StorageGetImageData, StorageGetImageResponse, StorageDeleteData, StorageDeleteResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersUpdateUserProfileData, UsersUpdateUserProfileResponse, UsersUploadUserProfilePictureData, UsersUploadUserProfilePictureResponse, UsersReadUserSettingsMeResponse, UsersUpdateUserSettingsData, UsersUpdateUserSettingsResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class CollectionsService {
     /**
      * Read Collections
-     * Retrieve collections for the current user.
+     * Retrieve collections.
      * @param data The data for the request.
      * @param data.skip
      * @param data.limit
+     * @param data.ownerId
      * @returns CollectionsPublic Successful Response
      * @throws ApiError
      */
@@ -21,7 +22,8 @@ export class CollectionsService {
             url: '/api/v1/collections/',
             query: {
                 skip: data.skip,
-                limit: data.limit
+                limit: data.limit,
+                owner_id: data.ownerId
             },
             errors: {
                 422: 'Validation Error'
@@ -421,7 +423,7 @@ export class FriendsService {
     
     /**
      * Read Friend Requests
-     * Retrieve pending friend requests sent to current user.
+     * Retrieve pending friend requests sent to current user (Incoming).
      * @param data The data for the request.
      * @param data.skip
      * @param data.limit
@@ -432,6 +434,29 @@ export class FriendsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/friends/requests',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Sent Friend Requests
+     * Retrieve pending friend requests sent by current user (Outgoing).
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns UsersPublic Successful Response
+     * @throws ApiError
+     */
+    public static readSentFriendRequests(data: FriendsReadSentFriendRequestsData = {}): CancelablePromise<FriendsReadSentFriendRequestsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/friends/requests/sent',
             query: {
                 skip: data.skip,
                 limit: data.limit
@@ -543,6 +568,7 @@ export class ItemsService {
      * @param data.ownerId
      * @param data.sortBy
      * @param data.sortOrder
+     * @param data.excludeCollections
      * @returns ItemsPublic Successful Response
      * @throws ApiError
      */
@@ -555,7 +581,8 @@ export class ItemsService {
                 limit: data.limit,
                 owner_id: data.ownerId,
                 sort_by: data.sortBy,
-                sort_order: data.sortOrder
+                sort_order: data.sortOrder,
+                exclude_collections: data.excludeCollections
             },
             errors: {
                 422: 'Validation Error'
@@ -640,6 +667,164 @@ export class ItemsService {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/items/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+}
+
+export class LoansService {
+    /**
+     * Create Loan Request
+     * Submit a loan request for an item.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns LoanPublic Successful Response
+     * @throws ApiError
+     */
+    public static createLoanRequest(data: LoansCreateLoanRequestData): CancelablePromise<LoansCreateLoanRequestResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/loans/request',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Incoming Loan Requests
+     * Retrieve loan requests for items owned by the current user.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns LoansPublic Successful Response
+     * @throws ApiError
+     */
+    public static readIncomingLoanRequests(data: LoansReadIncomingLoanRequestsData = {}): CancelablePromise<LoansReadIncomingLoanRequestsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/loans/incoming',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Outgoing Loan Requests
+     * Retrieve loan requests submitted by the current user.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns LoansPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOutgoingLoanRequests(data: LoansReadOutgoingLoanRequestsData = {}): CancelablePromise<LoansReadOutgoingLoanRequestsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/loans/outgoing',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Respond To Loan Request
+     * Accept or reject a loan request (Owner only).
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.accept
+     * @returns LoanPublic Successful Response
+     * @throws ApiError
+     */
+    public static respondToLoanRequest(data: LoansRespondToLoanRequestData): CancelablePromise<LoansRespondToLoanRequestResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/loans/{id}/respond',
+            path: {
+                id: data.id
+            },
+            query: {
+                accept: data.accept
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Ratify Loan
+     * Confirm possession of the item (Requester only).
+     * @param data The data for the request.
+     * @param data.id
+     * @returns LoanPublic Successful Response
+     * @throws ApiError
+     */
+    public static ratifyLoan(data: LoansRatifyLoanData): CancelablePromise<LoansRatifyLoanResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/loans/{id}/ratify',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Signal Return
+     * Signal that the item is being returned (Requester only).
+     * @param data The data for the request.
+     * @param data.id
+     * @returns LoanPublic Successful Response
+     * @throws ApiError
+     */
+    public static signalReturn(data: LoansSignalReturnData): CancelablePromise<LoansSignalReturnResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/loans/{id}/return-signal',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Return Loan
+     * Mark an item as returned (Owner only).
+     * @param data The data for the request.
+     * @param data.id
+     * @returns LoanPublic Successful Response
+     * @throws ApiError
+     */
+    public static returnLoan(data: LoansReturnLoanData): CancelablePromise<LoansReturnLoanResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/loans/{id}/return',
             path: {
                 id: data.id
             },
@@ -1206,7 +1391,7 @@ export class UsersService {
             method: 'PATCH',
             url: '/api/v1/users/{user_id}',
             path: {
-                user_id: data.userId
+                id: data.userId
             },
             body: data.requestBody,
             mediaType: 'application/json',
@@ -1229,7 +1414,7 @@ export class UsersService {
             method: 'DELETE',
             url: '/api/v1/users/{user_id}',
             path: {
-                user_id: data.userId
+                id: data.userId
             },
             errors: {
                 422: 'Validation Error'

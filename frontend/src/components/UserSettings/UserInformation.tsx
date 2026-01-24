@@ -8,19 +8,19 @@ import {
 } from "@chakra-ui/react"
 
 import type { UserPublicExtended } from "@/customTypes"
-import useAuth from "@/hooks/useAuth"
 import { Field } from "../ui/field"
 
-const UserInformation = () => {
-  const { user: currentUserData } = useAuth()
-  const currentUser = currentUserData as UserPublicExtended
+interface UserInformationProps {
+  user: UserPublicExtended
+}
 
+const UserInformation = ({ user }: UserInformationProps) => {
   return (
     <Container maxW="full" p={0}>
       <VStack align="stretch" gap={10}>
         <Box>
           <Heading size="sm" mb={6}>
-            About Me
+            About
           </Heading>
           <Box
             p={4}
@@ -30,13 +30,13 @@ const UserInformation = () => {
             maxH="150px" // Height for roughly 5-6 lines
             overflowY="auto"
             whiteSpace="pre-wrap"
-            color={!currentUser?.profile?.bio ? "fg.muted" : "inherit"}
+            color={!user?.profile?.bio ? "fg.muted" : "inherit"}
             css={{
               "&::-webkit-scrollbar": { width: "4px" },
               "&::-webkit-scrollbar-thumb": { background: "gray.300", borderRadius: "full" },
             }}
           >
-            {currentUser?.profile?.bio || "No bio set."}
+            {user?.profile?.bio || "No bio set."}
           </Box>
         </Box>
 
@@ -47,7 +47,7 @@ const UserInformation = () => {
           <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
             <Field label="Email Address">
               <Text fontSize="md" py={2}>
-                {currentUser?.email}
+                {user?.email}
               </Text>
             </Field>
           </SimpleGrid>

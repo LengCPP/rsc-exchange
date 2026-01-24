@@ -1,11 +1,9 @@
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
 import { Link as RouterLink } from "@tanstack/react-router"
 import { useState } from "react"
 import { FaBars } from "react-icons/fa"
 import { FiSettings } from "react-icons/fi"
 
-import type { UserPublic } from "@/client"
 import { ColorModeButton } from "../ui/color-mode"
 import {
   DrawerBackdrop,
@@ -16,10 +14,10 @@ import {
   DrawerTrigger,
 } from "../ui/drawer"
 import SidebarItems from "./SidebarItems"
+import useAuth from "@/hooks/useAuth"
 
 const Sidebar = () => {
-  const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const { user: currentUser } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (

@@ -6,6 +6,7 @@ from app.api.routes import (
     friends,
     interests,
     items,
+    loans,
     login,
     notifications,
     private,
@@ -32,6 +33,7 @@ api_router.include_router(storage.router)
 api_router.include_router(
     notifications.router, prefix="/notifications", tags=["notifications"]
 )
+api_router.include_router(loans.router)
 
 
 if settings.ENVIRONMENT == "local":

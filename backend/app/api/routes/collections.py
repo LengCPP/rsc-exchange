@@ -25,20 +25,36 @@ def read_collections(
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(get_current_user),
+    owner_id: uuid.UUID | None = None,
 ) -> Any:
     """
-    Retrieve collections for the current user.
+    Retrieve collections.
     """
+    target_owner_id = owner_id or current_user.id
+    
+    # Permission check: If not me, check if friend
+    if target_owner_id != current_user.id:
+        from app.models import Friendship, FriendshipStatus
+        is_friend = session.exec(
+            select(Friendship).where(
+                ((Friendship.user_id == current_user.id) & (Friendship.friend_id == target_owner_id)) |
+                ((Friendship.user_id == target_owner_id) & (Friendship.friend_id == current_user.id)),
+                Friendship.status == FriendshipStatus.ACCEPTED
+            )
+        ).first()
+        if not is_friend and not current_user.is_superuser:
+            raise HTTPException(status_code=403, detail="Not enough permissions to view this user's collections")
+
     count_statement = (
         select(func.count())
         .select_from(Collection)
-        .where(Collection.owner_id == current_user.id)
+        .where(Collection.owner_id == target_owner_id)
     )
     count = session.exec(count_statement).one()
     
     statement = (
         select(Collection)
-        .where(Collection.owner_id == current_user.id)
+        .where(Collection.owner_id == target_owner_id)
         .offset(skip)
         .limit(limit)
     )
@@ -138,6 +154,14 @@ def add_item_to_collection(
     if collection.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
     
+    # Check if item is already in ANY collection
+    from app.models import CollectionItem
+    existing_link = session.exec(
+        select(CollectionItem).where(CollectionItem.item_id == item_id)
+    ).first()
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Item is already in a collection")
+
     crud.add_item_to_collection(session=session, collection_id=id, item_id=item_id)
     return Message(message="Item added to collection")
 
