@@ -5,8 +5,8 @@ import {
   Container,
   Flex,
   Grid,
-  Heading,
   HStack,
+  Heading,
   IconButton,
   Separator,
   Skeleton,
@@ -14,15 +14,15 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { FiChevronLeft, FiPlus, FiTrash2 } from "react-icons/fi"
 
 import { CollectionsService, ItemsService } from "@/client"
 import ItemCard from "@/components/Items/ItemCard"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import useAuth from "@/hooks/useAuth"
-import { handleError } from "@/utils"
 import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 export const Route = createFileRoute("/_layout/collections/$collectionId")({
   component: CollectionDetail,
@@ -33,7 +33,7 @@ function CollectionDetail() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
-  
+
   const bgColor = useColorModeValue("orange.50", "gray.800")
   const borderColor = useColorModeValue("orange.200", "gray.600")
 
@@ -45,12 +45,13 @@ function CollectionDetail() {
   // Get user's items to allow adding them if owner
   const { data: userItemsData } = useQuery({
     queryKey: ["items", "me", { excludeCollections: true }],
-    queryFn: () => ItemsService.readItems({ limit: 100, excludeCollections: true }),
+    queryFn: () =>
+      ItemsService.readItems({ limit: 100, excludeCollections: true }),
     enabled: !!user && collection?.owner_id === user.id,
   })
 
   const addMutation = useMutation({
-    mutationFn: (itemId: string) => 
+    mutationFn: (itemId: string) =>
       CollectionsService.addItemToCollection({ id: collectionId, itemId }),
     onSuccess: () => {
       showSuccessToast("Item added to collection")
@@ -60,7 +61,7 @@ function CollectionDetail() {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (itemId: string) => 
+    mutationFn: (itemId: string) =>
       CollectionsService.removeItemFromCollection({ id: collectionId, itemId }),
     onSuccess: () => {
       showSuccessToast("Item removed from collection")
@@ -75,7 +76,9 @@ function CollectionDetail() {
         <Skeleton height="40px" width="300px" mb={4} />
         <Skeleton height="20px" width="500px" mb={8} />
         <Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={6}>
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} height="300px" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} height="300px" />
+          ))}
         </Grid>
       </Container>
     )
@@ -88,9 +91,10 @@ function CollectionDetail() {
   const isOwner = user?.id === collection.owner_id
 
   // Filter out items already in collection
-  const availableItems = userItemsData?.data.filter(
-    (item) => !collection.items?.some((ci) => ci.id === item.id)
-  ) || []
+  const availableItems =
+    userItemsData?.data.filter(
+      (item) => !collection.items?.some((ci) => ci.id === item.id),
+    ) || []
 
   return (
     <Container maxW="full" pt={12} pb={20}>
@@ -98,20 +102,25 @@ function CollectionDetail() {
         <HStack width="full" justify="space-between">
           <HStack gap={4}>
             <IconButton asChild variant="ghost" colorPalette="orange">
-               <Link to={isOwner ? "/items" : "/users/$userId"} params={isOwner ? {} : { userId: collection.owner_id }}>
+              <Link
+                to={isOwner ? "/items" : "/users/$userId"}
+                params={isOwner ? {} : { userId: collection.owner_id }}
+              >
                 <FiChevronLeft />
-               </Link>
+              </Link>
             </IconButton>
             <VStack align="start" gap={0}>
               <Heading size="2xl">{collection.title}</Heading>
-              <Text color="gray.500">{collection.description || "No description provided."}</Text>
+              <Text color="gray.500">
+                {collection.description || "No description provided."}
+              </Text>
             </VStack>
           </HStack>
-          
+
           {isOwner && (
-             <Badge colorPalette="orange" size="lg" variant="solid">
-                Owner View
-             </Badge>
+            <Badge colorPalette="orange" size="lg" variant="solid">
+              Owner View
+            </Badge>
           )}
         </HStack>
 
@@ -127,11 +136,25 @@ function CollectionDetail() {
         >
           {/* Items Grid */}
           <Box>
-            <Heading size="md" mb={4}>Items in this {collection.collection_type === 'library' ? 'Library' : 'Collection'}</Heading>
+            <Heading size="md" mb={4}>
+              Items in this{" "}
+              {collection.collection_type === "library"
+                ? "Library"
+                : "Collection"}
+            </Heading>
             {!collection.items || collection.items.length === 0 ? (
-               <Flex direction="column" align="center" justify="center" p={10} bg={bgColor} borderRadius="lg" border="2px dashed" borderColor={borderColor}>
-                  <Text color="gray.500">No items in this collection yet.</Text>
-               </Flex>
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                p={10}
+                bg={bgColor}
+                borderRadius="lg"
+                border="2px dashed"
+                borderColor={borderColor}
+              >
+                <Text color="gray.500">No items in this collection yet.</Text>
+              </Flex>
             ) : (
               <Grid
                 templateColumns={{
@@ -168,21 +191,51 @@ function CollectionDetail() {
 
           {/* Sidebar for Owner to add items */}
           {isOwner && (
-            <Box p={4} bg={bgColor} borderRadius="lg" border="1px solid" borderColor={borderColor} height="fit-content">
-              <Heading size="sm" mb={4}>Add your items</Heading>
+            <Box
+              p={4}
+              bg={bgColor}
+              borderRadius="lg"
+              border="1px solid"
+              borderColor={borderColor}
+              height="fit-content"
+            >
+              <Heading size="sm" mb={4}>
+                Add your items
+              </Heading>
               <VStack align="stretch" gap={3}>
                 {availableItems.length === 0 ? (
-                  <Text fontSize="xs" color="gray.500">All your items are already in this collection.</Text>
+                  <Text fontSize="xs" color="gray.500">
+                    All your items are already in this collection.
+                  </Text>
                 ) : (
                   availableItems.map((item) => (
-                    <Flex key={item.id} justify="space-between" align="center" p={2} bg="whiteAlpha.500" borderRadius="md" _dark={{ bg: "whiteAlpha.100" }}>
-                      <Text fontSize="xs" fontWeight="bold" lineClamp={1} flex={1} mr={2}>{item.title}</Text>
+                    <Flex
+                      key={item.id}
+                      justify="space-between"
+                      align="center"
+                      p={2}
+                      bg="whiteAlpha.500"
+                      borderRadius="md"
+                      _dark={{ bg: "whiteAlpha.100" }}
+                    >
+                      <Text
+                        fontSize="xs"
+                        fontWeight="bold"
+                        lineClamp={1}
+                        flex={1}
+                        mr={2}
+                      >
+                        {item.title}
+                      </Text>
                       <IconButton
                         aria-label="Add to collection"
                         size="xs"
                         colorPalette="orange"
                         onClick={() => addMutation.mutate(item.id)}
-                        loading={addMutation.isPending && addMutation.variables === item.id}
+                        loading={
+                          addMutation.isPending &&
+                          addMutation.variables === item.id
+                        }
                       >
                         <FiPlus />
                       </IconButton>

@@ -1,9 +1,4 @@
-import {
-  Container,
-  Heading,
-  Text,
-  VStack,
-} from "@chakra-ui/react"
+import { Container, Heading, Text, VStack } from "@chakra-ui/react"
 
 import type { UserPublicExtended } from "@/customTypes"
 import useAuth from "@/hooks/useAuth"

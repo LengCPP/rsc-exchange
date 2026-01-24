@@ -4,8 +4,8 @@ import {
   EmptyState,
   Flex,
   Grid,
-  Heading,
   HStack,
+  Heading,
   VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -14,10 +14,10 @@ import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
 import { CollectionsService, ItemsService } from "@/client"
+import AddCollection from "@/components/Collections/AddCollection"
+import CollectionCard from "@/components/Collections/CollectionCard"
 import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
-import CollectionCard from "@/components/Collections/CollectionCard"
-import AddCollection from "@/components/Collections/AddCollection"
 import PendingItems from "@/components/Pending/PendingItems"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import {
@@ -34,27 +34,30 @@ const itemsSearchSchema = z.object({
   limit: z.number().catch(8),
 })
 
-function getItemsQueryOptions({ 
-  page, 
-  sort_by, 
+function getItemsQueryOptions({
+  page,
+  sort_by,
   sort_order,
-  limit
-}: { 
-  page: number, 
-  sort_by: string, 
-  sort_order: string,
+  limit,
+}: {
+  page: number
+  sort_by: string
+  sort_order: string
   limit: number
 }) {
   return {
     queryFn: () =>
-      ItemsService.readItems({ 
-        skip: (page - 1) * limit, 
+      ItemsService.readItems({
+        skip: (page - 1) * limit,
         limit: limit,
         sortBy: sort_by,
         sortOrder: sort_order,
-        excludeCollections: true
+        excludeCollections: true,
       }),
-    queryKey: ["items", { page, sort_by, sort_order, limit, excludeCollections: true }],
+    queryKey: [
+      "items",
+      { page, sort_by, sort_order, limit, excludeCollections: true },
+    ],
   }
 }
 
@@ -77,7 +80,9 @@ function CollectionsTable() {
 
   return (
     <Box mt={8}>
-      <Heading size="md" mb={4}>My Collections & Libraries</Heading>
+      <Heading size="md" mb={4}>
+        My Collections & Libraries
+      </Heading>
       <Grid
         templateColumns={{
           base: "1fr",
@@ -113,7 +118,11 @@ function SortingControls() {
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     navigate({
-      search: (prev: any) => ({ ...prev, limit: Number(e.target.value), page: 1 }),
+      search: (prev: any) => ({
+        ...prev,
+        limit: Number(e.target.value),
+        page: 1,
+      }),
     })
   }
 
@@ -133,18 +142,38 @@ function SortingControls() {
   return (
     <Flex gap={2} align="center" wrap="wrap">
       <select value={sort_by} onChange={handleSortByChange} style={selectStyle}>
-        <option value="created_at" style={{ backgroundColor: selectBg }}>Date Created</option>
-        <option value="title" style={{ backgroundColor: selectBg }}>Name</option>
+        <option value="created_at" style={{ backgroundColor: selectBg }}>
+          Date Created
+        </option>
+        <option value="title" style={{ backgroundColor: selectBg }}>
+          Name
+        </option>
       </select>
-      <select value={sort_order} onChange={handleSortOrderChange} style={selectStyle}>
-        <option value="desc" style={{ backgroundColor: selectBg }}>Descending</option>
-        <option value="asc" style={{ backgroundColor: selectBg }}>Ascending</option>
+      <select
+        value={sort_order}
+        onChange={handleSortOrderChange}
+        style={selectStyle}
+      >
+        <option value="desc" style={{ backgroundColor: selectBg }}>
+          Descending
+        </option>
+        <option value="asc" style={{ backgroundColor: selectBg }}>
+          Ascending
+        </option>
       </select>
       <select value={limit} onChange={handleLimitChange} style={selectStyle}>
-        <option value={4} style={{ backgroundColor: selectBg }}>4 per page</option>
-        <option value={8} style={{ backgroundColor: selectBg }}>8 per page</option>
-        <option value={12} style={{ backgroundColor: selectBg }}>12 per page</option>
-        <option value={10000} style={{ backgroundColor: selectBg }}>All</option>
+        <option value={4} style={{ backgroundColor: selectBg }}>
+          4 per page
+        </option>
+        <option value={8} style={{ backgroundColor: selectBg }}>
+          8 per page
+        </option>
+        <option value={12} style={{ backgroundColor: selectBg }}>
+          12 per page
+        </option>
+        <option value={10000} style={{ backgroundColor: selectBg }}>
+          All
+        </option>
       </select>
     </Flex>
   )
@@ -191,7 +220,9 @@ function ItemsTable() {
 
   return (
     <Box mt={8}>
-      <Heading size="md" mb={4}>My Items</Heading>
+      <Heading size="md" mb={4}>
+        My Items
+      </Heading>
       <Grid
         templateColumns={{
           base: "1fr",
@@ -227,7 +258,13 @@ function Items() {
   return (
     <Container maxW="full">
       <VStack pt={12} align="start" gap={6}>
-        <Flex justify="space-between" align="center" width="full" wrap="wrap" gap={4}>
+        <Flex
+          justify="space-between"
+          align="center"
+          width="full"
+          wrap="wrap"
+          gap={4}
+        >
           <Heading size="lg">Items Management</Heading>
           <SortingControls />
         </Flex>

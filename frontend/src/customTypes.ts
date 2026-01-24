@@ -1,22 +1,22 @@
 import type {
   CommunityCreate,
-  CommunityPublic,
-  CommunityUpdate,
-  UserPublic,
-  ItemType,
-  InterestPublic,
-  UserProfilePublic,
-  UserSettingsSchema,
-  UserProfileUpdate,
   CommunityMemberRole,
   CommunityMemberStatus,
+  CommunityPublic,
+  CommunityUpdate,
+  InterestPublic,
+  ItemType,
+  UserProfilePublic,
+  UserProfileUpdate,
+  UserPublic,
+  UserSettingsSchema,
 } from "./client"
 
-export {
-  type ItemType,
-  type UserProfileUpdate,
-  type UserSettingsSchema as UserSettingsUpdate,
-  type InterestPublic,
+export type {
+  ItemType,
+  UserProfileUpdate,
+  UserSettingsSchema as UserSettingsUpdate,
+  InterestPublic,
 }
 
 export interface CommunityCreateExtended extends CommunityCreate {
@@ -36,7 +36,8 @@ export interface UserPublicWithRole extends UserPublic {
   community_status?: CommunityMemberStatus
 }
 
-export interface UserProfilePublicExtended extends Omit<UserProfilePublic, "image_url"> {
+export interface UserProfilePublicExtended
+  extends Omit<UserProfilePublic, "image_url"> {
   image_url?: string | null
 }
 
@@ -45,4 +46,3 @@ export interface UserPublicExtended extends Omit<UserPublic, "profile"> {
   settings?: UserSettingsSchema
   interests?: InterestPublic[]
 }
-

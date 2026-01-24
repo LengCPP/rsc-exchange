@@ -4,6 +4,7 @@ import { useState } from "react"
 import { FaBars } from "react-icons/fa"
 import { FiSettings } from "react-icons/fi"
 
+import useAuth from "@/hooks/useAuth"
 import { ColorModeButton } from "../ui/color-mode"
 import {
   DrawerBackdrop,
@@ -14,7 +15,6 @@ import {
   DrawerTrigger,
 } from "../ui/drawer"
 import SidebarItems from "./SidebarItems"
-import useAuth from "@/hooks/useAuth"
 
 const Sidebar = () => {
   const { user: currentUser } = useAuth()

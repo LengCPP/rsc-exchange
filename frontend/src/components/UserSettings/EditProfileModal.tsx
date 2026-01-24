@@ -1,11 +1,11 @@
 import {
   Button,
   Flex,
+  Heading,
   Input,
+  Separator,
   Textarea,
   VStack,
-  Heading,
-  Separator,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
@@ -134,22 +134,53 @@ const EditProfileModal = ({ user, isOpen, onClose }: EditProfileModalProps) => {
         </DialogHeader>
         <DialogCloseTrigger />
         <DialogBody>
-          <VStack as="form" id="edit-profile-form" gap={4} align="stretch" onSubmit={handleSubmit(onSubmit)}>
-            <Heading size="xs" mt={2}>General Info</Heading>
-            <Field label="Name" invalid={!!errors.full_name} errorText={errors.full_name?.message}>
+          <VStack
+            as="form"
+            id="edit-profile-form"
+            gap={4}
+            align="stretch"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <Heading size="xs" mt={2}>
+              General Info
+            </Heading>
+            <Field
+              label="Name"
+              invalid={!!errors.full_name}
+              errorText={errors.full_name?.message}
+            >
               <Input {...register("full_name")} placeholder="Full Name" />
             </Field>
-            <Field label="Alias" invalid={!!errors.alias} errorText={errors.alias?.message}>
+            <Field
+              label="Alias"
+              invalid={!!errors.alias}
+              errorText={errors.alias?.message}
+            >
               <Input {...register("alias")} placeholder="Nickname / Alias" />
             </Field>
-            <Field label="Bio" invalid={!!errors.bio} errorText={errors.bio?.message}>
-              <Textarea {...register("bio")} placeholder="Tell us about yourself" />
+            <Field
+              label="Bio"
+              invalid={!!errors.bio}
+              errorText={errors.bio?.message}
+            >
+              <Textarea
+                {...register("bio")}
+                placeholder="Tell us about yourself"
+              />
             </Field>
 
             <Separator my={2} />
             <Heading size="xs">Contact Details</Heading>
-            <Field label="Email" invalid={!!errors.email} errorText={errors.email?.message}>
-              <Input {...register("email")} type="email" placeholder="Email Address" />
+            <Field
+              label="Email"
+              invalid={!!errors.email}
+              errorText={errors.email?.message}
+            >
+              <Input
+                {...register("email")}
+                type="email"
+                placeholder="Email Address"
+              />
             </Field>
 
             <Separator my={2} />

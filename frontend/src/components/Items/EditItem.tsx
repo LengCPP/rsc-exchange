@@ -208,7 +208,6 @@ const EditItem = ({ item }: EditItemProps) => {
             </VStack>
           </DialogBody>
 
-
           <DialogFooter gap={2}>
             <ButtonGroup>
               <DialogActionTrigger asChild>

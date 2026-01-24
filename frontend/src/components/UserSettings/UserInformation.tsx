@@ -2,9 +2,9 @@ import {
   Box,
   Container,
   Heading,
+  SimpleGrid,
   Text,
   VStack,
-  SimpleGrid,
 } from "@chakra-ui/react"
 
 import type { UserPublicExtended } from "@/customTypes"
@@ -33,7 +33,10 @@ const UserInformation = ({ user }: UserInformationProps) => {
             color={!user?.profile?.bio ? "fg.muted" : "inherit"}
             css={{
               "&::-webkit-scrollbar": { width: "4px" },
-              "&::-webkit-scrollbar-thumb": { background: "gray.300", borderRadius: "full" },
+              "&::-webkit-scrollbar-thumb": {
+                background: "gray.300",
+                borderRadius: "full",
+              },
             }}
           >
             {user?.profile?.bio || "No bio set."}

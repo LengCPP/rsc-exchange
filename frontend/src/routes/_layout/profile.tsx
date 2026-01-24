@@ -1,23 +1,30 @@
-import { Container, Flex, Heading, IconButton, Separator, VStack } from "@chakra-ui/react"
+import {
+  Container,
+  Flex,
+  Heading,
+  IconButton,
+  Separator,
+  VStack,
+} from "@chakra-ui/react"
 import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit2, FiShare2 } from "react-icons/fi"
 
+import type { ApiError } from "@/client"
+import EditProfileModal from "@/components/UserSettings/EditProfileModal"
 import UserInformation from "@/components/UserSettings/UserInformation"
 import UserProfilePicture from "@/components/UserSettings/UserProfilePicture"
-import EditProfileModal from "@/components/UserSettings/EditProfileModal"
-import useAuth from "@/hooks/useAuth"
 import {
   MenuContent,
   MenuItem,
   MenuRoot,
   MenuTrigger,
 } from "@/components/ui/menu"
-import { formatPublicId, handleError } from "@/utils"
-import useCustomToast from "@/hooks/useCustomToast"
-import type { ApiError } from "@/client"
 import type { UserPublicExtended } from "@/customTypes"
+import useAuth from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import { formatPublicId, handleError } from "@/utils"
 
 export const Route = createFileRoute("/_layout/profile")({
   component: Profile,
@@ -53,7 +60,10 @@ function Profile() {
             </IconButton>
           </MenuTrigger>
           <MenuContent>
-            <MenuItem value="edit-profile" onClick={() => setIsEditModalOpen(true)}>
+            <MenuItem
+              value="edit-profile"
+              onClick={() => setIsEditModalOpen(true)}
+            >
               <FiEdit2 style={{ marginRight: "8px" }} /> Edit Profile
             </MenuItem>
             <MenuItem value="copy-id" onClick={handleShareId}>

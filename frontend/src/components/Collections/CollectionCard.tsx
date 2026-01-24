@@ -1,8 +1,18 @@
 import type { CollectionPublic } from "@/client"
 import { useColorModeValue } from "@/components/ui/color-mode"
-import { Badge, Box, Button, Card, Flex, HStack, Image, Text, VStack } from "@chakra-ui/react"
-import { Link } from "@tanstack/react-router"
 import { getImageUrl } from "@/utils"
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Flex,
+  HStack,
+  Image,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { Link } from "@tanstack/react-router"
 
 interface CollectionCardProps {
   collection: CollectionPublic
@@ -33,7 +43,9 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
               {collection.title}
             </Text>
             <Badge colorPalette="orange" variant="subtle" size="sm">
-              {collection.collection_type === "library" ? "Library" : "Collection"}
+              {collection.collection_type === "library"
+                ? "Library"
+                : "Collection"}
             </Badge>
           </VStack>
           <Badge variant="solid" colorPalette="teal">
@@ -42,16 +54,30 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
         </Flex>
 
         {/* Book Preview Section */}
-        <Box height="120px" position="relative" mb={4} bg="blackAlpha.100" borderRadius="md" p={2}>
+        <Box
+          height="120px"
+          position="relative"
+          mb={4}
+          bg="blackAlpha.100"
+          borderRadius="md"
+          p={2}
+        >
           {previewItems.length > 0 ? (
             <HStack gap={-4} justify="center" height="100%">
               {previewItems.map((item, index) => (
                 <Box
                   key={item.id}
                   zIndex={3 - index}
-                  transform={`translateX(${index * 10}px) rotate(${index * 5}deg)`}
+                  transform={`translateX(${index * 10}px) rotate(${
+                    index * 5
+                  }deg)`}
                   transition="transform 0.2s"
-                  _hover={{ transform: `translateX(${index * 10}px) rotate(0deg) scale(1.1)`, zIndex: 10 }}
+                  _hover={{
+                    transform: `translateX(${
+                      index * 10
+                    }px) rotate(0deg) scale(1.1)`,
+                    zIndex: 10,
+                  }}
                 >
                   {item.image_url ? (
                     <Image
@@ -77,7 +103,13 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
                       border="1px solid white"
                       p={1}
                     >
-                      <Text fontSize="8px" fontWeight="bold" textAlign="center" color="white" lineClamp={3}>
+                      <Text
+                        fontSize="8px"
+                        fontWeight="bold"
+                        textAlign="center"
+                        color="white"
+                        lineClamp={3}
+                      >
                         {item.title}
                       </Text>
                     </Box>
@@ -88,13 +120,22 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
           ) : (
             <Flex height="100%" align="center" justify="center">
               <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                Empty {collection.collection_type === "library" ? "library" : "collection"}
+                Empty{" "}
+                {collection.collection_type === "library"
+                  ? "library"
+                  : "collection"}
               </Text>
             </Flex>
           )}
         </Box>
 
-        <Text fontSize="sm" lineClamp={2} color={textColor} opacity={0.8} mb={4}>
+        <Text
+          fontSize="sm"
+          lineClamp={2}
+          color={textColor}
+          opacity={0.8}
+          mb={4}
+        >
           {collection.description || "No description provided."}
         </Text>
 
@@ -109,7 +150,10 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
             to="/collections/$collectionId"
             params={{ collectionId: collection.id }}
           >
-            View {collection.collection_type === "library" ? "Library" : "Collection"}
+            View{" "}
+            {collection.collection_type === "library"
+              ? "Library"
+              : "Collection"}
           </Link>
         </Button>
       </Card.Body>

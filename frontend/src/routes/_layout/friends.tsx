@@ -1,27 +1,24 @@
 import {
+  Badge,
   Box,
   Button,
   Container,
   EmptyState,
   Flex,
+  HStack,
   Heading,
   Input,
   Separator,
   SimpleGrid,
   Text,
   VStack,
-  HStack,
-  Badge,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import { FiUsers, FiPlus, FiUserPlus, FiSend } from "react-icons/fi"
 import { useState } from "react"
+import { FiPlus, FiSend, FiUserPlus, FiUsers } from "react-icons/fi"
 
 import { FriendsService } from "@/client"
-import useAuth from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { formatPublicId } from "@/utils"
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -33,6 +30,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Field } from "@/components/ui/field"
+import useAuth from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import { formatPublicId } from "@/utils"
 
 export const Route = createFileRoute("/_layout/friends")({
   component: Friends,
@@ -304,11 +304,16 @@ function Friends() {
                   to={
                     user.id === currentUser?.id ? "/profile" : "/users/$userId"
                   }
-                  params={user.id === currentUser?.id ? {} : { userId: user.id }}
+                  params={
+                    user.id === currentUser?.id ? {} : { userId: user.id }
+                  }
                 >
                   <Text
                     fontWeight="bold"
-                    _hover={{ textDecoration: "underline", color: "orange.500" }}
+                    _hover={{
+                      textDecoration: "underline",
+                      color: "orange.500",
+                    }}
                   >
                     {user.full_name || user.email}
                   </Text>

@@ -1,14 +1,22 @@
-import { Box, Container, Flex, Image, Input, Separator, Text } from "@chakra-ui/react"
+import {
+  Box,
+  Container,
+  Flex,
+  Image,
+  Input,
+  Separator,
+  Text,
+} from "@chakra-ui/react"
 import { useGoogleLogin } from "@react-oauth/google"
 import {
   Link as RouterLink,
   createFileRoute,
   redirect,
 } from "@tanstack/react-router"
+import axios from "axios"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaGoogle } from "react-icons/fa"
 import { FiLock, FiMail } from "react-icons/fi"
-import axios from "axios"
 
 import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -52,8 +60,8 @@ function Login() {
       console.log(tokenResponse)
       try {
         const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/v1/auth/google`,
-            { token: tokenResponse.access_token }
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/google`,
+          { token: tokenResponse.access_token },
         )
         // Handle success - store token, redirect, etc.
         // For now just log as requested
@@ -137,13 +145,9 @@ function Login() {
           <Box flex="1" h="1px" bg="gray.600" />
         </Flex>
 
-        <Button 
-            variant="outline" 
-            width="full" 
-            onClick={() => googleLogin()}
-        >
-            <FaGoogle style={{ marginRight: "8px" }} />
-            Log in with Google
+        <Button variant="outline" width="full" onClick={() => googleLogin()}>
+          <FaGoogle style={{ marginRight: "8px" }} />
+          Log in with Google
         </Button>
 
         <Text>

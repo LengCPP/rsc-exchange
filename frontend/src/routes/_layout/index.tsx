@@ -10,7 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { FiSearch, FiUserPlus } from "react-icons/fi"
 
@@ -93,8 +93,16 @@ function Dashboard() {
                         {searchResults?.users.map((user: any) => (
                           <Link
                             key={user.id}
-                            to={user.id === currentUser?.id ? "/profile" : "/users/$userId"}
-                            params={user.id === currentUser?.id ? {} : { userId: user.id }}
+                            to={
+                              user.id === currentUser?.id
+                                ? "/profile"
+                                : "/users/$userId"
+                            }
+                            params={
+                              user.id === currentUser?.id
+                                ? {}
+                                : { userId: user.id }
+                            }
                             style={{ textDecoration: "none" }}
                           >
                             <Box

@@ -1,8 +1,8 @@
+import useCustomToast from "@/hooks/useCustomToast"
 import { GoogleLogin } from "@react-oauth/google"
 import { useMutation } from "@tanstack/react-query"
-import axios from "axios"
-import useCustomToast from "@/hooks/useCustomToast"
 import { useNavigate } from "@tanstack/react-router"
+import axios from "axios"
 
 const GoogleLoginButton = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -12,7 +12,7 @@ const GoogleLoginButton = () => {
     mutationFn: async (token: string) => {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/google`,
-        { token }
+        { token },
       )
       return response.data
     },

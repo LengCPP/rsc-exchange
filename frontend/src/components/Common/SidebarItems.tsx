@@ -1,12 +1,12 @@
 import { Box, Flex, Icon, Text } from "@chakra-ui/react"
 import { Link as RouterLink } from "@tanstack/react-router"
 import {
+  FiBookOpen,
   FiBriefcase,
   FiGlobe,
   FiHome,
   FiUserPlus,
   FiUsers,
-  FiBookOpen,
 } from "react-icons/fi"
 import type { IconType } from "react-icons/lib"
 

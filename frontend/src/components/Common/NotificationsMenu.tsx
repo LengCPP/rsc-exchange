@@ -11,19 +11,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { FaBell, FaCircle } from "react-icons/fa"
 import { NotificationsService } from "../../client"
 import { useNotifications } from "../../hooks/useNotifications"
-import {
-  MenuContent,
-  MenuItem,
-  MenuRoot,
-  MenuTrigger,
-} from "../ui/menu"
+import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
 
 const NotificationsMenu = () => {
   const queryClient = useQueryClient()
   const { data: notifications, isLoading } = useNotifications()
 
   const markAsReadMutation = useMutation({
-    mutationFn: (id: string) => NotificationsService.markNotificationAsRead({ id }),
+    mutationFn: (id: string) =>
+      NotificationsService.markNotificationAsRead({ id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
@@ -42,11 +38,7 @@ const NotificationsMenu = () => {
     <MenuRoot size="sm" positioning={{ placement: "bottom-end" }}>
       <MenuTrigger asChild>
         <Box position="relative">
-          <IconButton
-            variant="ghost"
-            aria-label="Notifications"
-            rounded="full"
-          >
+          <IconButton variant="ghost" aria-label="Notifications" rounded="full">
             <FaBell />
           </IconButton>
           {unreadCount > 0 && (
@@ -72,7 +64,13 @@ const NotificationsMenu = () => {
         </Box>
       </MenuTrigger>
       <MenuContent minW="xs" maxH="md" overflowY="auto">
-        <Flex justify="space-between" align="center" px={4} py={2} borderBottomWidth="1px">
+        <Flex
+          justify="space-between"
+          align="center"
+          px={4}
+          py={2}
+          borderBottomWidth="1px"
+        >
           <Text fontWeight="bold">Notifications</Text>
           {unreadCount > 0 && (
             <Text
@@ -96,7 +94,9 @@ const NotificationsMenu = () => {
           </Flex>
         ) : !notifications || notifications.data.length === 0 ? (
           <Box p={4}>
-            <Text fontSize="sm" color="gray.500">No notifications</Text>
+            <Text fontSize="sm" color="gray.500">
+              No notifications
+            </Text>
           </Box>
         ) : (
           <VStack align="stretch" gap={0}>
@@ -104,7 +104,10 @@ const NotificationsMenu = () => {
               <MenuItem
                 value={notification.id}
                 key={notification.id}
-                onClick={() => !notification.is_read && markAsReadMutation.mutate(notification.id)}
+                onClick={() =>
+                  !notification.is_read &&
+                  markAsReadMutation.mutate(notification.id)
+                }
                 _hover={{ bg: "bg.muted" }}
                 px={4}
                 py={3}
@@ -119,7 +122,10 @@ const NotificationsMenu = () => {
                     )}
                   </Box>
                   <VStack align="start" gap={0} flex={1}>
-                    <Text fontWeight={notification.is_read ? "normal" : "bold"} fontSize="sm">
+                    <Text
+                      fontWeight={notification.is_read ? "normal" : "bold"}
+                      fontSize="sm"
+                    >
                       {notification.title}
                     </Text>
                     <Text fontSize="xs" color="fg.muted">

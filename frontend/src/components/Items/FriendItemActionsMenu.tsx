@@ -1,12 +1,12 @@
-import { IconButton } from "@chakra-ui/react"
-import { BsThreeDotsVertical } from "react-icons/bs"
-import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
-import { useState } from "react"
-import { FiBookOpen, FiCornerUpLeft } from "react-icons/fi"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { LoansService, type ItemPublic } from "@/client"
-import { LoanRequestModal } from "./LoanRequestModal"
+import { type ItemPublic, LoansService } from "@/client"
 import useCustomToast from "@/hooks/useCustomToast"
+import { IconButton } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
+import { BsThreeDotsVertical } from "react-icons/bs"
+import { FiBookOpen, FiCornerUpLeft } from "react-icons/fi"
+import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
+import { LoanRequestModal } from "./LoanRequestModal"
 
 interface FriendItemActionsMenuProps {
   item: ItemPublic
@@ -14,7 +14,11 @@ interface FriendItemActionsMenuProps {
   loanId?: string
 }
 
-export const FriendItemActionsMenu = ({ item, isBorrowing = false, loanId }: FriendItemActionsMenuProps) => {
+export const FriendItemActionsMenu = ({
+  item,
+  isBorrowing = false,
+  loanId,
+}: FriendItemActionsMenuProps) => {
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
@@ -27,15 +31,15 @@ export const FriendItemActionsMenu = ({ item, isBorrowing = false, loanId }: Fri
     },
     onError: (err: any) => {
       showErrorToast(err.body?.detail || "Failed to signal return")
-    }
+    },
   })
 
   if (isBorrowing) {
     return (
-      <IconButton 
-        size="xs" 
-        colorPalette="blue" 
-        variant="ghost" 
+      <IconButton
+        size="xs"
+        colorPalette="blue"
+        variant="ghost"
         onClick={(e) => {
           e.stopPropagation()
           signalReturnMutation.mutate()
@@ -57,21 +61,21 @@ export const FriendItemActionsMenu = ({ item, isBorrowing = false, loanId }: Fri
           </IconButton>
         </MenuTrigger>
         <MenuContent>
-          <MenuItem 
-            value="request-loan" 
+          <MenuItem
+            value="request-loan"
             onClick={() => setIsLoanModalOpen(true)}
             disabled={!item.is_available}
           >
-            <FiBookOpen style={{ marginRight: "8px" }} /> 
+            <FiBookOpen style={{ marginRight: "8px" }} />
             {item.is_available ? "Request Loan" : "On Loan (Unavailable)"}
           </MenuItem>
         </MenuContent>
       </MenuRoot>
 
-      <LoanRequestModal 
-        item={item} 
-        isOpen={isLoanModalOpen} 
-        onClose={() => setIsLoanModalOpen(false)} 
+      <LoanRequestModal
+        item={item}
+        isOpen={isLoanModalOpen}
+        onClose={() => setIsLoanModalOpen(false)}
       />
     </>
   )

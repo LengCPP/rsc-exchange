@@ -5,10 +5,10 @@ import {
   createFileRoute,
   redirect,
 } from "@tanstack/react-router"
+import axios from "axios"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaGoogle } from "react-icons/fa"
 import { FiLock, FiUser } from "react-icons/fi"
-import axios from "axios"
 
 import type { UserRegister } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -64,8 +64,8 @@ function SignUp() {
       console.log(tokenResponse)
       try {
         const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/v1/auth/google`,
-            { token: tokenResponse.access_token }
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/google`,
+          { token: tokenResponse.access_token },
         )
         // Handle success - store token, redirect, etc.
         console.log("Backend response:", response.data)
@@ -159,11 +159,7 @@ function SignUp() {
             <Box flex="1" h="1px" bg="gray.600" />
           </Flex>
 
-          <Button 
-            variant="outline" 
-            width="full" 
-            onClick={() => googleLogin()}
-          >
+          <Button variant="outline" width="full" onClick={() => googleLogin()}>
             <FaGoogle style={{ marginRight: "8px" }} />
             Sign up with Google
           </Button>

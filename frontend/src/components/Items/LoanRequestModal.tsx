@@ -1,12 +1,4 @@
-import {
-  Button,
-  VStack,
-  Input as ChakraInput,
-} from "@chakra-ui/react"
-import { useMutation } from "@tanstack/react-query"
-import { useState } from "react"
 import { LoansService } from "@/client"
-import useCustomToast from "@/hooks/useCustomToast"
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -17,6 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Field } from "@/components/ui/field"
+import useCustomToast from "@/hooks/useCustomToast"
+import { Button, Input as ChakraInput, VStack } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { useState } from "react"
 
 interface LoanRequestModalProps {
   item: any
@@ -24,21 +20,28 @@ interface LoanRequestModalProps {
   onClose: () => void
 }
 
-export function LoanRequestModal({ item, isOpen, onClose }: LoanRequestModalProps) {
+export function LoanRequestModal({
+  item,
+  isOpen,
+  onClose,
+}: LoanRequestModalProps) {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  
+
   const mutation = useMutation({
-    mutationFn: (data: { item_id: string, start_date: string, end_date: string }) =>
-      LoansService.createLoanRequest({ requestBody: data }),
+    mutationFn: (data: {
+      item_id: string
+      start_date: string
+      end_date: string
+    }) => LoansService.createLoanRequest({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Loan request sent!")
       onClose()
     },
     onError: (err: any) => {
       showErrorToast(err.body?.detail || "Failed to send loan request")
-    }
+    },
   })
 
   return (
@@ -50,18 +53,34 @@ export function LoanRequestModal({ item, isOpen, onClose }: LoanRequestModalProp
         <DialogBody>
           <VStack gap={4} align="stretch">
             <Field label="Start Date">
-              <ChakraInput type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <ChakraInput
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </Field>
             <Field label="End Date">
-              <ChakraInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <ChakraInput
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </Field>
           </VStack>
         </DialogBody>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button 
-            colorPalette="orange" 
-            onClick={() => mutation.mutate({ item_id: item.id, start_date: startDate, end_date: endDate })}
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            colorPalette="orange"
+            onClick={() =>
+              mutation.mutate({
+                item_id: item.id,
+                start_date: startDate,
+                end_date: endDate,
+              })
+            }
             loading={mutation.isPending}
             disabled={!startDate || !endDate}
           >

@@ -1,14 +1,14 @@
 "use client"
 
+import { UsersService } from "@/client"
+import useAuth from "@/hooks/useAuth"
 import type { IconButtonProps, SpanProps } from "@chakra-ui/react"
 import { ClientOnly, IconButton, Skeleton, Span } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ThemeProvider, useTheme } from "next-themes"
 import type { ThemeProviderProps } from "next-themes"
 import * as React from "react"
 import { LuMoon, LuSun } from "react-icons/lu"
-import useAuth from "@/hooks/useAuth"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { UsersService } from "@/client"
 
 export interface ColorModeProviderProps extends ThemeProviderProps {}
 

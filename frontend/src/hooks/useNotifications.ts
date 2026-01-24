@@ -18,8 +18,15 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user || !token) return
 
-    const baseUrl = OpenAPI.BASE || (window.location.hostname === "localhost" ? "http://localhost:8000" : window.location.origin)
-    const wsUrl = baseUrl.replace(/^http/, "ws") + "/api/v1/notifications/ws?token=" + token
+    const baseUrl =
+      OpenAPI.BASE ||
+      (window.location.hostname === "localhost"
+        ? "http://localhost:8000"
+        : window.location.origin)
+    const wsUrl = `${baseUrl.replace(
+      /^http/,
+      "ws",
+    )}/api/v1/notifications/ws?token=${token}`
 
     const socket = new WebSocket(wsUrl)
 

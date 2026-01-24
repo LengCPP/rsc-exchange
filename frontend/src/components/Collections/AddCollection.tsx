@@ -86,7 +86,9 @@ const AddCollection = () => {
             <DialogTitle>Create Collection / Library</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Text mb={4}>Organize your items into libraries or collections.</Text>
+            <Text mb={4}>
+              Organize your items into libraries or collections.
+            </Text>
             <VStack gap={4}>
               <Field label="Type">
                 <select

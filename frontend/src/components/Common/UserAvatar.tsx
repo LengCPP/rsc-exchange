@@ -1,6 +1,6 @@
-import { Avatar, Box } from "@chakra-ui/react"
 import type { UserPublicExtended } from "@/customTypes"
 import { getImageUrl } from "@/utils"
+import { Avatar, Box } from "@chakra-ui/react"
 
 interface UserAvatarProps {
   user?: UserPublicExtended | null
@@ -21,14 +21,16 @@ const PALETTES = [
 ]
 
 const pickPalette = (name: string) => {
-  const index = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const index = name
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return PALETTES[index % PALETTES.length]
 }
 
 const UserAvatar = ({ user, size = "40px", fontSize }: UserAvatarProps) => {
   const imageUrl = getImageUrl(user?.profile?.image_url)
   const fullName = user?.full_name || user?.email || ""
-  
+
   return (
     <Box
       display="inline-flex"
@@ -38,9 +40,9 @@ const UserAvatar = ({ user, size = "40px", fontSize }: UserAvatarProps) => {
       borderColor="ui.hover"
     >
       <Avatar.Root boxSize={size}>
-        <Avatar.Fallback 
-          name={fullName} 
-          fontSize={fontSize || `calc(${size} * 0.4)`} 
+        <Avatar.Fallback
+          name={fullName}
+          fontSize={fontSize || `calc(${size} * 0.4)`}
           colorPalette={pickPalette(fullName)}
         />
         <Avatar.Image src={imageUrl || undefined} />

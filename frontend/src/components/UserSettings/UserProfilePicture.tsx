@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Input,
-  Text,
-  VStack,
-} from "@chakra-ui/react"
+import { Box, Button, Flex, Input, Text, VStack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 import { FiCamera } from "react-icons/fi"
@@ -20,7 +13,10 @@ interface UserProfilePictureProps {
   isReadOnly?: boolean
 }
 
-const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProps) => {
+const UserProfilePicture = ({
+  user,
+  isReadOnly = false,
+}: UserProfilePictureProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -40,7 +36,7 @@ const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProp
     },
     onSettled: () => {
       setIsUploading(false)
-    }
+    },
   })
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +56,12 @@ const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProp
   return (
     <Box>
       <Flex align="center" gap={6} direction={{ base: "column", sm: "row" }}>
-        <Box position="relative" role="group" onClick={handleButtonClick} cursor={isReadOnly ? "default" : "pointer"}>
+        <Box
+          position="relative"
+          role="group"
+          onClick={handleButtonClick}
+          cursor={isReadOnly ? "default" : "pointer"}
+        >
           <UserAvatar user={user as any} size="100px" />
           {!isReadOnly && (
             <Box
@@ -88,7 +89,7 @@ const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProp
               </Text>
             )}
           </VStack>
-          
+
           <Flex gap={2} wrap="wrap">
             {user?.interests?.length ? (
               user.interests.map((i) => (
@@ -106,7 +107,9 @@ const UserProfilePicture = ({ user, isReadOnly = false }: UserProfilePictureProp
                 </Box>
               ))
             ) : (
-              <Text fontSize="xs" color="fg.muted">No interests selected</Text>
+              <Text fontSize="xs" color="fg.muted">
+                No interests selected
+              </Text>
             )}
           </Flex>
 

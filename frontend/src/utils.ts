@@ -80,7 +80,9 @@ export const formatPublicId = (publicId: string | undefined): string => {
  * @param url - The image URL or path
  * @returns The full image URL
  */
-export const getImageUrl = (url: string | null | undefined): string | undefined => {
+export const getImageUrl = (
+  url: string | null | undefined,
+): string | undefined => {
   if (!url) return undefined
   if (url.startsWith("http")) return url
   if (url.startsWith("/api")) return `${OpenAPI.BASE}${url}`

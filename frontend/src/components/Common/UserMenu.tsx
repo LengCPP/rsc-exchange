@@ -51,12 +51,7 @@ const UserMenu = () => {
           </Button>
         </MenuTrigger>
 
-        <MenuContent
-          boxShadow="lg"
-          borderRadius="xl"
-          py={2}
-          minW="220px"
-        >
+        <MenuContent boxShadow="lg" borderRadius="xl" py={2} minW="220px">
           <Box px={4} py={3} mb={1}>
             <VStack align="start" gap={0}>
               <Text fontWeight="600" fontSize="sm" truncate maxW="180px">
@@ -67,10 +62,13 @@ const UserMenu = () => {
               </Text>
             </VStack>
           </Box>
-          
+
           <MenuSeparator mx={2} mb={2} />
 
-          <Link to="/profile" style={{ textDecoration: "none", color: "inherit" }}>
+          <Link
+            to="/profile"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             <MenuItem
               value="profile"
               mx={2}
@@ -85,7 +83,10 @@ const UserMenu = () => {
             </MenuItem>
           </Link>
 
-          <Link to="/settings" style={{ textDecoration: "none", color: "inherit" }}>
+          <Link
+            to="/settings"
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             <MenuItem
               value="settings"
               mx={2}

@@ -4,28 +4,30 @@ import {
   Button,
   Container,
   Flex,
+  HStack,
   Heading,
+  IconButton,
+  Separator,
   SimpleGrid,
   Text,
   VStack,
-  Separator,
-  HStack,
-  IconButton,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
-import { FiUserCheck, FiUserPlus, FiShare2 } from "react-icons/fi"
 import { BsThreeDotsVertical } from "react-icons/bs"
+import { FiShare2, FiUserCheck, FiUserPlus } from "react-icons/fi"
 
-import { FriendsService, ItemsService, UsersService, CollectionsService } from "@/client"
+import {
+  CollectionsService,
+  FriendsService,
+  ItemsService,
+  UsersService,
+} from "@/client"
+import CollectionCard from "@/components/Collections/CollectionCard"
 import ItemCard from "@/components/Items/ItemCard"
 import UserInformation from "@/components/UserSettings/UserInformation"
 import UserProfilePicture from "@/components/UserSettings/UserProfilePicture"
-import CollectionCard from "@/components/Collections/CollectionCard"
-import useAuth from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { formatPublicId, handleError } from "@/utils"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import {
   MenuContent,
@@ -34,6 +36,9 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu"
 import type { UserPublicExtended } from "@/customTypes"
+import useAuth from "@/hooks/useAuth"
+import useCustomToast from "@/hooks/useCustomToast"
+import { formatPublicId, handleError } from "@/utils"
 
 export const Route = createFileRoute("/_layout/users/$userId")({
   component: UserProfilePage,
@@ -45,7 +50,7 @@ function UserProfilePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  
+
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("desc")
 
@@ -83,13 +88,18 @@ function UserProfilePage() {
   })
 
   const { data: items, isLoading: isLoadingItems } = useQuery({
-    queryKey: ["items", userId, { excludeCollections: true, sortBy, sortOrder }],
-    queryFn: () => ItemsService.readItems({ 
-      ownerId: userId, 
-      excludeCollections: true,
-      sortBy,
-      sortOrder
-    }),
+    queryKey: [
+      "items",
+      userId,
+      { excludeCollections: true, sortBy, sortOrder },
+    ],
+    queryFn: () =>
+      ItemsService.readItems({
+        ownerId: userId,
+        excludeCollections: true,
+        sortBy,
+        sortOrder,
+      }),
     enabled: isFriend,
   })
 
@@ -179,7 +189,9 @@ function UserProfilePage() {
 
       {isFriend && collections?.data && collections.data.length > 0 && (
         <Box mb={12}>
-          <Heading size="lg" mb={6}>Collections & Libraries</Heading>
+          <Heading size="lg" mb={6}>
+            Collections & Libraries
+          </Heading>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
             {collections.data.map((c) => (
               <CollectionCard key={c.id} collection={c} />
@@ -189,23 +201,21 @@ function UserProfilePage() {
       )}
 
       <Flex justify="space-between" align="center" mb={6} wrap="wrap" gap={4}>
-        <Heading size="lg">
-          Other Items
-        </Heading>
-        
+        <Heading size="lg">Other Items</Heading>
+
         {isFriend && (
           <HStack gap={2}>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)} 
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
               style={selectStyle}
             >
               <option value="created_at">Date Created</option>
               <option value="title">Name</option>
             </select>
-            <select 
-              value={sortOrder} 
-              onChange={(e) => setSortOrder(e.target.value)} 
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
               style={selectStyle}
             >
               <option value="desc">Descending</option>
@@ -216,8 +226,17 @@ function UserProfilePage() {
       </Flex>
 
       {!isFriend ? (
-        <Box p={10} textAlign="center" borderWidth="1px" borderStyle="dashed" borderRadius="lg" borderColor={borderColor}>
-          <Text color="gray.500">Items are hidden. Send a friend request to see them!</Text>
+        <Box
+          p={10}
+          textAlign="center"
+          borderWidth="1px"
+          borderStyle="dashed"
+          borderRadius="lg"
+          borderColor={borderColor}
+        >
+          <Text color="gray.500">
+            Items are hidden. Send a friend request to see them!
+          </Text>
         </Box>
       ) : isLoadingItems ? (
         <Text>Loading items...</Text>
@@ -233,4 +252,3 @@ function UserProfilePage() {
     </Container>
   )
 }
-
