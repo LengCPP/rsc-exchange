@@ -1,14 +1,25 @@
 import type { ItemPublic, LoanPublic } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
-import { FriendItemActionsMenu } from "./FriendItemActionsMenu"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import useAuth from "@/hooks/useAuth"
 import { getImageUrl } from "@/utils"
-import { Badge, Box, Card, Flex, HStack, Image, Text, VStack, IconButton } from "@chakra-ui/react"
+import {
+  Badge,
+  Box,
+  Card,
+  Flex,
+  HStack,
+  IconButton,
+  Image,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
 import { Link, useNavigate } from "@tanstack/react-router"
-import React, { useState } from "react"
-import { FiExternalLink } from "react-icons/fi"
 import { format } from "date-fns"
+import type React from "react"
+import { useState } from "react"
+import { FiExternalLink } from "react-icons/fi"
+import { FriendItemActionsMenu } from "./FriendItemActionsMenu"
 
 interface ItemCardProps {
   item: ItemPublic
@@ -33,12 +44,16 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
   const handleGoToCollection = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (item.collection_id) {
-      navigate({ to: "/collections/$collectionId", params: { collectionId: item.collection_id } })
+      navigate({
+        to: "/collections/$collectionId",
+        params: { collectionId: item.collection_id },
+      })
     }
   }
 
   const isOwner = item.owners?.some((o) => o.id === user?.id)
-  const isBorrowing = !!loan && loan.requester_id === user?.id && loan.status === 'active'
+  const isBorrowing =
+    !!loan && loan.requester_id === user?.id && loan.status === "active"
 
   return (
     <Box
@@ -74,7 +89,7 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
             <Image
               src={getImageUrl(item.image_url)}
               alt={item.title}
-              objectFit="cover"
+              objectFit={item.item_type === "book" ? "contain" : "cover"}
               width="100%"
               height="100%"
             />
@@ -93,7 +108,13 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               borderColor={borderColor}
               borderStyle="double"
             >
-              <Text fontSize="xl" fontWeight="bold" fontFamily="serif" mb={2} lineClamp={3}>
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                fontFamily="serif"
+                mb={2}
+                lineClamp={3}
+              >
                 {item.title}
               </Text>
               {item.item_type === "book" && item.extra_data?.author && (
@@ -156,9 +177,9 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                 {isOwner ? (
                   <ItemActionsMenu item={item} />
                 ) : (
-                  <FriendItemActionsMenu 
-                    item={item} 
-                    isBorrowing={isBorrowing} 
+                  <FriendItemActionsMenu
+                    item={item}
+                    isBorrowing={isBorrowing}
                     loanId={loan?.id}
                   />
                 )}
@@ -169,22 +190,45 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               <Text fontSize="lg" fontWeight="bold" lineClamp={2}>
                 {item.title}
               </Text>
-              
+
               {item.item_type === "book" && item.extra_data?.author && (
-                <Text fontSize="sm" fontStyle="italic" color="gray.500" lineClamp={1}>
+                <Text
+                  fontSize="sm"
+                  fontStyle="italic"
+                  color="gray.500"
+                  lineClamp={1}
+                >
                   By {String(item.extra_data.author)}
                 </Text>
               )}
 
-              <Text fontSize="sm" mt={2} lineClamp={5} color="inherit" opacity={0.9}>
+              <Text
+                fontSize="sm"
+                mt={2}
+                lineClamp={5}
+                color="inherit"
+                opacity={0.9}
+              >
                 {item.description || "No description provided."}
               </Text>
             </VStack>
 
-            <Box mt="auto" pt={2} borderTopWidth="1px" borderColor={borderColor}>
+            <Box
+              mt="auto"
+              pt={2}
+              borderTopWidth="1px"
+              borderColor={borderColor}
+            >
               {loan && (
                 <VStack align="start" gap={0} mb={2}>
-                  <Text fontSize="2xs" color="fg.muted" fontWeight="bold" textTransform="uppercase">Due Date</Text>
+                  <Text
+                    fontSize="2xs"
+                    color="fg.muted"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                  >
+                    Due Date
+                  </Text>
                   <Text fontSize="xs" fontWeight="bold" color="orange.500">
                     {format(new Date(loan.end_date), "MMM d, yyyy")}
                   </Text>
@@ -192,24 +236,42 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               )}
 
               {!item.is_available && !loan && (
-                <Badge colorPalette="red" variant="solid" mb={2} width="full" justifyContent="center">
+                <Badge
+                  colorPalette="red"
+                  variant="solid"
+                  mb={2}
+                  width="full"
+                  justifyContent="center"
+                >
                   On Loan
                 </Badge>
               )}
               {isOwner && (
-                <Badge colorPalette="yellow" variant="subtle" mb={2} width="full" justifyContent="center">
+                <Badge
+                  colorPalette="yellow"
+                  variant="subtle"
+                  mb={2}
+                  width="full"
+                  justifyContent="center"
+                >
                   You own this
                 </Badge>
               )}
-              
+
               <Text fontSize="xs" fontWeight="semibold" mb={1}>
                 {loan ? "Owner:" : "Owners:"}
               </Text>
               <HStack gap={1} flexWrap="wrap">
                 {loan ? (
                   <Link
-                    to={loan.owner.id === user?.id ? "/profile" : "/users/$userId"}
-                    params={loan.owner.id === user?.id ? {} : { userId: loan.owner.id }}
+                    to={
+                      loan.owner.id === user?.id ? "/profile" : "/users/$userId"
+                    }
+                    params={
+                      loan.owner.id === user?.id
+                        ? {}
+                        : { userId: loan.owner.id }
+                    }
                     onClick={(e) => e.stopPropagation()}
                     style={{ textDecoration: "none" }}
                   >
@@ -242,11 +304,11 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                   ))
                 )}
               </HStack>
-              
+
               {item.item_type === "book" && item.extra_data?.isbn && (
-                 <Text fontSize="2xs" color="gray.400" mt={2} fontFamily="mono">
-                   ISBN: {String(item.extra_data.isbn)}
-                 </Text>
+                <Text fontSize="2xs" color="gray.400" mt={2} fontFamily="mono">
+                  ISBN: {String(item.extra_data.isbn)}
+                </Text>
               )}
             </Box>
           </Card.Body>

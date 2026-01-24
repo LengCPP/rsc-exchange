@@ -16,6 +16,8 @@ import { type Body_items_create_item, ItemsService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { BookSearchInput } from "@/components/BookSearchInput"
+import type { BookResult } from "@/hooks/useBookSearch"
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -31,7 +33,11 @@ interface ItemCreate {
   title: string
   description?: string
   item_type?: string
-  extra_data?: Record<string, any>
+  extra_data?: {
+    author?: string
+    isbn?: string
+    [key: string]: any
+  }
   image_url?: string
 }
 
@@ -48,6 +54,7 @@ const AddItem = () => {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isValid, isSubmitting },
   } = useForm<ItemCreate>({
     mode: "onBlur",
@@ -62,6 +69,14 @@ const AddItem = () => {
   })
 
   const itemType = watch("item_type")
+
+  const handleBookSelect = (book: BookResult) => {
+    setValue("title", book.title, { shouldValidate: true })
+    setValue("description", book.description)
+    setValue("extra_data.author", book.authors.join(", "))
+    setValue("extra_data.isbn", book.isbn)
+    setValue("image_url", book.thumbnail)
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImageFile(e.target.files?.[0] || null)
@@ -139,14 +154,18 @@ const AddItem = () => {
                 errorText={errors.title?.message}
                 label="Title"
               >
-                <Input
-                  id="title"
-                  {...register("title", {
-                    required: "Title is required.",
-                  })}
-                  placeholder="Title"
-                  type="text"
-                />
+                {itemType === "book" ? (
+                  <BookSearchInput onSelect={handleBookSelect} />
+                ) : (
+                  <Input
+                    id="title"
+                    {...register("title", {
+                      required: "Title is required.",
+                    })}
+                    placeholder="Title"
+                    type="text"
+                  />
+                )}
               </Field>
 
               <Field
@@ -196,7 +215,6 @@ const AddItem = () => {
               </Field>
             </VStack>
           </DialogBody>
-
 
           <DialogFooter gap={2}>
             <DialogActionTrigger asChild>
