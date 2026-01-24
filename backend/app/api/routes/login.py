@@ -1,5 +1,6 @@
 import logging
 import httpx
+import secrets
 from datetime import timedelta
 from typing import Annotated, Any
 
@@ -13,7 +14,7 @@ from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.models import Message, NewPassword, Token, UserPublic
+from app.models import Message, NewPassword, Token, UserPublic, UserCreate
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -142,7 +143,6 @@ def login_google(
     """
     Login with Google
     """
-    # TODO: Fix bug on the google log in
     logger.info(f"Received Google token: {token_data.token[:10]}...")
     # Verify access token via Google API
     try:
@@ -161,17 +161,27 @@ def login_google(
         logger.error("Google token missing email")
         raise HTTPException(status_code=400, detail="Google token missing email")
     
+    full_name = user_info.get("name")
+    
+    user = crud.get_user_by_email(session=session, email=email)
+    if not user:
+        # Create user if not exists
+        random_password = secrets.token_urlsafe(32)
+        user_create = UserCreate(
+            email=email,
+            password=random_password,
+            full_name=full_name,
+        )
+        user = crud.create_user(session=session, user_create=user_create)
+        logger.info(f"Created new user via Google: {email}")
+    elif not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    
     logger.info(f"Google login success for email: {email}")
     
-    # Mock User Create/Get
-    # user = crud.get_user_by_email(session=session, email=email)
-    # if not user:
-    #     user = crud.create_user(session=session, user_create=UserCreate(email=email, ...))
-    
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    # Mocking user ID as 1 for demonstration
     return Token(
         access_token=security.create_access_token(
-            1, expires_delta=access_token_expires
+            user.id, expires_delta=access_token_expires
         )
     )

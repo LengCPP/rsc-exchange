@@ -49,15 +49,19 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
       # Do not expose all Docker services, only the ones explicitly exposed
       - --providers.docker.exposedbydefault=false
-      # Create an entrypoint "http" listening on port 80
+      # Create entrypoints
       - --entrypoints.http.address=:80
-      # DISABLE HTTPS entrypoint or just don't use it locally
+      - --entrypoints.https.address=:443
+      # Enable Let's Encrypt resolver
+      - --certificatesresolvers.le.acme.email=${EMAILS_FROM_EMAIL?Variable not set}
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=http
       # Enable the access log, with HTTP requests
       - --accesslog
       - --log
-      - --log.level=DEBUG
+      - --log.level=INFO
       - --api
-      - --api.insecure=true
+      - --api.insecure=false
 
     networks:
       # Use the public network created to be shared between Traefik and

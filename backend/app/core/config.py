@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str
     
     GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
 
     MEILI_URL: str = "http://meilisearch:7700"
     MEILI_MASTER_KEY: str = "changethis"
