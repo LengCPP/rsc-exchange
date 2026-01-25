@@ -273,7 +273,7 @@ class User(UserBase, table=True):
     communities: list["Community"] = Relationship(
         back_populates="members", link_model=CommunityMember
     )
-    settings: dict = Field(default={}, sa_column=Column(JSONB))
+    settings: dict = Field(default={}, sa_column=Column(JSON))
     profile: UserProfile | None = Relationship(sa_relationship_kwargs={"uselist": False})
     interests: list["Interest"] = Relationship(back_populates="users", link_model=UserInterest)
     notifications: list["Notification"] = Relationship(back_populates="recipient", cascade_delete=True)
@@ -531,6 +531,7 @@ class ItemOwnerPublic(SQLModel):
     id: uuid.UUID
     full_name: str | None
     email: str
+    is_available: bool = True
 
 
 class ItemPublic(ItemBase):

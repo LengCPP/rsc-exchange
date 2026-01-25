@@ -33,6 +33,7 @@ from app.models import (
     ItemPublic,
     ItemsPublic,
     Loan,
+    LoansPublic,
     LoanStatus,
     Message,
     NotificationType,
@@ -1262,3 +1263,39 @@ def create_community_message(
     session.commit()
     session.refresh(message)
     return message
+
+
+@router.get("/{id}/loans", response_model=LoansPublic)
+def read_community_loans(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> Any:
+    """
+    Get loans for a community (Admin only).
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Admin check
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.role == CommunityMemberRole.ADMIN,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only admins can view community loans")
+
+    count_statement = select(func.count()).select_from(Loan).where(Loan.community_id == id)
+    count = session.exec(count_statement).one()
+
+    statement = (
+        select(Loan)
+        .where(Loan.community_id == id)
+        .order_by(Loan.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    loans = session.exec(statement).all()
+    return LoansPublic(data=loans, count=count)

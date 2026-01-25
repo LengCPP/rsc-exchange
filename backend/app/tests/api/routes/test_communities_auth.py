@@ -63,7 +63,7 @@ def test_update_community_auth(
     
     # Make user 2 admin
     member = CommunityMember(
-        community_id=community_id, 
+        community_id=uuid.UUID(community_id), 
         user_id=user2.id, 
         role=CommunityMemberRole.ADMIN,
         status=CommunityMemberStatus.ACCEPTED

@@ -55,7 +55,7 @@ function Login() {
   const { loginMutation, error, resetError } = useAuth()
   const navigate = useNavigate()
   const { token, new_user } = Route.useSearch()
-  
+
   const {
     register,
     handleSubmit,

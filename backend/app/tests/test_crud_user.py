@@ -22,9 +22,8 @@ def test_create_user_initializes_profiles(session: Session):
     
     assert user.email == email
     assert user.profile is not None
-    assert user.settings is not None
+    assert user.settings == {}
     assert user.profile.user_id == user.id
-    assert user.settings.user_id == user.id
 
 def test_accept_friend_request_avoids_duplicates(session: Session):
     u1_in = UserCreate(email="u1@example.com", password="password")

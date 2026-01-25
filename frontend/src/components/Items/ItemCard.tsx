@@ -80,6 +80,18 @@ const ItemCard = ({
 
   const effectiveDisplayOwnerId = displayOwnerId || item.added_by_id
 
+  // Determine availability status based on context
+  let isDisplayAvailable = item.is_available
+  if (isOwner) {
+    const myOwner = item.owners?.find((o) => o.id === user?.id)
+    if (myOwner) isDisplayAvailable = myOwner.is_available
+  } else if (effectiveDisplayOwnerId) {
+    const displayOwner = item.owners?.find(
+      (o) => o.id === effectiveDisplayOwnerId,
+    )
+    if (displayOwner) isDisplayAvailable = displayOwner.is_available
+  }
+
   return (
     <Box
       aspectRatio={isBook ? 2 / 3 : 3 / 4}
@@ -292,13 +304,13 @@ const ItemCard = ({
 
               {isOwner ? (
                 <Badge
-                  colorPalette={item.is_available ? "green" : "red"}
+                  colorPalette={isDisplayAvailable ? "green" : "red"}
                   variant="solid"
                   mb={2}
                   width="full"
                   justifyContent="center"
                 >
-                  {item.is_available ? "Available" : "On Loan"}
+                  {isDisplayAvailable ? "Available" : "On Loan"}
                 </Badge>
               ) : isBorrowing ? (
                 <Badge
@@ -315,7 +327,7 @@ const ItemCard = ({
                     : "In your possession"}
                 </Badge>
               ) : (
-                !item.is_available && (
+                !isDisplayAvailable && (
                   <Badge
                     colorPalette="red"
                     variant="solid"
@@ -441,6 +453,16 @@ const ItemCard = ({
                                 {owner.id === user?.id
                                   ? "You"
                                   : String(owner.full_name || owner.email)}
+                                <Text
+                                  as="span"
+                                  color={
+                                    owner.is_available ? "green.500" : "red.500"
+                                  }
+                                >
+                                  {owner.is_available
+                                    ? " (Available)"
+                                    : " (On Loan)"}
+                                </Text>
                                 {index < arr.length - 1 ? "," : ""}
                               </Text>
                             </Link>

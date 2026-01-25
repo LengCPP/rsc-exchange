@@ -3,7 +3,7 @@ from typing import Any
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select, func
+from sqlmodel import select, func, or_
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -140,7 +140,7 @@ def read_incoming_loan_requests(
     """
     Retrieve loan requests for items owned by the current user or their communities.
     """
-    from app.models import CommunityMember, CommunityMemberRole, or_
+    from app.models import CommunityMember, CommunityMemberRole
     
     # Get IDs of communities where user is an admin
     admin_communities = session.exec(

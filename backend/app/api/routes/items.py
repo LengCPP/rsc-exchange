@@ -39,6 +39,19 @@ def check_item_availability(session: SessionDep, item_id: uuid.UUID) -> bool:
     ).first()
     return active_loan is None
 
+def check_owner_item_availability(session: SessionDep, item_id: uuid.UUID, owner_id: uuid.UUID) -> bool:
+    """
+    Check if a specific owner's copy of an item is available.
+    """
+    active_loan = session.exec(
+        select(Loan).where(
+            Loan.item_id == item_id,
+            Loan.owner_id == owner_id,
+            Loan.status.in_([LoanStatus.ACTIVE, LoanStatus.PENDING, LoanStatus.ACCEPTED, LoanStatus.RETURN_PENDING])
+        )
+    ).first()
+    return active_loan is None
+
 
 @router.get("/", response_model=ItemsPublic)
 def read_items(
@@ -110,12 +123,15 @@ def read_items(
     
     public_items = []
     for item in items:
-        owners_public = [
-            ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
-            for owner in item.owners
-        ]
-        
-        is_available = check_item_availability(session, item.id)
+        owners_public = []
+        any_available = False
+        for owner in item.owners:
+            is_avail = check_owner_item_availability(session, item.id, owner.id)
+            if is_avail:
+                any_available = True
+            owners_public.append(
+                ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email, is_available=is_avail)
+            )
         
         public_items.append(
             ItemPublic(
@@ -128,7 +144,7 @@ def read_items(
                 count=item.count,
                 owners=owners_public,
                 created_at=item.created_at,
-                is_available=is_available
+                is_available=any_available
             )
         )
 
@@ -165,12 +181,15 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         if not friendship:
              raise HTTPException(status_code=400, detail="Not enough permissions (Not a friend of owner)")
 
-    owners_public = [
-        ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
-        for owner in item.owners
-    ]
-    
-    is_available = check_item_availability(session, item.id)
+    owners_public = []
+    any_available = False
+    for owner in item.owners:
+        is_avail = check_owner_item_availability(session, item.id, owner.id)
+        if is_avail:
+            any_available = True
+        owners_public.append(
+            ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email, is_available=is_avail)
+        )
     
     return ItemPublic(
         id=item.id,
@@ -182,7 +201,7 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         count=item.count,
         owners=owners_public,
         created_at=item.created_at,
-        is_available=is_available
+        is_available=any_available
     )
 
 
@@ -297,10 +316,16 @@ async def create_item(
         session.refresh(item)
         sync_item_to_search(item)
 
-    owners_public = [
-        ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
-        for owner in item.owners
-    ]
+    owners_public = []
+    any_available = False
+    for owner in item.owners:
+        is_avail = check_owner_item_availability(session, item.id, owner.id)
+        if is_avail:
+            any_available = True
+        owners_public.append(
+            ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email, is_available=is_avail)
+        )
+
     return ItemPublic(
         id=item.id,
         title=item.title,
@@ -312,7 +337,7 @@ async def create_item(
         owners=owners_public,
         community_owner_id=item.community_owner_id,
         created_at=item.created_at,
-        is_available=True
+        is_available=any_available
     )
 
 
@@ -366,12 +391,15 @@ async def update_item(
     session.refresh(item)
     sync_item_to_search(item)
     
-    owners_public = [
-        ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
-        for owner in item.owners
-    ]
-    
-    is_available = check_item_availability(session, item.id)
+    owners_public = []
+    any_available = False
+    for owner in item.owners:
+        is_avail = check_owner_item_availability(session, item.id, owner.id)
+        if is_avail:
+            any_available = True
+        owners_public.append(
+            ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email, is_available=is_avail)
+        )
     
     return ItemPublic(
         id=item.id,
@@ -383,7 +411,7 @@ async def update_item(
         count=item.count,
         owners=owners_public,
         created_at=item.created_at,
-        is_available=is_available
+        is_available=any_available
     )
 
 
