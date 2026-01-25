@@ -1,3 +1,4 @@
+import { useColorModeValue } from "@/components/ui/color-mode"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
@@ -31,6 +32,10 @@ const AddCollection = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
+
+  const selectBg = useColorModeValue("white", "gray.800")
+  const selectColor = useColorModeValue("black", "white")
+  const selectBorder = useColorModeValue("gray.300", "gray.600")
 
   const {
     register,
@@ -77,7 +82,7 @@ const AddCollection = () => {
       <DialogTrigger asChild>
         <Button variant="outline" my={4} colorPalette="orange">
           <FaPlus fontSize="16px" />
-          Create Library
+          Create Collection
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -97,12 +102,17 @@ const AddCollection = () => {
                     width: "100%",
                     padding: "8px",
                     borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "transparent",
+                    border: `1px solid ${selectBorder}`,
+                    backgroundColor: selectBg,
+                    color: selectColor,
                   }}
                 >
-                  <option value="library">Library (e.g. for Books)</option>
-                  <option value="general">General Collection</option>
+                  <option value="library" style={{ backgroundColor: selectBg }}>
+                    Library (e.g. for Books)
+                  </option>
+                  <option value="general" style={{ backgroundColor: selectBg }}>
+                    General Collection
+                  </option>
                 </select>
               </Field>
 

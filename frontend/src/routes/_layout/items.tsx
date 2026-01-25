@@ -133,7 +133,7 @@ function SortingControls() {
 
   const selectBg = useColorModeValue("white", "gray.800")
   const selectColor = useColorModeValue("black", "white")
-  const selectBorder = useColorModeValue("#ccc", "gray.600")
+  const selectBorder = useColorModeValue("gray.300", "gray.600")
 
   const selectStyle = {
     padding: "8px",
@@ -201,6 +201,14 @@ function ItemsTable() {
     enabled: !!user,
   })
 
+  // Check if user has ANY items at all (ignoring collection filtering)
+  // to decide whether to show the "No items" empty state.
+  const { data: allItemsCheck } = useQuery({
+    queryKey: ["hasAnyItems", user?.id],
+    queryFn: () => ItemsService.readItems({ limit: 1, ownerId: user?.id }),
+    enabled: !!user,
+  })
+
   const setPage = (page: number) =>
     navigate({
       search: (prev: any) => ({ ...prev, page }),
@@ -208,12 +216,19 @@ function ItemsTable() {
 
   const items = data?.data ?? []
   const count = data?.count ?? 0
+  const hasAnyItems = (allItemsCheck?.count ?? 0) > 0
 
   if (isLoading) {
     return <PendingItems />
   }
 
   if (items.length === 0 && page === 1) {
+    // If we have no visible items, but we DO have items (hidden in collections),
+    // we should NOT show the empty state.
+    if (hasAnyItems) {
+      return null
+    }
+
     return (
       <EmptyState.Root>
         <EmptyState.Content>
