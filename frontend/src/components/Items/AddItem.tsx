@@ -220,7 +220,11 @@ const AddItem = () => {
             <Text mb={4}>Fill in the details to add a new item.</Text>
             <VStack gap={4}>
               <Field label="Item Type">
-                <select {...register("item_type")} style={selectStyle}>
+                <select
+                  id="item_type"
+                  {...register("item_type")}
+                  style={selectStyle}
+                >
                   <option value="general" style={{ backgroundColor: selectBg }}>
                     General
                   </option>
@@ -237,7 +241,11 @@ const AddItem = () => {
                 label="Title"
               >
                 {itemType === "book" ? (
-                  <BookSearchInput onSelect={handleBookSelect} />
+                  <BookSearchInput
+                    id="title"
+                    name="title"
+                    onSelect={handleBookSelect}
+                  />
                 ) : (
                   <Input
                     id="title"
@@ -283,12 +291,14 @@ const AddItem = () => {
                 <>
                   <Field label="Author">
                     <Input
+                      id="author"
                       placeholder="Author"
                       {...register("extra_data.author" as any)}
                     />
                   </Field>
                   <Field label="ISBN">
                     <Input
+                      id="isbn"
                       placeholder="ISBN"
                       {...register("extra_data.isbn" as any)}
                     />
@@ -296,6 +306,7 @@ const AddItem = () => {
                   <HStack width="full" gap={4}>
                     <Field label="Category" flex={1}>
                       <select
+                        id="category"
                         {...register("extra_data.category" as any)}
                         style={selectStyle}
                       >
@@ -315,6 +326,7 @@ const AddItem = () => {
                     </Field>
                     <Field label="Genre" flex={1}>
                       <select
+                        id="genre"
                         {...register("extra_data.genre" as any)}
                         style={selectStyle}
                         disabled={!selectedCategory}
@@ -342,6 +354,8 @@ const AddItem = () => {
 
               <Field label="Upload Image">
                 <Input
+                  id="image_file"
+                  name="image_file"
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
@@ -351,6 +365,7 @@ const AddItem = () => {
 
               <Field label="Image URL (alternative)">
                 <Input
+                  id="image_url"
                   placeholder="https://example.com/image.jpg"
                   {...register("image_url")}
                 />

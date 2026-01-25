@@ -13,11 +13,15 @@ import { type BookResult, useBookSearch } from "@/hooks/useBookSearch"
 interface BookSearchInputProps {
   onSelect: (book: BookResult) => void
   placeholder?: string
+  id?: string
+  name?: string
 }
 
 export const BookSearchInput = ({
   onSelect,
   placeholder = "Search for a book title...",
+  id,
+  name,
 }: BookSearchInputProps) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedTerm, setDebouncedTerm] = useState("")
@@ -57,6 +61,8 @@ export const BookSearchInput = ({
   return (
     <Box position="relative" width="100%" ref={containerRef}>
       <Input
+        id={id}
+        name={name}
         value={searchTerm}
         onChange={(e) => {
           setSearchTerm(e.target.value)

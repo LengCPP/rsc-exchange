@@ -185,7 +185,11 @@ const EditItem = ({ item }: EditItemProps) => {
             <Text mb={4}>Update the item details below.</Text>
             <VStack gap={4}>
               <Field label="Item Type">
-                <select {...register("item_type")} style={selectStyle}>
+                <select
+                  id="edit_item_type"
+                  {...register("item_type")}
+                  style={selectStyle}
+                >
                   <option value="general" style={{ backgroundColor: selectBg }}>
                     General
                   </option>
@@ -202,7 +206,7 @@ const EditItem = ({ item }: EditItemProps) => {
                 label="Title"
               >
                 <Input
-                  id="title"
+                  id="edit_title"
                   {...register("title", {
                     required: "Title is required",
                   })}
@@ -228,7 +232,7 @@ const EditItem = ({ item }: EditItemProps) => {
                 }
               >
                 <Textarea
-                  id="description"
+                  id="edit_description"
                   {...register("description", {
                     maxLength: {
                       value: 1000,
@@ -244,12 +248,14 @@ const EditItem = ({ item }: EditItemProps) => {
                 <>
                   <Field label="Author">
                     <Input
+                      id="edit_author"
                       placeholder="Author"
                       {...register("extra_data.author" as any)}
                     />
                   </Field>
                   <Field label="ISBN">
                     <Input
+                      id="edit_isbn"
                       placeholder="ISBN"
                       {...register("extra_data.isbn" as any)}
                     />
@@ -257,6 +263,7 @@ const EditItem = ({ item }: EditItemProps) => {
                   <HStack width="full" gap={4}>
                     <Field label="Category" flex={1}>
                       <select
+                        id="edit_category"
                         {...register("extra_data.category" as any)}
                         style={selectStyle}
                       >
@@ -276,6 +283,7 @@ const EditItem = ({ item }: EditItemProps) => {
                     </Field>
                     <Field label="Genre" flex={1}>
                       <select
+                        id="edit_genre"
                         {...register("extra_data.genre" as any)}
                         style={selectStyle}
                         disabled={!selectedCategory}
@@ -314,6 +322,8 @@ const EditItem = ({ item }: EditItemProps) => {
                   </Box>
                 )}
                 <Input
+                  id="edit_image_file"
+                  name="edit_image_file"
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
@@ -323,6 +333,7 @@ const EditItem = ({ item }: EditItemProps) => {
 
               <Field label="Image URL">
                 <Input
+                  id="edit_image_url"
                   placeholder="https://example.com/image.jpg"
                   {...register("image_url")}
                 />

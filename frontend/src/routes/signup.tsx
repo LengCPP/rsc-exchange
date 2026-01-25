@@ -134,6 +134,7 @@ function SignUp() {
             </InputGroup>
           </Field>
           <PasswordInput
+            id="password"
             type="password"
             startElement={<FiLock />}
             {...register("password", passwordRules())}
@@ -141,6 +142,7 @@ function SignUp() {
             errors={errors}
           />
           <PasswordInput
+            id="confirm_password"
             type="confirm_password"
             startElement={<FiLock />}
             {...register("confirm_password", confirmPasswordRules(getValues))}

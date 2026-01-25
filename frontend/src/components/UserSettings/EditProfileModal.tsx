@@ -149,14 +149,22 @@ const EditProfileModal = ({ user, isOpen, onClose }: EditProfileModalProps) => {
               invalid={!!errors.full_name}
               errorText={errors.full_name?.message}
             >
-              <Input {...register("full_name")} placeholder="Full Name" />
+              <Input
+                id="full_name"
+                {...register("full_name")}
+                placeholder="Full Name"
+              />
             </Field>
             <Field
               label="Alias"
               invalid={!!errors.alias}
               errorText={errors.alias?.message}
             >
-              <Input {...register("alias")} placeholder="Nickname / Alias" />
+              <Input
+                id="alias"
+                {...register("alias")}
+                placeholder="Nickname / Alias"
+              />
             </Field>
             <Field
               label="Bio"
@@ -164,6 +172,7 @@ const EditProfileModal = ({ user, isOpen, onClose }: EditProfileModalProps) => {
               errorText={errors.bio?.message}
             >
               <Textarea
+                id="bio"
                 {...register("bio")}
                 placeholder="Tell us about yourself"
               />
@@ -177,6 +186,7 @@ const EditProfileModal = ({ user, isOpen, onClose }: EditProfileModalProps) => {
               errorText={errors.email?.message}
             >
               <Input
+                id="email"
                 {...register("email")}
                 type="email"
                 placeholder="Email Address"
@@ -189,6 +199,7 @@ const EditProfileModal = ({ user, isOpen, onClose }: EditProfileModalProps) => {
               {interests?.map((interest) => (
                 <Checkbox
                   key={interest.id}
+                  id={`interest-${interest.id}`}
                   checked={selectedInterests.includes(interest.id)}
                   onCheckedChange={() => toggleInterest(interest.id)}
                 >

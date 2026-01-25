@@ -124,6 +124,7 @@ function Login() {
           </InputGroup>
         </Field>
         <PasswordInput
+          id="password"
           type="password"
           startElement={<FiLock />}
           {...register("password", passwordRules())}
