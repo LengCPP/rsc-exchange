@@ -16,6 +16,12 @@ from app.models import (
     CommunityMemberRole,
     CommunityMemberStatus,
     CommunityMemberUpdate,
+    CommunityAnnouncementCreate,
+    CommunityAnnouncementPublic,
+    CommunityAnnouncementsPublic,
+    CommunityMessageCreate,
+    CommunityMessagePublic,
+    CommunityMessagesPublic,
     CommunityPublic,
     CommunityUpdate,
     Friendship,
@@ -366,3 +372,174 @@ async def update_community_member_role(
     user_public.community_role = updated_member.role
     user_public.community_status = updated_member.status
     return user_public
+
+
+@router.get("/{id}/announcements", response_model=CommunityAnnouncementsPublic)
+def read_community_announcements(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> Any:
+    """
+    Get announcements for a community.
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Access check: member or admin
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Must be a member to view announcements")
+
+    from app.models import CommunityAnnouncement
+    count = session.exec(
+        select(func.count()).where(CommunityAnnouncement.community_id == id)
+    ).one()
+    statement = (
+        select(CommunityAnnouncement)
+        .where(CommunityAnnouncement.community_id == id)
+        .order_by(CommunityAnnouncement.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    announcements = session.exec(statement).all()
+    return CommunityAnnouncementsPublic(data=announcements, count=count)
+
+
+@router.post("/{id}/announcements", response_model=CommunityAnnouncementPublic)
+def create_community_announcement(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    announcement_in: CommunityAnnouncementCreate,
+) -> Any:
+    """
+    Create an announcement (Admin only).
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Admin check
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.role == CommunityMemberRole.ADMIN,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only admins can create announcements")
+
+    from app.models import CommunityAnnouncement
+    announcement = CommunityAnnouncement(
+        **announcement_in.model_dump(),
+        community_id=id,
+        author_id=current_user.id
+    )
+    session.add(announcement)
+    session.commit()
+    session.refresh(announcement)
+
+    # Notify all members
+    member_statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+        CommunityMember.user_id != current_user.id
+    )
+    members = session.exec(member_statement).all()
+    for member in members:
+        crud.create_notification(
+            session=session,
+            recipient_id=member.user_id,
+            title=f"New Announcement in {community.name}",
+            message=announcement.title,
+            type=NotificationType.INFO,
+            link=f"/communities/{id}"
+        )
+        # Notify via websocket
+        # Note: notification_manager is imported at the top
+        await notification_manager.send_personal_message(
+            {"type": "new_notification"},
+            member.user_id
+        )
+
+    return announcement
+
+
+@router.get("/{id}/messages", response_model=CommunityMessagesPublic)
+def read_community_messages(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> Any:
+    """
+    Get messages for a community board.
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Access check: member or admin
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Must be a member to view messages")
+
+    from app.models import CommunityMessage
+    count = session.exec(
+        select(func.count()).where(CommunityMessage.community_id == id)
+    ).one()
+    statement = (
+        select(CommunityMessage)
+        .where(CommunityMessage.community_id == id)
+        .order_by(CommunityMessage.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    messages = session.exec(statement).all()
+    return CommunityMessagesPublic(data=messages, count=count)
+
+
+@router.post("/{id}/messages", response_model=CommunityMessagePublic)
+def create_community_message(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    message_in: CommunityMessageCreate,
+) -> Any:
+    """
+    Post a message to the community board.
+    """
+    community = session.get(Community, id)
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Member check
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+    )
+    membership = session.exec(statement).first()
+    if not membership and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Must be a member to post messages")
+
+    from app.models import CommunityMessage
+    message = CommunityMessage(
+        **message_in.model_dump(),
+        community_id=id,
+        author_id=current_user.id
+    )
+    session.add(message)
+    session.commit()
+    session.refresh(message)
+    return message

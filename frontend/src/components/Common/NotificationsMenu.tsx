@@ -8,6 +8,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { FaBell, FaCircle } from "react-icons/fa"
 import { NotificationsService } from "../../client"
 import { useNotifications } from "../../hooks/useNotifications"
@@ -15,6 +16,7 @@ import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
 
 const NotificationsMenu = () => {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { data: notifications, isLoading } = useNotifications()
 
   const markAsReadMutation = useMutation({
@@ -31,6 +33,15 @@ const NotificationsMenu = () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
   })
+
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.is_read) {
+      markAsReadMutation.mutate(notification.id)
+    }
+    if (notification.link) {
+      navigate({ to: notification.link })
+    }
+  }
 
   const unreadCount = notifications?.unread_count || 0
 
@@ -104,10 +115,7 @@ const NotificationsMenu = () => {
               <MenuItem
                 value={notification.id}
                 key={notification.id}
-                onClick={() =>
-                  !notification.is_read &&
-                  markAsReadMutation.mutate(notification.id)
-                }
+                onClick={() => handleNotificationClick(notification)}
                 _hover={{ bg: "bg.muted" }}
                 px={4}
                 py={3}

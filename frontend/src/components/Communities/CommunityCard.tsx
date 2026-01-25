@@ -9,6 +9,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import {
   FiSettings,
@@ -180,6 +181,14 @@ const CommunityCard = ({ community }: CommunityCardProps) => {
           </Button>
         ) : (
           <>
+            <Link
+              to="/communities/$communityId"
+              params={{ communityId: community.id }}
+            >
+              <Button size="sm" colorPalette="orange" variant="solid">
+                View Board
+              </Button>
+            </Link>
             <Button
               size="sm"
               variant={"secondary" as any}

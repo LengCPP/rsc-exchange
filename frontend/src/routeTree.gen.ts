@@ -22,9 +22,10 @@ import { Route as LayoutProfileImport } from './routes/_layout/profile'
 import { Route as LayoutLoansImport } from './routes/_layout/loans'
 import { Route as LayoutItemsImport } from './routes/_layout/items'
 import { Route as LayoutFriendsImport } from './routes/_layout/friends'
-import { Route as LayoutCommunitiesImport } from './routes/_layout/communities'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
+import { Route as LayoutCommunitiesIndexImport } from './routes/_layout/communities/index'
 import { Route as LayoutUsersUserIdImport } from './routes/_layout/users/$userId'
+import { Route as LayoutCommunitiesCommunityIdImport } from './routes/_layout/communities/$communityId'
 import { Route as LayoutCollectionsCollectionIdImport } from './routes/_layout/collections/$collectionId'
 
 // Create/Update Routes
@@ -84,13 +85,13 @@ const LayoutFriendsRoute = LayoutFriendsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutCommunitiesRoute = LayoutCommunitiesImport.update({
-  path: '/communities',
+const LayoutAdminRoute = LayoutAdminImport.update({
+  path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutAdminRoute = LayoutAdminImport.update({
-  path: '/admin',
+const LayoutCommunitiesIndexRoute = LayoutCommunitiesIndexImport.update({
+  path: '/communities/',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -98,6 +99,12 @@ const LayoutUsersUserIdRoute = LayoutUsersUserIdImport.update({
   path: '/users/$userId',
   getParentRoute: () => LayoutRoute,
 } as any)
+
+const LayoutCommunitiesCommunityIdRoute =
+  LayoutCommunitiesCommunityIdImport.update({
+    path: '/communities/$communityId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 const LayoutCollectionsCollectionIdRoute =
   LayoutCollectionsCollectionIdImport.update({
@@ -133,10 +140,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/communities': {
-      preLoaderRoute: typeof LayoutCommunitiesImport
-      parentRoute: typeof LayoutImport
-    }
     '/_layout/friends': {
       preLoaderRoute: typeof LayoutFriendsImport
       parentRoute: typeof LayoutImport
@@ -165,8 +168,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutCollectionsCollectionIdImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/communities/$communityId': {
+      preLoaderRoute: typeof LayoutCommunitiesCommunityIdImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/users/$userId': {
       preLoaderRoute: typeof LayoutUsersUserIdImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/communities/': {
+      preLoaderRoute: typeof LayoutCommunitiesIndexImport
       parentRoute: typeof LayoutImport
     }
   }
@@ -177,7 +188,6 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
-    LayoutCommunitiesRoute,
     LayoutFriendsRoute,
     LayoutItemsRoute,
     LayoutLoansRoute,
@@ -185,7 +195,9 @@ export const routeTree = rootRoute.addChildren([
     LayoutSettingsRoute,
     LayoutIndexRoute,
     LayoutCollectionsCollectionIdRoute,
+    LayoutCommunitiesCommunityIdRoute,
     LayoutUsersUserIdRoute,
+    LayoutCommunitiesIndexRoute,
   ]),
   LoginRoute,
   RecoverPasswordRoute,

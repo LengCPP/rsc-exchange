@@ -295,6 +295,41 @@ class Community(CommunityBase, table=True):
         back_populates="communities", link_model=CommunityMember
     )
     interests: list["Interest"] = Relationship(back_populates="communities", link_model=CommunityInterest)
+    announcements: list["CommunityAnnouncement"] = Relationship(
+        back_populates="community", cascade_delete=True
+    )
+    messages: list["CommunityMessage"] = Relationship(
+        back_populates="community", cascade_delete=True
+    )
+
+
+class CommunityAnnouncement(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    community_id: uuid.UUID = Field(foreign_key="community.id", ondelete="CASCADE")
+    author_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    title: str = Field(max_length=255)
+    content: str = Field(max_length=5000)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+
+    community: "Community" = Relationship(back_populates="announcements")
+    author: "User" = Relationship()
+
+
+class CommunityMessage(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    community_id: uuid.UUID = Field(foreign_key="community.id", ondelete="CASCADE")
+    author_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    content: str = Field(max_length=2000)
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    )
+
+    community: "Community" = Relationship(back_populates="messages")
+    author: "User" = Relationship()
 
 
 class CollectionBase(SQLModel):
@@ -352,6 +387,49 @@ class CommunityPublic(CommunityBase):
     id: uuid.UUID
     created_by: uuid.UUID
     current_user_role: CommunityMemberRole | None = None
+
+
+class CommunityAnnouncementBase(SQLModel):
+    title: str = Field(min_length=1, max_length=255)
+    content: str = Field(min_length=1, max_length=5000)
+
+
+class CommunityAnnouncementCreate(CommunityAnnouncementBase):
+    pass
+
+
+class CommunityAnnouncementPublic(CommunityAnnouncementBase):
+    id: uuid.UUID
+    community_id: uuid.UUID
+    author_id: uuid.UUID
+    created_at: datetime
+    author: "UserPublic"
+
+
+class CommunityAnnouncementsPublic(SQLModel):
+    data: list[CommunityAnnouncementPublic]
+    count: int
+
+
+class CommunityMessageBase(SQLModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class CommunityMessageCreate(CommunityMessageBase):
+    pass
+
+
+class CommunityMessagePublic(CommunityMessageBase):
+    id: uuid.UUID
+    community_id: uuid.UUID
+    author_id: uuid.UUID
+    created_at: datetime
+    author: "UserPublic"
+
+
+class CommunityMessagesPublic(SQLModel):
+    data: list[CommunityMessagePublic]
+    count: int
 
 
 class CommunitiesPublic(SQLModel):
