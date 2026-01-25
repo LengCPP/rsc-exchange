@@ -3,6 +3,7 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 
 import Navbar from "@/components/Common/Navbar"
 import Sidebar from "@/components/Common/Sidebar"
+import NotFound from "@/components/Common/NotFound"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_layout")({
       })
     }
   },
+  notFoundComponent: () => <NotFound />,
 })
 
 function Layout() {

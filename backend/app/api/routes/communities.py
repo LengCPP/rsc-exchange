@@ -411,7 +411,7 @@ def read_community_announcements(
 
 
 @router.post("/{id}/announcements", response_model=CommunityAnnouncementPublic)
-def create_community_announcement(
+async def create_community_announcement(
     *,
     session: SessionDep,
     current_user: CurrentUser,

@@ -20,7 +20,7 @@ const communitiesSearchSchema = z.object({
   page: z.number().catch(1),
 })
 
-export const Route = createFileRoute("/_layout/communities/")({
+export const Route = createFileRoute("/_layout/communities")({
   component: Communities,
   validateSearch: (search) => communitiesSearchSchema.parse(search),
 })

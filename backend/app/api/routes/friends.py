@@ -169,7 +169,7 @@ async def create_friend_request(
         title="New Friend Request",
         message=f"{current_user.full_name or current_user.email} sent you a friend request.",
         type=NotificationType.INFO,
-        link="/friends/requests"
+        link="/friends"
     )
     await notification_manager.send_personal_message(
         {"type": "new_notification"},
