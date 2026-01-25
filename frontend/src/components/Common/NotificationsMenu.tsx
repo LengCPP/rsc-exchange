@@ -40,7 +40,9 @@ const NotificationsMenu = () => {
     }
     if (notification.link) {
       // If it's a community link, we can try to navigate more explicitly
-      const communityMatch = notification.link.match(/\/communities\/([a-f0-9-]+)/i)
+      const communityMatch = notification.link.match(
+        /\/communities\/([a-f0-9-]+)/i,
+      )
       if (communityMatch) {
         navigate({
           to: "/communities/$communityId",

@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import type React from "react"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
@@ -25,7 +26,7 @@ import {
   PaginationNextTrigger,
   PaginationPrevTrigger,
   PaginationRoot,
-} from "@/components/ui/pagination.tsx"
+} from "@/components/ui/pagination"
 import useAuth from "@/hooks/useAuth"
 
 const itemsSearchSchema = z.object({
@@ -246,7 +247,7 @@ function ItemsTable() {
         opacity={isPlaceholderData ? 0.5 : 1}
       >
         {items?.map((item) => (
-          <ItemCard key={item.id} item={item} />
+          <ItemCard key={item.id} item={item} displayOwnerId={user?.id} />
         ))}
       </Grid>
       <Flex justifyContent="center" mt={8}>

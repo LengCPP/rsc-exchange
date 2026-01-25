@@ -114,7 +114,8 @@ function UserProfilePage() {
   })
 
   const removeFriendMutation = useMutation({
-    mutationFn: (userId: string) => FriendsService.removeFriend({ friendId: userId }),
+    mutationFn: (userId: string) =>
+      FriendsService.removeFriend({ friendId: userId }),
     onSuccess: () => {
       showSuccessToast("Friend removed")
       queryClient.invalidateQueries({ queryKey: ["user", userId] })
@@ -191,7 +192,11 @@ function UserProfilePage() {
                   value="remove-friend"
                   color="red.500"
                   onClick={() => {
-                    if (window.confirm("Are you sure you want to remove this friend?")) {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to remove this friend?",
+                      )
+                    ) {
                       removeFriendMutation.mutate(user.id)
                     }
                   }}
@@ -268,7 +273,7 @@ function UserProfilePage() {
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
           {userItems.map((item) => (
-            <ItemCard key={item.id} item={item} />
+            <ItemCard key={item.id} item={item} displayOwnerId={userId} />
           ))}
         </SimpleGrid>
       )}

@@ -1,3 +1,4 @@
+import { type BookResult, useBookSearch } from "@/hooks/useBookSearch"
 import {
   Box,
   HStack,
@@ -8,7 +9,6 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
-import { type BookResult, useBookSearch } from "@/hooks/useBookSearch"
 
 interface BookSearchInputProps {
   onSelect: (book: BookResult) => void
@@ -101,7 +101,9 @@ export const BookSearchInput = ({
                   p={3}
                   _hover={{ bg: "bg.muted", cursor: "pointer" }}
                   onClick={() => handleSelect(book)}
-                  borderBottom={index !== results.length - 1 ? "1px solid" : "none"}
+                  borderBottom={
+                    index !== results.length - 1 ? "1px solid" : "none"
+                  }
                   borderColor="border.subtle"
                   align="start"
                 >
@@ -136,7 +138,9 @@ export const BookSearchInput = ({
             </Stack>
           ) : (
             <Box p={4}>
-              <Text fontSize="sm" color="fg.muted">No books found.</Text>
+              <Text fontSize="sm" color="fg.muted">
+                No books found.
+              </Text>
             </Box>
           )}
         </Box>

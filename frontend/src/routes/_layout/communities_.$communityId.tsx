@@ -4,8 +4,8 @@ import {
   Button,
   Container,
   Flex,
-  Heading,
   HStack,
+  Heading,
   Input,
   Separator,
   SimpleGrid,
@@ -15,22 +15,19 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import {
   FiArrowLeft,
   FiBell,
   FiBellOff,
   FiBox,
-  FiCheck,
-  FiHeart,
   FiLogOut,
   FiMessageSquare,
   FiPlus,
   FiSend,
   FiSettings,
   FiShield,
-  FiTrash2,
   FiUserCheck,
   FiUserMinus,
   FiUserPlus,
@@ -39,11 +36,10 @@ import {
 
 import {
   CommunitiesService,
-  FriendsService,
-  ItemsService,
-  LoansService,
   type CommunityPublic,
+  FriendsService,
 } from "@/client"
+import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
 import {
   DialogBody,
@@ -145,178 +141,6 @@ function AddAnnouncementModal({ communityId }: { communityId: string }) {
   )
 }
 
-function AddCommunityItemModal({
-  communityId,
-  isAdmin,
-}: { communityId: string; isAdmin: boolean }) {
-  const { user: currentUser } = useAuth()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isOpen, setIsOpen] = useState(false)
-  const [mode, setMode] = useState<"pool" | "create">("pool")
-
-  // For 'create' mode
-  const [newTitle, setNewTitle] = useState("")
-  const [newDesc, setNewDesc] = useState("")
-
-  const queryClient = useQueryClient()
-  const { showSuccessToast, showErrorToast } = useCustomToast()
-
-  const { data: myItems } = useQuery({
-    queryKey: ["my-items-for-community"],
-    queryFn: () =>
-      ItemsService.readItems({
-        ownerId: currentUser?.id,
-      }),
-    enabled: isOpen && mode === "pool" && !!currentUser,
-  })
-
-  const addMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      CommunitiesService.addItemToCommunity({ id: communityId, itemId }),
-    onSuccess: () => {
-      showSuccessToast("Item added to community pool!")
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: () => showErrorToast("Failed to add item"),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: () =>
-      ItemsService.createItem({
-        formData: {
-          title: newTitle,
-          description: newDesc,
-          community_owner_id: communityId,
-        },
-      }),
-    onSuccess: () => {
-      showSuccessToast("Community-owned item created!")
-      setNewTitle("")
-      setNewDesc("")
-      setIsOpen(false)
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: () => showErrorToast("Failed to create item"),
-  })
-
-  const filteredItems = myItems?.data.filter((item) =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
-
-  return (
-    <DialogRoot open={isOpen} onOpenChange={(e) => setIsOpen(e.open)} size="lg">
-      <DialogTrigger asChild>
-        <Button size="sm" colorPalette="orange" variant="outline">
-          <FiPlus /> Add Item
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Items to Community</DialogTitle>
-        </DialogHeader>
-        <DialogBody>
-          <Tabs.Root
-            value={mode}
-            onValueChange={(e) => setMode(e.value as any)}
-            variant="plain"
-          >
-            <Tabs.List mb={4} gap={4}>
-              <Tabs.Trigger value="pool">From My Collection</Tabs.Trigger>
-              {isAdmin && (
-                <Tabs.Trigger value="create">New Community Item</Tabs.Trigger>
-              )}
-            </Tabs.List>
-
-            <Tabs.Content value="pool">
-              <VStack gap={4} align="stretch">
-                <Text fontSize="sm" color="fg.muted">
-                  Make your own items available for community members to borrow.
-                </Text>
-                <Input
-                  placeholder="Search your items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Box maxH="300px" overflowY="auto">
-                  {filteredItems?.length === 0 ? (
-                    <Text p={4} textAlign="center" color="fg.muted">
-                      No items found.
-                    </Text>
-                  ) : (
-                    <VStack align="stretch" gap={2}>
-                      {filteredItems?.map((item) => (
-                        <Flex
-                          key={item.id}
-                          p={3}
-                          borderWidth="1px"
-                          rounded="md"
-                          justify="space-between"
-                          align="center"
-                        >
-                          <Text fontWeight="medium">{item.title}</Text>
-                          <Button
-                            size="xs"
-                            colorPalette="orange"
-                            onClick={() => addMutation.mutate(item.id)}
-                            loading={addMutation.isPending}
-                          >
-                            Pool Item
-                          </Button>
-                        </Flex>
-                      ))}
-                    </VStack>
-                  )}
-                </Box>
-              </VStack>
-            </Tabs.Content>
-
-            <Tabs.Content value="create">
-              <VStack gap={4}>
-                <Text fontSize="sm" color="fg.muted">
-                  Create an item that is directly owned by the community itself.
-                </Text>
-                <Field label="Title" required>
-                  <Input
-                    placeholder="Item Title"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                  />
-                </Field>
-                <Field label="Description">
-                  <Textarea
-                    placeholder="Item Description"
-                    value={newDesc}
-                    onChange={(e) => setNewDesc(e.target.value)}
-                  />
-                </Field>
-                <Button
-                  colorPalette="orange"
-                  width="full"
-                  onClick={() => createMutation.mutate()}
-                  loading={createMutation.isPending}
-                  disabled={!newTitle.trim()}
-                >
-                  Create Community Item
-                </Button>
-              </VStack>
-            </Tabs.Content>
-          </Tabs.Root>
-        </DialogBody>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setIsOpen(false)}>
-            Close
-          </Button>
-        </DialogFooter>
-        <DialogCloseTrigger />
-      </DialogContent>
-    </DialogRoot>
-  )
-}
-
 function CommunityBoard() {
   const { communityId } = Route.useParams()
   const { user: currentUser } = useAuth()
@@ -345,7 +169,8 @@ function CommunityBoard() {
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
     queryKey: ["communityMessages", communityId],
-    queryFn: () => CommunitiesService.readCommunityMessages({ id: communityId }),
+    queryFn: () =>
+      CommunitiesService.readCommunityMessages({ id: communityId }),
   })
 
   const { data: announcements, isLoading: isLoadingAnnouncements } = useQuery({
@@ -411,42 +236,6 @@ function CommunityBoard() {
     onError: () => showErrorToast("Failed to remove member"),
   })
 
-  const removeItemMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      CommunitiesService.removeItemFromCommunity({ id: communityId, itemId }),
-    onSuccess: () => {
-      showSuccessToast("Item removed from community")
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: () => showErrorToast("Failed to remove item"),
-  })
-
-  const donateMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      CommunitiesService.initiateDonation({ id: communityId, itemId }),
-    onSuccess: () => {
-      showSuccessToast("Donation request sent!")
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: () => showErrorToast("Failed to initiate donation"),
-  })
-
-  const ratifyDonationMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      CommunitiesService.ratifyDonation({ id: communityId, itemId }),
-    onSuccess: () => {
-      showSuccessToast("Donation ratified! The community now owns this item.")
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: () => showErrorToast("Failed to ratify donation"),
-  })
-
   const leaveMutation = useMutation({
     mutationFn: () => CommunitiesService.leaveCommunity({ id: communityId }),
     onSuccess: () => {
@@ -463,26 +252,6 @@ function CommunityBoard() {
       FriendsService.createFriendRequest({ friendId: userId }),
     onSuccess: () => showSuccessToast("Friend request sent!"),
     onError: () => showErrorToast("Failed to send friend request"),
-  })
-
-  const borrowMutation = useMutation({
-    mutationFn: (itemId: string) =>
-      LoansService.createLoanRequest({
-        requestBody: {
-          item_id: itemId,
-          community_id: communityId,
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week
-        },
-      }),
-    onSuccess: () => {
-      showSuccessToast("Loan request sent to community admins!")
-      queryClient.invalidateQueries({
-        queryKey: ["communityItems", communityId],
-      })
-    },
-    onError: (err: any) =>
-      showErrorToast(err.detail || "Failed to request loan"),
   })
 
   const isMember = !!community?.current_user_role
@@ -722,10 +491,7 @@ function CommunityBoard() {
             <VStack align="stretch" gap={6}>
               <Flex justify="space-between" align="center">
                 <Heading size="md">Community Items</Heading>
-                <AddCommunityItemModal
-                  communityId={communityId}
-                  isAdmin={isAdmin}
-                />
+                <AddItem communityId={communityId} isAdmin={isAdmin} />
               </Flex>
 
               {isLoadingItems ? (
@@ -744,114 +510,28 @@ function CommunityBoard() {
                 </Box>
               ) : (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
-                  {communityItems?.data.map((item) => {
-                    const isOwner = item.owners.some(
-                      (o) => o.id === currentUser?.id,
-                    )
-                    const isPooledByMe = item.added_by_id === currentUser?.id
-                    const isCommunityOwned = !!item.community_owner_id
-
-                    return (
-                      <Box key={item.id} position="relative">
-                        <ItemCard item={item} />
-                        <VStack mt={2} align="stretch" gap={1}>
-                          <Button
-                            size="xs"
-                            colorPalette="orange"
-                            variant="solid"
-                            width="full"
-                            onClick={() => borrowMutation.mutate(item.id)}
-                            loading={borrowMutation.isPending}
-                            disabled={!item.is_available || isOwner}
-                          >
-                            {isOwner
-                              ? "Your Item"
-                              : item.is_available
-                                ? "Borrow"
-                                : "Currently on Loan"}
-                          </Button>
-
-                          <HStack gap={1}>
-                            {isPooledByMe &&
-                              !isCommunityOwned &&
-                              !item.is_donation_pending && (
-                                <Button
-                                  size="xs"
-                                  variant="outline"
-                                  colorPalette="green"
-                                  flex={1}
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        "Donate this item to the community? You will lose personal ownership.",
-                                      )
-                                    ) {
-                                      donateMutation.mutate(item.id)
-                                    }
-                                  }}
-                                  loading={donateMutation.isPending}
-                                >
-                                  <FiHeart /> Donate
-                                </Button>
-                              )}
-
-                            {item.is_donation_pending && (
-                              <Badge
-                                colorPalette="yellow"
-                                flex={1}
-                                textAlign="center"
-                              >
-                                Donation Pending
-                              </Badge>
-                            )}
-
-                            {item.is_donation_pending && isAdmin && (
-                              <Button
-                                size="xs"
-                                colorPalette="green"
-                                variant="solid"
-                                onClick={() =>
-                                  ratifyDonationMutation.mutate(item.id)
-                                }
-                                loading={ratifyDonationMutation.isPending}
-                              >
-                                <FiCheck /> Ratify
-                              </Button>
-                            )}
-
-                            {(isAdmin || isPooledByMe) && (
-                              <Button
-                                size="xs"
-                                colorPalette="red"
-                                variant="ghost"
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      "Remove this item from community pool?",
-                                    )
-                                  ) {
-                                    removeItemMutation.mutate(item.id)
-                                  }
-                                }}
-                                loading={removeItemMutation.isPending}
-                              >
-                                <FiTrash2 />
-                              </Button>
-                            )}
-                          </HStack>
-                          {isCommunityOwned && (
-                            <Badge
-                              variant="solid"
-                              colorPalette="purple"
-                              size="xs"
-                            >
-                              Community Owned
-                            </Badge>
-                          )}
-                        </VStack>
-                      </Box>
-                    )
-                  })}
+                  {communityItems?.data.map((item) => (
+                    <Box key={item.id} position="relative">
+                      <ItemCard
+                        item={item}
+                        communityId={communityId}
+                        isAdmin={isAdmin}
+                      />
+                      {item.is_donation_pending && (
+                        <Badge
+                          colorPalette="yellow"
+                          variant="solid"
+                          size="xs"
+                          position="absolute"
+                          top={2}
+                          left={2}
+                          zIndex={1}
+                        >
+                          Donation Pending
+                        </Badge>
+                      )}
+                    </Box>
+                  ))}
                 </SimpleGrid>
               )}
             </VStack>

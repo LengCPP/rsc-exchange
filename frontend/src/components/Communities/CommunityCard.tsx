@@ -1,16 +1,7 @@
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Text,
-} from "@chakra-ui/react"
+import { Badge, Box, Button, Flex, Heading, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import {
-  FiTrash2,
-} from "react-icons/fi"
+import { FiTrash2 } from "react-icons/fi"
 
 import { CommunitiesService } from "@/client"
 import EditCommunity from "@/components/Communities/EditCommunity"

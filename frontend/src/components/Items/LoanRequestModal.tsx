@@ -18,12 +18,14 @@ interface LoanRequestModalProps {
   item: any
   isOpen: boolean
   onClose: () => void
+  communityId?: string
 }
 
 export function LoanRequestModal({
   item,
   isOpen,
   onClose,
+  communityId,
 }: LoanRequestModalProps) {
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -34,6 +36,7 @@ export function LoanRequestModal({
       item_id: string
       start_date: string
       end_date: string
+      community_id?: string
     }) => LoansService.createLoanRequest({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Loan request sent!")
@@ -79,6 +82,7 @@ export function LoanRequestModal({
                 item_id: item.id,
                 start_date: startDate,
                 end_date: endDate,
+                community_id: communityId,
               })
             }
             loading={mutation.isPending}
