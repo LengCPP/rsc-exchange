@@ -1,4 +1,4 @@
-import type { ItemPublic, LoanPublic } from "@/client"
+import { CommunitiesService, type ItemPublic, type LoanPublic } from "@/client"
 import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import useAuth from "@/hooks/useAuth"
@@ -14,6 +14,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { format } from "date-fns"
 import type React from "react"
@@ -24,9 +25,18 @@ import { FriendItemActionsMenu } from "./FriendItemActionsMenu"
 interface ItemCardProps {
   item: ItemPublic
   loan?: LoanPublic
+  communityId?: string
+  isAdmin?: boolean
+  displayOwnerId?: string
 }
 
-const ItemCard = ({ item, loan }: ItemCardProps) => {
+const ItemCard = ({
+  item,
+  loan,
+  communityId,
+  isAdmin,
+  displayOwnerId,
+}: ItemCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -58,8 +68,17 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
     loan.requester_id === user?.id &&
     ["active", "return_pending"].includes(loan.status)
 
+  const { data: ownerCommunity } = useQuery({
+    queryKey: ["community", item.community_owner_id],
+    queryFn: () =>
+      CommunitiesService.readCommunity({ id: item.community_owner_id! }),
+    enabled: !!item.community_owner_id,
+  })
+
   const isBook = item.item_type === "book"
   const extraData = (item.extra_data as any) || {}
+
+  const effectiveDisplayOwnerId = displayOwnerId || item.added_by_id
 
   return (
     <Box
@@ -181,12 +200,18 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                   </IconButton>
                 )}
                 {isOwner ? (
-                  <ItemActionsMenu item={item} />
+                  <ItemActionsMenu
+                    item={item}
+                    communityId={communityId}
+                    isAdmin={isAdmin}
+                  />
                 ) : (
                   <FriendItemActionsMenu
                     item={item}
                     isBorrowing={isBorrowing}
                     loanId={loan?.id}
+                    communityId={communityId}
+                    isAdmin={isAdmin}
                   />
                 )}
               </HStack>
@@ -304,18 +329,20 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
               )}
 
               <Text fontSize="xs" fontWeight="semibold" mb={1}>
-                {loan ? "Owner:" : "Owners:"}
+                {loan || effectiveDisplayOwnerId ? "Owner:" : "Owners:"}
               </Text>
               <HStack gap={1} flexWrap="wrap">
                 {loan ? (
                   <Link
                     to={
-                      loan.owner.id === user?.id ? "/profile" : "/users/$userId"
+                      loan.owner?.id === user?.id
+                        ? "/profile"
+                        : "/users/$userId"
                     }
                     params={
-                      loan.owner.id === user?.id
+                      loan.owner?.id === user?.id
                         ? {}
-                        : { userId: loan.owner.id }
+                        : { userId: loan.owner?.id || "" }
                     }
                     onClick={(e) => e.stopPropagation()}
                     style={{ textDecoration: "none" }}
@@ -325,28 +352,102 @@ const ItemCard = ({ item, loan }: ItemCardProps) => {
                       color="blue.500"
                       _hover={{ textDecoration: "underline" }}
                     >
-                      {String(loan.owner.full_name || loan.owner.email)}
+                      {loan.owner
+                        ? loan.owner.id === user?.id
+                          ? "You"
+                          : String(loan.owner.full_name || loan.owner.email)
+                        : ownerCommunity?.name || "Community"}
                     </Text>
                   </Link>
                 ) : (
-                  item.owners?.map((owner, index, arr) => (
-                    <Link
-                      key={owner.id}
-                      to={owner.id === user?.id ? "/profile" : "/users/$userId"}
-                      params={owner.id === user?.id ? {} : { userId: owner.id }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ textDecoration: "none" }}
-                    >
-                      <Text
-                        fontSize="xs"
-                        color="blue.500"
-                        _hover={{ textDecoration: "underline" }}
+                  <>
+                    {item.community_owner_id && ownerCommunity ? (
+                      <Link
+                        to="/communities/$communityId"
+                        params={{ communityId: item.community_owner_id }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ textDecoration: "none" }}
                       >
-                        {String(owner.full_name || owner.email)}
-                        {index < arr.length - 1 ? "," : ""}
-                      </Text>
-                    </Link>
-                  ))
+                        <Text
+                          fontSize="xs"
+                          color="purple.500"
+                          fontWeight="bold"
+                          _hover={{ textDecoration: "underline" }}
+                        >
+                          {ownerCommunity.name}
+                        </Text>
+                      </Link>
+                    ) : (
+                      <>
+                        {effectiveDisplayOwnerId && (
+                          <Link
+                            to={
+                              effectiveDisplayOwnerId === user?.id
+                                ? "/profile"
+                                : "/users/$userId"
+                            }
+                            params={
+                              effectiveDisplayOwnerId === user?.id
+                                ? {}
+                                : { userId: effectiveDisplayOwnerId }
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ textDecoration: "none" }}
+                          >
+                            <Text
+                              fontSize="xs"
+                              color="blue.500"
+                              _hover={{ textDecoration: "underline" }}
+                            >
+                              {effectiveDisplayOwnerId === user?.id
+                                ? "You"
+                                : String(
+                                    item.owners?.find(
+                                      (o) => o.id === effectiveDisplayOwnerId,
+                                    )?.full_name ||
+                                      item.owners?.find(
+                                        (o) => o.id === effectiveDisplayOwnerId,
+                                      )?.email ||
+                                      "Owner",
+                                  )}
+                              {/* If we are showing specific owner, we usually don't need others unless specifically multiple ownership is key. 
+                                  For now, hiding others if effectiveDisplayOwnerId is set to reduce clutter/confusion. 
+                              */}
+                            </Text>
+                          </Link>
+                        )}
+                        {!effectiveDisplayOwnerId &&
+                          item.owners?.map((owner, index, arr) => (
+                            <Link
+                              key={owner.id}
+                              to={
+                                owner.id === user?.id
+                                  ? "/profile"
+                                  : "/users/$userId"
+                              }
+                              params={
+                                owner.id === user?.id
+                                  ? {}
+                                  : { userId: owner.id }
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ textDecoration: "none" }}
+                            >
+                              <Text
+                                fontSize="xs"
+                                color="blue.500"
+                                _hover={{ textDecoration: "underline" }}
+                              >
+                                {owner.id === user?.id
+                                  ? "You"
+                                  : String(owner.full_name || owner.email)}
+                                {index < arr.length - 1 ? "," : ""}
+                              </Text>
+                            </Link>
+                          ))}
+                      </>
+                    )}
+                  </>
                 )}
               </HStack>
 
