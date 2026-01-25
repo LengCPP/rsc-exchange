@@ -16,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { BsThreeDotsVertical } from "react-icons/bs"
-import { FiShare2, FiUserCheck, FiUserPlus } from "react-icons/fi"
+import { FiShare2, FiUserCheck, FiUserMinus, FiUserPlus } from "react-icons/fi"
 
 import {
   CollectionsService,
@@ -113,6 +113,16 @@ function UserProfilePage() {
     onError: () => showErrorToast("Failed to send friend request"),
   })
 
+  const removeFriendMutation = useMutation({
+    mutationFn: (userId: string) => FriendsService.removeFriend({ friendId: userId }),
+    onSuccess: () => {
+      showSuccessToast("Friend removed")
+      queryClient.invalidateQueries({ queryKey: ["user", userId] })
+      queryClient.invalidateQueries({ queryKey: ["friends"] })
+    },
+    onError: () => showErrorToast("Failed to remove friend"),
+  })
+
   const handleCopyId = async () => {
     const formattedId = formatPublicId(user?.public_id)
     try {
@@ -176,6 +186,19 @@ function UserProfilePage() {
               <MenuItem value="copy-id" onClick={handleCopyId}>
                 <FiShare2 style={{ marginRight: "8px" }} /> Copy User ID
               </MenuItem>
+              {isFriend && (
+                <MenuItem
+                  value="remove-friend"
+                  color="red.500"
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to remove this friend?")) {
+                      removeFriendMutation.mutate(user.id)
+                    }
+                  }}
+                >
+                  <FiUserMinus style={{ marginRight: "8px" }} /> Remove Friend
+                </MenuItem>
+              )}
             </MenuContent>
           </MenuRoot>
         </HStack>

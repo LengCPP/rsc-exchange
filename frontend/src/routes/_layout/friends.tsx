@@ -321,15 +321,6 @@ function Friends() {
                 <Text fontSize="xs" color="fg.muted" mb={3}>
                   ID: {formatPublicId(user.public_id)}
                 </Text>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  colorPalette="red"
-                  onClick={() => removeMutation.mutate(user.id)}
-                  loading={removeMutation.isPending}
-                >
-                  Remove Friend
-                </Button>
               </Box>
             ))}
           </SimpleGrid>

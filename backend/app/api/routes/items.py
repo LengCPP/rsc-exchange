@@ -197,11 +197,25 @@ async def create_item(
     extra_data: Annotated[str | None, Form()] = None,
     image: Annotated[UploadFile | None, File()] = None,
     image_url: Annotated[str | None, Form()] = None,
+    community_owner_id: Annotated[uuid.UUID | None, Form()] = None,
 ) -> Any:
     """
     Create new item. If item with same title exists, connect user to it and increment count.
+    If community_owner_id is provided, check if user is admin.
     """
     
+    if community_owner_id:
+        from app.models import CommunityMember, CommunityMemberRole
+        membership = session.exec(
+            select(CommunityMember).where(
+                CommunityMember.community_id == community_owner_id,
+                CommunityMember.user_id == current_user.id,
+                CommunityMember.role == CommunityMemberRole.ADMIN
+            )
+        ).first()
+        if not membership and not current_user.is_superuser:
+            raise HTTPException(status_code=403, detail="Only admins can create community-owned items")
+
     final_image_url = image_url
     if image:
         contents = await image.read()
@@ -226,16 +240,34 @@ async def create_item(
     
     if existing_item:
         item = existing_item
-        if current_user not in item.owners:
+        # If community-owned, it's just available. If not, check if user already owns it.
+        if community_owner_id:
+            # Check if already in this community
+            from app.models import CommunityItem
+            existing_comm_item = session.exec(
+                select(CommunityItem).where(
+                    CommunityItem.community_id == community_owner_id,
+                    CommunityItem.item_id == item.id
+                )
+            ).first()
+            if not existing_comm_item:
+                comm_item = CommunityItem(
+                    community_id=community_owner_id, 
+                    item_id=item.id,
+                    added_by=current_user.id
+                )
+                session.add(comm_item)
+        elif current_user not in item.owners:
             item.owners.append(current_user)
             item.count += 1
             # Update image if existing item doesn't have one and new one is provided
             if not item.image_url and final_image_url:
                 item.image_url = final_image_url
             session.add(item)
-            session.commit()
-            session.refresh(item)
-            sync_item_to_search(item)
+        
+        session.commit()
+        session.refresh(item)
+        sync_item_to_search(item)
     else:
         item = Item(
             title=title,
@@ -243,9 +275,23 @@ async def create_item(
             item_type=ItemType(item_type_val),
             extra_data=extra_data_dict,
             image_url=final_image_url,
-            count=1
+            count=1,
+            community_owner_id=community_owner_id
         )
-        item.owners.append(current_user)
+        if not community_owner_id:
+            item.owners.append(current_user)
+        else:
+            # If creating for community, also link it via CommunityItem link table
+            from app.models import CommunityItem
+            session.add(item)
+            session.flush() # Get item ID
+            comm_item = CommunityItem(
+                community_id=community_owner_id, 
+                item_id=item.id,
+                added_by=current_user.id
+            )
+            session.add(comm_item)
+
         session.add(item)
         session.commit()
         session.refresh(item)
@@ -264,6 +310,7 @@ async def create_item(
         extra_data=item.extra_data,
         count=item.count,
         owners=owners_public,
+        community_owner_id=item.community_owner_id,
         created_at=item.created_at,
         is_available=True
     )

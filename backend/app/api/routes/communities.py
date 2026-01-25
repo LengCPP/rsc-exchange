@@ -10,14 +10,17 @@ from app.api.websocket_manager import notification_manager
 from app.models import (
     CommunitiesPublic,
     Community,
+    CommunityAnnouncement,
     CommunityAnnouncementCreate,
     CommunityAnnouncementPublic,
     CommunityAnnouncementsPublic,
     CommunityCreate,
+    CommunityItem,
     CommunityMember,
     CommunityMemberRole,
     CommunityMemberStatus,
     CommunityMemberUpdate,
+    CommunityMessage,
     CommunityMessageCreate,
     CommunityMessagePublic,
     CommunityMessagesPublic,
@@ -25,8 +28,15 @@ from app.models import (
     CommunityUpdate,
     Friendship,
     FriendshipStatus,
+    Item,
+    ItemOwnerPublic,
+    ItemPublic,
+    ItemsPublic,
+    Loan,
+    LoanStatus,
     Message,
     NotificationType,
+    User,
     UserPublic,
     UsersPublic,
 )
@@ -277,8 +287,6 @@ def read_community_members(
         select(func.count()).where(CommunityMember.community_id == id)
     ).one()
 
-    from app.models import User, UserPublic
-
     statement = (
         select(User, CommunityMember)
         .join(CommunityMember, User.id == CommunityMember.user_id)
@@ -382,7 +390,6 @@ async def update_community_member_role(
             user_id
         )
 
-    from app.models import User
     user = session.get(User, user_id)
     user_public = UserPublic.model_validate(user)
     user_public.community_role = updated_member.role
@@ -415,6 +422,681 @@ def update_community_notifications(
     return Message(message=f"Notifications {'enabled' if enabled else 'disabled'}")
 
 
+@router.get("/{id}/items", response_model=ItemsPublic)
+
+
+def read_community_items(
+
+
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
+
+
+) -> Any:
+
+
+    """
+
+
+    Get items belonging to a community.
+
+
+    """
+
+
+    community = session.get(Community, id)
+
+
+    if not community:
+
+
+        raise HTTPException(status_code=404, detail="Community not found")
+
+
+
+
+
+    # Access check: member or admin
+
+
+    statement = select(CommunityMember).where(
+
+
+        CommunityMember.community_id == id,
+
+
+        CommunityMember.user_id == current_user.id,
+
+
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+
+
+    )
+
+
+    membership = session.exec(statement).first()
+
+
+    if not membership and not current_user.is_superuser:
+
+
+        raise HTTPException(status_code=403, detail="Must be a member to view community items")
+
+
+
+
+
+    # Fetch items linked to community
+
+
+    statement = (
+
+
+        select(Item, CommunityItem)
+
+
+        .join(CommunityItem, Item.id == CommunityItem.item_id)
+
+
+        .where(CommunityItem.community_id == id)
+
+
+    )
+
+
+    results = session.exec(statement.offset(skip).limit(limit)).all()
+
+
+    
+
+
+    count_statement = (
+
+
+        select(func.count())
+
+
+        .select_from(CommunityItem)
+
+
+        .where(CommunityItem.community_id == id)
+
+
+    )
+
+
+    count = session.exec(count_statement).one()
+
+
+    
+
+
+    items_public = []
+
+
+    for item, comm_item in results:
+
+
+        item_pub = ItemPublic.model_validate(item)
+
+
+        item_pub.added_by_id = comm_item.added_by
+
+
+        item_pub.is_donation_pending = comm_item.is_donation_pending
+
+
+        
+
+
+        # Add owners info
+
+
+        item_pub.owners = [
+
+
+            ItemOwnerPublic(id=owner.id, full_name=owner.full_name, email=owner.email)
+
+
+            for owner in item.owners
+
+
+        ]
+
+
+        # Check availability
+
+
+        active_loan = session.exec(
+
+
+            select(Loan).where(
+
+
+                Loan.item_id == item.id,
+
+
+                Loan.status.in_([LoanStatus.ACTIVE, LoanStatus.ACCEPTED, LoanStatus.PENDING])
+
+
+            )
+
+
+        ).first()
+
+
+        item_pub.is_available = not active_loan
+
+
+        items_public.append(item_pub)
+
+
+
+
+
+    return ItemsPublic(data=items_public, count=count)
+
+
+
+
+
+
+
+
+@router.post("/{id}/items/{item_id}", response_model=Message)
+
+
+def add_item_to_community(
+
+
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, item_id: uuid.UUID
+
+
+) -> Any:
+
+
+    """
+
+
+    Add an item to a community pool (Any member).
+
+
+    """
+
+
+    community = session.get(Community, id)
+
+
+    if not community:
+
+
+        raise HTTPException(status_code=404, detail="Community not found")
+
+
+
+
+
+    # Member check
+
+
+    statement = select(CommunityMember).where(
+
+
+        CommunityMember.community_id == id,
+
+
+        CommunityMember.user_id == current_user.id,
+
+
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+
+
+    )
+
+
+    membership = session.exec(statement).first()
+
+
+    if not membership and not current_user.is_superuser:
+
+
+        raise HTTPException(status_code=403, detail="Must be a member to add items to community")
+
+
+
+
+
+    item = session.get(Item, item_id)
+
+
+    if not item:
+
+
+        raise HTTPException(status_code=404, detail="Item not found")
+
+
+
+
+
+    # Check if current user is an owner
+
+
+    if current_user.id not in [o.id for o in item.owners]:
+
+
+        raise HTTPException(status_code=403, detail="Only owners can add items to pool")
+
+
+
+
+
+    # Check if already added
+
+
+    statement = select(CommunityItem).where(
+
+
+        CommunityItem.community_id == id,
+
+
+        CommunityItem.item_id == item_id
+
+
+    )
+
+
+    existing = session.exec(statement).first()
+
+
+    if existing:
+
+
+        raise HTTPException(status_code=400, detail="Item already in community")
+
+
+
+
+
+    comm_item = CommunityItem(
+
+
+        community_id=id, 
+
+
+        item_id=item_id, 
+
+
+        added_by=current_user.id
+
+
+    )
+
+
+    session.add(comm_item)
+
+
+    session.commit()
+
+
+    return Message(message="Item added to community pool")
+
+
+
+
+
+
+
+
+@router.post("/{id}/items/{item_id}/donate", response_model=Message)
+
+
+def initiate_donation(
+
+
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, item_id: uuid.UUID
+
+
+) -> Any:
+
+
+    """
+
+
+    Initiate a donation of an item to the community.
+
+
+    """
+
+
+    statement = select(CommunityItem).where(
+
+
+        CommunityItem.community_id == id,
+
+
+        CommunityItem.item_id == item_id
+
+
+    )
+
+
+    comm_item = session.exec(statement).first()
+
+
+    if not comm_item:
+
+
+        raise HTTPException(status_code=404, detail="Item not found in community")
+
+
+    
+
+
+    if comm_item.added_by != current_user.id:
+
+
+        raise HTTPException(status_code=403, detail="Only the person who pooled the item can donate it")
+
+
+
+
+
+    comm_item.is_donation_pending = True
+
+
+    session.add(comm_item)
+
+
+    session.commit()
+
+
+    
+
+
+    # Notify admins
+
+
+    admin_statement = select(CommunityMember).where(
+
+
+        CommunityMember.community_id == id,
+
+
+        CommunityMember.role == CommunityMemberRole.ADMIN
+
+
+    )
+
+
+    admins = session.exec(admin_statement).all()
+
+
+    for admin in admins:
+
+
+        crud.create_notification(
+
+
+            session=session,
+
+
+            recipient_id=admin.user_id,
+
+
+            title="Item Donation Pending",
+
+
+            message=f"{current_user.full_name or current_user.email} wants to donate an item to the community.",
+
+
+            type=NotificationType.INFO,
+
+
+            link=f"/communities/{id}"
+
+
+        )
+
+
+    
+
+
+    return Message(message="Donation request sent to admins")
+
+
+
+
+
+
+
+
+@router.post("/{id}/items/{item_id}/ratify-donation", response_model=Message)
+
+
+def ratify_donation(
+
+
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, item_id: uuid.UUID
+
+
+) -> Any:
+
+
+    """
+
+
+    Ratify a donation (Admin only).
+
+
+    """
+
+
+    # Admin check
+
+
+    statement = select(CommunityMember).where(
+
+
+        CommunityMember.community_id == id,
+
+
+        CommunityMember.user_id == current_user.id,
+
+
+        CommunityMember.role == CommunityMemberRole.ADMIN
+
+
+    )
+
+
+    if not session.exec(statement).first() and not current_user.is_superuser:
+
+
+        raise HTTPException(status_code=403, detail="Only admins can ratify donations")
+
+
+
+
+
+    statement = select(CommunityItem).where(
+
+
+        CommunityItem.community_id == id,
+
+
+        CommunityItem.item_id == item_id
+
+
+    )
+
+
+    comm_item = session.exec(statement).first()
+
+
+    if not comm_item or not comm_item.is_donation_pending:
+
+
+        raise HTTPException(status_code=400, detail="No pending donation found")
+
+
+
+
+
+    item = session.get(Item, item_id)
+
+
+    # Change ownership
+
+
+    item.community_owner_id = id
+
+
+    item.owners = [] # Clear personal owners
+
+
+    
+
+
+    # Update comm_item status
+
+
+    comm_item.is_donation_pending = False
+
+
+    
+
+
+    session.add(item)
+
+
+    session.add(comm_item)
+
+
+    session.commit()
+
+
+    
+
+
+    return Message(message="Donation ratified! The community now owns this item.")
+
+
+
+
+
+
+
+
+@router.delete("/{id}/items/{item_id}", response_model=Message)
+
+
+def remove_item_from_community(
+
+
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, item_id: uuid.UUID
+
+
+) -> Any:
+
+
+    """
+
+
+    Remove an item from a community.
+
+
+    Admins can remove any item. Members can only remove items they added.
+
+
+    """
+
+
+    community = session.get(Community, id)
+
+
+    if not community:
+
+
+        raise HTTPException(status_code=404, detail="Community not found")
+
+
+
+
+
+    statement = select(CommunityItem).where(
+
+
+        CommunityItem.community_id == id,
+
+
+        CommunityItem.item_id == item_id
+
+
+    )
+
+
+    comm_item = session.exec(statement).first()
+
+
+    if not comm_item:
+
+
+        raise HTTPException(status_code=404, detail="Item not found in community")
+
+
+
+
+
+    # Admin or added_by check
+
+
+    statement = select(CommunityMember).where(
+
+
+        CommunityMember.community_id == id,
+
+
+        CommunityMember.user_id == current_user.id,
+
+
+        CommunityMember.status == CommunityMemberStatus.ACCEPTED,
+
+
+    )
+
+
+    membership = session.exec(statement).first()
+
+
+    
+
+
+    is_admin = membership and membership.role == CommunityMemberRole.ADMIN
+
+
+    is_adder = comm_item.added_by == current_user.id
+
+
+    
+
+
+    if not is_admin and not is_adder and not current_user.is_superuser:
+
+
+        raise HTTPException(status_code=403, detail="Not enough permissions to remove this item")
+
+
+
+
+
+    session.delete(comm_item)
+
+
+    session.commit()
+
+
+    return Message(message="Item removed from community")
+
+
 @router.get("/{id}/announcements", response_model=CommunityAnnouncementsPublic)
 def read_community_announcements(
     *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, skip: int = 0, limit: int = 100
@@ -436,7 +1118,6 @@ def read_community_announcements(
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Must be a member to view announcements")
 
-    from app.models import CommunityAnnouncement
     count = session.exec(
         select(func.count()).where(CommunityAnnouncement.community_id == id)
     ).one()
@@ -477,7 +1158,6 @@ async def create_community_announcement(
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Only admins can create announcements")
 
-    from app.models import CommunityAnnouncement
     announcement = CommunityAnnouncement(
         **announcement_in.model_dump(),
         community_id=id,
@@ -534,7 +1214,6 @@ def read_community_messages(
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Must be a member to view messages")
 
-    from app.models import CommunityMessage
     count = session.exec(
         select(func.count()).where(CommunityMessage.community_id == id)
     ).one()
@@ -574,7 +1253,6 @@ def create_community_message(
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Must be a member to post messages")
 
-    from app.models import CommunityMessage
     message = CommunityMessage(
         **message_in.model_dump(),
         community_id=id,

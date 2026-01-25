@@ -7,6 +7,7 @@ export type Body_items_create_item = {
     extra_data?: (string | null);
     image?: ((Blob | File) | null);
     image_url?: (string | null);
+    community_owner_id?: (string | null);
 };
 
 export type Body_items_update_item = {
@@ -169,12 +170,16 @@ export type ItemPublic = {
     extra_data?: {
         [key: string]: unknown;
     };
+    community_owner_id?: (string | null);
     id: string;
     count: number;
     created_at: string;
     owners?: Array<ItemOwnerPublic>;
+    communities?: Array<CommunityPublic>;
     collection_id?: (string | null);
     is_available?: boolean;
+    added_by_id?: (string | null);
+    is_donation_pending?: boolean;
 };
 
 export type ItemsPublic = {
@@ -186,6 +191,7 @@ export type ItemType = 'general' | 'book';
 
 export type LoanCreate = {
     item_id: string;
+    community_id?: (string | null);
     start_date: string;
     end_date: string;
 };
@@ -193,15 +199,17 @@ export type LoanCreate = {
 export type LoanPublic = {
     id: string;
     item_id: string;
-    owner_id: string;
+    owner_id: (string | null);
+    community_id: (string | null);
     requester_id: string;
     status: LoanStatus;
     start_date: string;
     end_date: string;
     created_at: string;
     item: ItemPublic;
-    owner: UserPublic;
+    owner: (UserPublic | null);
     requester: UserPublic;
+    community: (CommunityPublic | null);
 };
 
 export type LoansPublic = {
@@ -446,6 +454,42 @@ export type CommunitiesUpdateCommunityNotificationsData = {
 };
 
 export type CommunitiesUpdateCommunityNotificationsResponse = (Message);
+
+export type CommunitiesReadCommunityItemsData = {
+    id: string;
+    limit?: number;
+    skip?: number;
+};
+
+export type CommunitiesReadCommunityItemsResponse = (ItemsPublic);
+
+export type CommunitiesAddItemToCommunityData = {
+    id: string;
+    itemId: string;
+};
+
+export type CommunitiesAddItemToCommunityResponse = (Message);
+
+export type CommunitiesRemoveItemFromCommunityData = {
+    id: string;
+    itemId: string;
+};
+
+export type CommunitiesRemoveItemFromCommunityResponse = (Message);
+
+export type CommunitiesInitiateDonationData = {
+    id: string;
+    itemId: string;
+};
+
+export type CommunitiesInitiateDonationResponse = (Message);
+
+export type CommunitiesRatifyDonationData = {
+    id: string;
+    itemId: string;
+};
+
+export type CommunitiesRatifyDonationResponse = (Message);
 
 export type CommunitiesReadCommunityAnnouncementsData = {
     id: string;

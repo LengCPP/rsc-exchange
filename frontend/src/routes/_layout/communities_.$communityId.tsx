@@ -15,19 +15,36 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import {
   FiArrowLeft,
   FiBell,
   FiBellOff,
+  FiBox,
+  FiCheck,
+  FiHeart,
+  FiLogOut,
   FiMessageSquare,
   FiPlus,
   FiSend,
+  FiSettings,
+  FiShield,
+  FiTrash2,
+  FiUserCheck,
+  FiUserMinus,
+  FiUserPlus,
   FiUsers,
 } from "react-icons/fi"
 
-import { CommunitiesService, type CommunityPublic } from "@/client"
+import {
+  CommunitiesService,
+  FriendsService,
+  ItemsService,
+  LoansService,
+  type CommunityPublic,
+} from "@/client"
+import ItemCard from "@/components/Items/ItemCard"
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -39,6 +56,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Field } from "@/components/ui/field"
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from "@/components/ui/menu"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 
@@ -122,22 +145,202 @@ function AddAnnouncementModal({ communityId }: { communityId: string }) {
   )
 }
 
+function AddCommunityItemModal({
+  communityId,
+  isAdmin,
+}: { communityId: string; isAdmin: boolean }) {
+  const { user: currentUser } = useAuth()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isOpen, setIsOpen] = useState(false)
+  const [mode, setMode] = useState<"pool" | "create">("pool")
+
+  // For 'create' mode
+  const [newTitle, setNewTitle] = useState("")
+  const [newDesc, setNewDesc] = useState("")
+
+  const queryClient = useQueryClient()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
+
+  const { data: myItems } = useQuery({
+    queryKey: ["my-items-for-community"],
+    queryFn: () =>
+      ItemsService.readItems({
+        ownerId: currentUser?.id,
+      }),
+    enabled: isOpen && mode === "pool" && !!currentUser,
+  })
+
+  const addMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      CommunitiesService.addItemToCommunity({ id: communityId, itemId }),
+    onSuccess: () => {
+      showSuccessToast("Item added to community pool!")
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to add item"),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      ItemsService.createItem({
+        formData: {
+          title: newTitle,
+          description: newDesc,
+          community_owner_id: communityId,
+        },
+      }),
+    onSuccess: () => {
+      showSuccessToast("Community-owned item created!")
+      setNewTitle("")
+      setNewDesc("")
+      setIsOpen(false)
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to create item"),
+  })
+
+  const filteredItems = myItems?.data.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  return (
+    <DialogRoot open={isOpen} onOpenChange={(e) => setIsOpen(e.open)} size="lg">
+      <DialogTrigger asChild>
+        <Button size="sm" colorPalette="orange" variant="outline">
+          <FiPlus /> Add Item
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Items to Community</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Tabs.Root
+            value={mode}
+            onValueChange={(e) => setMode(e.value as any)}
+            variant="plain"
+          >
+            <Tabs.List mb={4} gap={4}>
+              <Tabs.Trigger value="pool">From My Collection</Tabs.Trigger>
+              {isAdmin && (
+                <Tabs.Trigger value="create">New Community Item</Tabs.Trigger>
+              )}
+            </Tabs.List>
+
+            <Tabs.Content value="pool">
+              <VStack gap={4} align="stretch">
+                <Text fontSize="sm" color="fg.muted">
+                  Make your own items available for community members to borrow.
+                </Text>
+                <Input
+                  placeholder="Search your items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Box maxH="300px" overflowY="auto">
+                  {filteredItems?.length === 0 ? (
+                    <Text p={4} textAlign="center" color="fg.muted">
+                      No items found.
+                    </Text>
+                  ) : (
+                    <VStack align="stretch" gap={2}>
+                      {filteredItems?.map((item) => (
+                        <Flex
+                          key={item.id}
+                          p={3}
+                          borderWidth="1px"
+                          rounded="md"
+                          justify="space-between"
+                          align="center"
+                        >
+                          <Text fontWeight="medium">{item.title}</Text>
+                          <Button
+                            size="xs"
+                            colorPalette="orange"
+                            onClick={() => addMutation.mutate(item.id)}
+                            loading={addMutation.isPending}
+                          >
+                            Pool Item
+                          </Button>
+                        </Flex>
+                      ))}
+                    </VStack>
+                  )}
+                </Box>
+              </VStack>
+            </Tabs.Content>
+
+            <Tabs.Content value="create">
+              <VStack gap={4}>
+                <Text fontSize="sm" color="fg.muted">
+                  Create an item that is directly owned by the community itself.
+                </Text>
+                <Field label="Title" required>
+                  <Input
+                    placeholder="Item Title"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                  />
+                </Field>
+                <Field label="Description">
+                  <Textarea
+                    placeholder="Item Description"
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                  />
+                </Field>
+                <Button
+                  colorPalette="orange"
+                  width="full"
+                  onClick={() => createMutation.mutate()}
+                  loading={createMutation.isPending}
+                  disabled={!newTitle.trim()}
+                >
+                  Create Community Item
+                </Button>
+              </VStack>
+            </Tabs.Content>
+          </Tabs.Root>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setIsOpen(false)}>
+            Close
+          </Button>
+        </DialogFooter>
+        <DialogCloseTrigger />
+      </DialogContent>
+    </DialogRoot>
+  )
+}
+
 function CommunityBoard() {
   const { communityId } = Route.useParams()
   const { user: currentUser } = useAuth()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [message, setMessage] = useState("")
 
   const { data: community, isLoading: isLoadingCommunity } = useQuery({
     queryKey: ["community", communityId],
     queryFn: () =>
-      CommunitiesService.readCommunity({ id: communityId }) as Promise<CommunityPublic>,
+      CommunitiesService.readCommunity({
+        id: communityId,
+      }) as Promise<CommunityPublic>,
   })
 
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["communityMembers", communityId],
     queryFn: () => CommunitiesService.readCommunityMembers({ id: communityId }),
+  })
+
+  const { data: communityItems, isLoading: isLoadingItems } = useQuery({
+    queryKey: ["communityItems", communityId],
+    queryFn: () => CommunitiesService.readCommunityItems({ id: communityId }),
   })
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
@@ -179,6 +382,109 @@ function CommunityBoard() {
     onError: () => showErrorToast("Failed to update notification settings"),
   })
 
+  // Management Mutations
+  const updateMemberMutation = useMutation({
+    mutationFn: (data: { userId: string; role?: string; status?: string }) =>
+      CommunitiesService.updateCommunityMemberRole({
+        id: communityId,
+        userId: data.userId,
+        requestBody: { role: data.role as any, status: data.status as any },
+      }),
+    onSuccess: () => {
+      showSuccessToast("Member updated successfully")
+      queryClient.invalidateQueries({
+        queryKey: ["communityMembers", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to update member"),
+  })
+
+  const removeMemberMutation = useMutation({
+    mutationFn: (userId: string) =>
+      CommunitiesService.leaveCommunity({ id: communityId, userId }),
+    onSuccess: () => {
+      showSuccessToast("Member removed")
+      queryClient.invalidateQueries({
+        queryKey: ["communityMembers", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to remove member"),
+  })
+
+  const removeItemMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      CommunitiesService.removeItemFromCommunity({ id: communityId, itemId }),
+    onSuccess: () => {
+      showSuccessToast("Item removed from community")
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to remove item"),
+  })
+
+  const donateMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      CommunitiesService.initiateDonation({ id: communityId, itemId }),
+    onSuccess: () => {
+      showSuccessToast("Donation request sent!")
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to initiate donation"),
+  })
+
+  const ratifyDonationMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      CommunitiesService.ratifyDonation({ id: communityId, itemId }),
+    onSuccess: () => {
+      showSuccessToast("Donation ratified! The community now owns this item.")
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: () => showErrorToast("Failed to ratify donation"),
+  })
+
+  const leaveMutation = useMutation({
+    mutationFn: () => CommunitiesService.leaveCommunity({ id: communityId }),
+    onSuccess: () => {
+      showSuccessToast("Left community")
+      queryClient.invalidateQueries({ queryKey: ["communities"] })
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      navigate({ to: "/communities" })
+    },
+    onError: () => showErrorToast("Failed to leave community"),
+  })
+
+  const friendMutation = useMutation({
+    mutationFn: (userId: string) =>
+      FriendsService.createFriendRequest({ friendId: userId }),
+    onSuccess: () => showSuccessToast("Friend request sent!"),
+    onError: () => showErrorToast("Failed to send friend request"),
+  })
+
+  const borrowMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      LoansService.createLoanRequest({
+        requestBody: {
+          item_id: itemId,
+          community_id: communityId,
+          start_date: new Date().toISOString(),
+          end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week
+        },
+      }),
+    onSuccess: () => {
+      showSuccessToast("Loan request sent to community admins!")
+      queryClient.invalidateQueries({
+        queryKey: ["communityItems", communityId],
+      })
+    },
+    onError: (err: any) =>
+      showErrorToast(err.detail || "Failed to request loan"),
+  })
+
   const isMember = !!community?.current_user_role
   const isAdmin =
     community?.created_by === currentUser?.id ||
@@ -211,11 +517,6 @@ function CommunityBoard() {
     <Container maxW="full">
       <VStack align="stretch" gap={6} pt={8}>
         <Flex align="center" gap={4} wrap="wrap">
-          <Link to="/communities">
-            <Button variant="ghost" size="sm">
-              <FiArrowLeft /> Back
-            </Button>
-          </Link>
           <Heading size="xl">{community.name}</Heading>
           <HStack>
             {community.is_closed ? (
@@ -224,28 +525,49 @@ function CommunityBoard() {
               <Badge colorPalette="green">Open</Badge>
             )}
             {isMember && (
-              <Button
-                size="xs"
-                variant="ghost"
-                onClick={() =>
-                  toggleNotifMutation.mutate(!community.notifications_enabled)
-                }
-                loading={toggleNotifMutation.isPending}
-                title={
-                  community.notifications_enabled
-                    ? "Notifications enabled"
-                    : "Notifications disabled"
-                }
-              >
-                {community.notifications_enabled ? (
-                  <FiBell />
-                ) : (
-                  <FiBellOff color="gray" />
+              <HStack gap={2}>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() =>
+                    toggleNotifMutation.mutate(!community.notifications_enabled)
+                  }
+                  loading={toggleNotifMutation.isPending}
+                  title={
+                    community.notifications_enabled
+                      ? "Notifications enabled"
+                      : "Notifications disabled"
+                  }
+                >
+                  {community.notifications_enabled ? (
+                    <FiBell />
+                  ) : (
+                    <FiBellOff color="gray" />
+                  )}
+                  <Text fontSize="2xs" ml={1}>
+                    {community.notifications_enabled ? "On" : "Off"}
+                  </Text>
+                </Button>
+                {!isAdmin && (
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    colorPalette="red"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Are you sure you want to leave this community?",
+                        )
+                      ) {
+                        leaveMutation.mutate()
+                      }
+                    }}
+                    loading={leaveMutation.isPending}
+                  >
+                    <FiLogOut /> Leave
+                  </Button>
                 )}
-                <Text fontSize="2xs" ml={1}>
-                  {community.notifications_enabled ? "On" : "Off"}
-                </Text>
-              </Button>
+              </HStack>
             )}
           </HStack>
         </Flex>
@@ -261,9 +583,17 @@ function CommunityBoard() {
             <Tabs.Trigger value="board">
               <FiMessageSquare /> Board
             </Tabs.Trigger>
-            <Tabs.Trigger value="members">
-              <FiUsers /> Address Book ({members?.count || 0})
+            <Tabs.Trigger value="items">
+              <FiBox /> Items ({communityItems?.count || 0})
             </Tabs.Trigger>
+            <Tabs.Trigger value="members">
+              <FiUsers /> Members ({members?.count || 0})
+            </Tabs.Trigger>
+            {isAdmin && (
+              <Tabs.Trigger value="manage">
+                <FiShield /> Manage Members
+              </Tabs.Trigger>
+            )}
           </Tabs.List>
 
           <Tabs.Content value="board" pt={6}>
@@ -388,49 +718,348 @@ function CommunityBoard() {
             )}
           </Tabs.Content>
 
+          <Tabs.Content value="items" pt={6}>
+            <VStack align="stretch" gap={6}>
+              <Flex justify="space-between" align="center">
+                <Heading size="md">Community Items</Heading>
+                <AddCommunityItemModal
+                  communityId={communityId}
+                  isAdmin={isAdmin}
+                />
+              </Flex>
+
+              {isLoadingItems ? (
+                <Text>Loading items...</Text>
+              ) : communityItems?.data.length === 0 ? (
+                <Box
+                  p={10}
+                  textAlign="center"
+                  borderWidth="1px"
+                  borderStyle="dashed"
+                  rounded="md"
+                >
+                  <Text color="fg.muted">
+                    No items in this community pool yet.
+                  </Text>
+                </Box>
+              ) : (
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} gap={6}>
+                  {communityItems?.data.map((item) => {
+                    const isOwner = item.owners.some(
+                      (o) => o.id === currentUser?.id,
+                    )
+                    const isPooledByMe = item.added_by_id === currentUser?.id
+                    const isCommunityOwned = !!item.community_owner_id
+
+                    return (
+                      <Box key={item.id} position="relative">
+                        <ItemCard item={item} />
+                        <VStack mt={2} align="stretch" gap={1}>
+                          <Button
+                            size="xs"
+                            colorPalette="orange"
+                            variant="solid"
+                            width="full"
+                            onClick={() => borrowMutation.mutate(item.id)}
+                            loading={borrowMutation.isPending}
+                            disabled={!item.is_available || isOwner}
+                          >
+                            {isOwner
+                              ? "Your Item"
+                              : item.is_available
+                                ? "Borrow"
+                                : "Currently on Loan"}
+                          </Button>
+
+                          <HStack gap={1}>
+                            {isPooledByMe &&
+                              !isCommunityOwned &&
+                              !item.is_donation_pending && (
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  colorPalette="green"
+                                  flex={1}
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        "Donate this item to the community? You will lose personal ownership.",
+                                      )
+                                    ) {
+                                      donateMutation.mutate(item.id)
+                                    }
+                                  }}
+                                  loading={donateMutation.isPending}
+                                >
+                                  <FiHeart /> Donate
+                                </Button>
+                              )}
+
+                            {item.is_donation_pending && (
+                              <Badge
+                                colorPalette="yellow"
+                                flex={1}
+                                textAlign="center"
+                              >
+                                Donation Pending
+                              </Badge>
+                            )}
+
+                            {item.is_donation_pending && isAdmin && (
+                              <Button
+                                size="xs"
+                                colorPalette="green"
+                                variant="solid"
+                                onClick={() =>
+                                  ratifyDonationMutation.mutate(item.id)
+                                }
+                                loading={ratifyDonationMutation.isPending}
+                              >
+                                <FiCheck /> Ratify
+                              </Button>
+                            )}
+
+                            {(isAdmin || isPooledByMe) && (
+                              <Button
+                                size="xs"
+                                colorPalette="red"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      "Remove this item from community pool?",
+                                    )
+                                  ) {
+                                    removeItemMutation.mutate(item.id)
+                                  }
+                                }}
+                                loading={removeItemMutation.isPending}
+                              >
+                                <FiTrash2 />
+                              </Button>
+                            )}
+                          </HStack>
+                          {isCommunityOwned && (
+                            <Badge
+                              variant="solid"
+                              colorPalette="purple"
+                              size="xs"
+                            >
+                              Community Owned
+                            </Badge>
+                          )}
+                        </VStack>
+                      </Box>
+                    )
+                  })}
+                </SimpleGrid>
+              )}
+            </VStack>
+          </Tabs.Content>
+
           <Tabs.Content value="members" pt={6}>
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
               {isLoadingMembers ? (
                 <Text>Loading members...</Text>
               ) : (
-                members?.data.map((member) => (
-                  <Box
-                    key={member.id}
-                    p={4}
-                    borderWidth="1px"
-                    rounded="md"
-                    bg="bg.panel"
-                    _hover={{ borderColor: "ui.hover" }}
-                  >
-                    <Flex justify="space-between" align="center">
-                      <VStack align="start" gap={0}>
-                        <Text fontWeight="bold">
-                          {member.full_name || member.email}
-                        </Text>
-                        <Badge
-                          size="xs"
-                          colorPalette={
-                            member.community_role === "admin"
-                              ? "purple"
-                              : "gray"
-                          }
-                        >
-                          {member.community_role?.toUpperCase() || "MEMBER"}
-                        </Badge>
-                      </VStack>
-                      <Link to={`/users/${member.id}`}>
-                        <Button size="xs" variant="outline">
-                          View Profile
-                        </Button>
-                      </Link>
-                    </Flex>
-                  </Box>
-                ))
+                members?.data
+                  .filter((m) => m.community_status === "accepted")
+                  .map((member) => (
+                    <Box
+                      key={member.id}
+                      p={4}
+                      borderWidth="1px"
+                      rounded="md"
+                      bg="bg.panel"
+                      _hover={{ borderColor: "ui.hover" }}
+                    >
+                      <Flex justify="space-between" align="center">
+                        <VStack align="start" gap={0}>
+                          <Text fontWeight="bold">
+                            {member.full_name || member.email}
+                          </Text>
+                          <Badge
+                            size="xs"
+                            colorPalette={
+                              member.community_role === "admin"
+                                ? "purple"
+                                : "gray"
+                            }
+                          >
+                            {member.community_role?.toUpperCase() || "MEMBER"}
+                          </Badge>
+                        </VStack>
+                        <Flex gap={2}>
+                          {member.id !== currentUser?.id && (
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={() => {
+                                if (!member.friendship_status) {
+                                  friendMutation.mutate(member.id)
+                                }
+                              }}
+                              colorPalette={
+                                member.friendship_status === "pending"
+                                  ? "orange"
+                                  : member.friendship_status === "accepted"
+                                    ? "green"
+                                    : "gray"
+                              }
+                              disabled={!!member.friendship_status}
+                            >
+                              {member.friendship_status === "accepted" ? (
+                                <FiUserCheck />
+                              ) : (
+                                <FiUserPlus />
+                              )}
+                            </Button>
+                          )}
+                          <Link to={`/users/${member.id}`}>
+                            <Button size="xs" variant="outline">
+                              Profile
+                            </Button>
+                          </Link>
+                        </Flex>
+                      </Flex>
+                    </Box>
+                  ))
               )}
             </SimpleGrid>
           </Tabs.Content>
+
+          {isAdmin && (
+            <Tabs.Content value="manage" pt={6}>
+              <VStack align="stretch" gap={4}>
+                <Heading size="md">Manage Community Members</Heading>
+                {isLoadingMembers ? (
+                  <Text>Loading members...</Text>
+                ) : (
+                  <VStack align="stretch" gap={3}>
+                    {members?.data.map((member) => {
+                      const isCreator = member.id === community.created_by
+                      const role =
+                        member.community_role ||
+                        (isCreator ? "admin" : "member")
+                      const status = member.community_status
+
+                      return (
+                        <Flex
+                          key={member.id}
+                          justify="space-between"
+                          align="center"
+                          p={4}
+                          borderWidth="1px"
+                          rounded="md"
+                          bg="bg.panel"
+                        >
+                          <VStack align="start" gap={0}>
+                            <Text fontWeight="bold">
+                              {member.full_name || member.email}
+                            </Text>
+                            <HStack>
+                              <Badge
+                                size="xs"
+                                colorPalette={
+                                  role === "admin" ? "purple" : "gray"
+                                }
+                              >
+                                {role.toUpperCase()}
+                              </Badge>
+                              {status === "pending" && (
+                                <Badge size="xs" colorPalette="yellow">
+                                  PENDING APPROVAL
+                                </Badge>
+                              )}
+                            </HStack>
+                          </VStack>
+
+                          <HStack gap={2}>
+                            {status === "pending" && (
+                              <Button
+                                size="xs"
+                                colorPalette="green"
+                                variant="solid"
+                                onClick={() =>
+                                  updateMemberMutation.mutate({
+                                    userId: member.id,
+                                    status: "accepted",
+                                  })
+                                }
+                              >
+                                Approve
+                              </Button>
+                            )}
+
+                            {!isCreator && member.id !== currentUser?.id && (
+                              <>
+                                <MenuRoot>
+                                  <MenuTrigger asChild>
+                                    <Button size="xs" variant="outline">
+                                      <FiSettings /> Role
+                                    </Button>
+                                  </MenuTrigger>
+                                  <MenuContent>
+                                    <MenuItem
+                                      value="admin"
+                                      onClick={() =>
+                                        updateMemberMutation.mutate({
+                                          userId: member.id,
+                                          role: "admin",
+                                        })
+                                      }
+                                      disabled={role === "admin"}
+                                    >
+                                      Promote to Admin
+                                    </MenuItem>
+                                    <MenuItem
+                                      value="member"
+                                      onClick={() =>
+                                        updateMemberMutation.mutate({
+                                          userId: member.id,
+                                          role: "member",
+                                        })
+                                      }
+                                      disabled={role === "member"}
+                                    >
+                                      Demote to Member
+                                    </MenuItem>
+                                  </MenuContent>
+                                </MenuRoot>
+
+                                <Button
+                                  size="xs"
+                                  colorPalette="red"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        `Are you sure you want to remove ${
+                                          member.full_name || member.email
+                                        }?`,
+                                      )
+                                    ) {
+                                      removeMemberMutation.mutate(member.id)
+                                    }
+                                  }}
+                                >
+                                  <FiUserMinus /> Remove
+                                </Button>
+                              </>
+                            )}
+                          </HStack>
+                        </Flex>
+                      )
+                    })}
+                  </VStack>
+                )}
+              </VStack>
+            </Tabs.Content>
+          )}
         </Tabs.Root>
       </VStack>
     </Container>
   )
 }
+
+export default CommunityBoard

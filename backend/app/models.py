@@ -63,6 +63,17 @@ class CollectionItem(SQLModel, table=True):
     )
 
 
+class CommunityItem(SQLModel, table=True):
+    community_id: uuid.UUID = Field(
+        foreign_key="community.id", primary_key=True, ondelete="CASCADE"
+    )
+    item_id: uuid.UUID = Field(
+        foreign_key="item.id", primary_key=True, ondelete="CASCADE"
+    )
+    added_by: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    is_donation_pending: bool = Field(default=False)
+
+
 class CommunityMember(SQLModel, table=True):
     community_id: uuid.UUID = Field(
         foreign_key="community.id", primary_key=True, ondelete="CASCADE"
@@ -139,7 +150,8 @@ class Notification(SQLModel, table=True):
 class Loan(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     item_id: uuid.UUID = Field(foreign_key="item.id", ondelete="CASCADE")
-    owner_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    owner_id: uuid.UUID | None = Field(default=None, foreign_key="user.id", ondelete="CASCADE")
+    community_id: uuid.UUID | None = Field(default=None, foreign_key="community.id", ondelete="CASCADE")
     requester_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
     status: LoanStatus = Field(default=LoanStatus.PENDING)
     start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
@@ -156,6 +168,7 @@ class Loan(SQLModel, table=True):
     requester: "User" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "Loan.requester_id", "back_populates": "loans_in"}
     )
+    community: "Community" = Relationship(back_populates="loans")
 
 
 # Main Models (Circular references handled by strings)
@@ -302,6 +315,8 @@ class Community(CommunityBase, table=True):
     messages: list["CommunityMessage"] = Relationship(
         back_populates="community", cascade_delete=True
     )
+    items: list["Item"] = Relationship(back_populates="communities", link_model=CommunityItem)
+    loans: list["Loan"] = Relationship(back_populates="community")
 
 
 class CommunityAnnouncement(SQLModel, table=True):
@@ -357,6 +372,9 @@ class ItemBase(SQLModel):
     item_type: ItemType = Field(default=ItemType.general)
     image_url: str | None = Field(default=None, max_length=512)
     extra_data: dict = Field(default={}, sa_column=Column(JSON))
+    community_owner_id: uuid.UUID | None = Field(
+        default=None, foreign_key="community.id", ondelete="CASCADE"
+    )
 
 
 class Item(ItemBase, table=True):
@@ -368,6 +386,7 @@ class Item(ItemBase, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     )
     owners: list["User"] = Relationship(back_populates="items", link_model=UserItem)
+    communities: list["Community"] = Relationship(back_populates="items", link_model=CommunityItem)
     loans: list["Loan"] = Relationship(back_populates="item")
 
 
@@ -517,8 +536,11 @@ class ItemPublic(ItemBase):
     count: int
     created_at: datetime
     owners: list[ItemOwnerPublic] = []
+    communities: list[CommunityPublic] = []
     collection_id: uuid.UUID | None = None
     is_available: bool = True
+    added_by_id: uuid.UUID | None = None
+    is_donation_pending: bool = False
 
 
 class BookPublic(ItemPublic):
@@ -537,6 +559,7 @@ class ItemsPublic(SQLModel):
 
 class LoanCreate(SQLModel):
     item_id: uuid.UUID
+    community_id: uuid.UUID | None = None
     start_date: datetime
     end_date: datetime
 
@@ -544,15 +567,17 @@ class LoanCreate(SQLModel):
 class LoanPublic(SQLModel):
     id: uuid.UUID
     item_id: uuid.UUID
-    owner_id: uuid.UUID
+    owner_id: uuid.UUID | None
+    community_id: uuid.UUID | None
     requester_id: uuid.UUID
     status: LoanStatus
     start_date: datetime
     end_date: datetime
     created_at: datetime
     item: ItemPublic
-    owner: UserPublic
+    owner: UserPublic | None
     requester: UserPublic
+    community: CommunityPublic | None
 
 
 class LoansPublic(SQLModel):
