@@ -101,6 +101,7 @@ export type CommunityMemberStatus = 'pending' | 'accepted' | 'rejected';
 export type CommunityMemberUpdate = {
     role?: (CommunityMemberRole | null);
     status?: (CommunityMemberStatus | null);
+    notifications_enabled?: (boolean | null);
 };
 
 export type CommunityMessageCreate = {
@@ -128,6 +129,7 @@ export type CommunityPublic = {
     id: string;
     created_by: string;
     current_user_role?: (CommunityMemberRole | null);
+    notifications_enabled?: (boolean | null);
 };
 
 export type CommunityUpdate = {
@@ -437,6 +439,13 @@ export type CommunitiesUpdateCommunityMemberRoleData = {
 };
 
 export type CommunitiesUpdateCommunityMemberRoleResponse = (UserPublic);
+
+export type CommunitiesUpdateCommunityNotificationsData = {
+    enabled: boolean;
+    id: string;
+};
+
+export type CommunitiesUpdateCommunityNotificationsResponse = (Message);
 
 export type CommunitiesReadCommunityAnnouncementsData = {
     id: string;

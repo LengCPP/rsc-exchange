@@ -7,18 +7,17 @@ from sqlmodel import func, select
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
 from app.api.websocket_manager import notification_manager
-from app.search import sync_community_to_search, delete_community_from_search
 from app.models import (
     CommunitiesPublic,
     Community,
+    CommunityAnnouncementCreate,
+    CommunityAnnouncementPublic,
+    CommunityAnnouncementsPublic,
     CommunityCreate,
     CommunityMember,
     CommunityMemberRole,
     CommunityMemberStatus,
     CommunityMemberUpdate,
-    CommunityAnnouncementCreate,
-    CommunityAnnouncementPublic,
-    CommunityAnnouncementsPublic,
     CommunityMessageCreate,
     CommunityMessagePublic,
     CommunityMessagesPublic,
@@ -31,6 +30,7 @@ from app.models import (
     UserPublic,
     UsersPublic,
 )
+from app.search import delete_community_from_search, sync_community_to_search
 
 router = APIRouter()
 
@@ -47,9 +47,9 @@ def read_communities(
     statement = select(Community).offset(skip).limit(limit)
     communities = session.exec(statement).all()
 
-    # Populate current_user_role
+    # Populate current_user_role and notifications_enabled
     communities_public = []
-    
+
     # Get all memberships for current user in fetched communities
     community_ids = [c.id for c in communities]
     if community_ids:
@@ -59,13 +59,16 @@ def read_communities(
                 CommunityMember.community_id.in_(community_ids)
             )
         ).all()
-        membership_map = {m.community_id: m.role for m in memberships}
+        membership_map = {m.community_id: {"role": m.role, "notif": m.notifications_enabled} for m in memberships}
     else:
         membership_map = {}
 
     for community in communities:
         comm_pub = CommunityPublic.model_validate(community)
-        comm_pub.current_user_role = membership_map.get(community.id)
+        meta = membership_map.get(community.id)
+        if meta:
+            comm_pub.current_user_role = meta["role"]
+            comm_pub.notifications_enabled = meta["notif"]
         communities_public.append(comm_pub)
 
     return CommunitiesPublic(data=communities_public, count=count)
@@ -85,14 +88,27 @@ def create_community(
 
 
 @router.get("/{id}", response_model=CommunityPublic)
-def read_community(session: SessionDep, id: uuid.UUID) -> Any:
+def read_community(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
     """
     Get community by ID.
     """
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
-    return community
+
+    comm_pub = CommunityPublic.model_validate(community)
+
+    # Get membership info for current user
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id
+    )
+    membership = session.exec(statement).first()
+    if membership:
+        comm_pub.current_user_role = membership.role
+        comm_pub.notifications_enabled = membership.notifications_enabled
+
+    return comm_pub
 
 
 @router.patch("/{id}", response_model=CommunityPublic)
@@ -109,7 +125,7 @@ def update_community(
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
-    
+
     # Check if user is admin
     statement = select(CommunityMember).where(
         CommunityMember.community_id == id,
@@ -119,7 +135,7 @@ def update_community(
     membership = session.exec(statement).first()
     if not membership and not current_user.is_superuser:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    
+
     update_dict = community_in.model_dump(exclude_unset=True)
     community.sqlmodel_update(update_dict)
     session.add(community)
@@ -139,11 +155,11 @@ def delete_community(
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
-    
+
     # Check if user is creator or admin
     if community.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    
+
     session.delete(community)
     session.commit()
     delete_community_from_search(id)
@@ -160,7 +176,7 @@ async def join_community(
     community = session.get(Community, id)
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
-    
+
     # Check if user is already a member
     statement = select(CommunityMember).where(
         CommunityMember.community_id == id,
@@ -253,7 +269,7 @@ def read_community_members(
         membership = session.exec(statement).first()
         if not membership:
             raise HTTPException(
-                status_code=403, 
+                status_code=403,
                 detail="This community is closed. You must be a member to view the member list."
             )
 
@@ -287,15 +303,15 @@ def read_community_members(
         user_public = UserPublic.model_validate(user)
         user_public.community_role = membership.role
         user_public.community_status = membership.status
-        
+
         status = friendship_map.get(user.id)
         user_public.friendship_status = status
-        
+
         # Restrict data if not friends
         if user.id != current_user.id and status != FriendshipStatus.ACCEPTED:
             user_public.communities = []
             user_public.interests = []
-            
+
         users_with_meta.append(user_public)
 
     return UsersPublic(data=users_with_meta, count=count)
@@ -334,7 +350,7 @@ async def update_community_member_role(
         role=member_in.role,
         status=member_in.status,
     )
-    
+
     if not updated_member:
         raise HTTPException(status_code=404, detail="Member not found in this community")
 
@@ -372,6 +388,31 @@ async def update_community_member_role(
     user_public.community_role = updated_member.role
     user_public.community_status = updated_member.status
     return user_public
+
+
+@router.post("/{id}/notifications", response_model=Message)
+def update_community_notifications(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    enabled: bool,
+) -> Any:
+    """
+    Toggle notifications for a community.
+    """
+    statement = select(CommunityMember).where(
+        CommunityMember.community_id == id,
+        CommunityMember.user_id == current_user.id,
+    )
+    membership = session.exec(statement).first()
+    if not membership:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    membership.notifications_enabled = enabled
+    session.add(membership)
+    session.commit()
+    return Message(message=f"Notifications {'enabled' if enabled else 'disabled'}")
 
 
 @router.get("/{id}/announcements", response_model=CommunityAnnouncementsPublic)
@@ -446,11 +487,12 @@ async def create_community_announcement(
     session.commit()
     session.refresh(announcement)
 
-    # Notify all members
+    # Notify all members who have notifications enabled
     member_statement = select(CommunityMember).where(
         CommunityMember.community_id == id,
         CommunityMember.status == CommunityMemberStatus.ACCEPTED,
-        CommunityMember.user_id != current_user.id
+        CommunityMember.user_id != current_user.id,
+        CommunityMember.notifications_enabled,
     )
     members = session.exec(member_statement).all()
     for member in members:
@@ -463,7 +505,6 @@ async def create_community_announcement(
             link=f"/communities/{id}"
         )
         # Notify via websocket
-        # Note: notification_manager is imported at the top
         await notification_manager.send_personal_message(
             {"type": "new_notification"},
             member.user_id

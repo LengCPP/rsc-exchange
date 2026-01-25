@@ -72,6 +72,7 @@ class CommunityMember(SQLModel, table=True):
     )
     role: CommunityMemberRole = Field(default=CommunityMemberRole.MEMBER)
     status: CommunityMemberStatus = Field(default=CommunityMemberStatus.ACCEPTED)
+    notifications_enabled: bool = Field(default=True)
 
 
 class Friendship(SQLModel, table=True):
@@ -387,6 +388,7 @@ class CommunityPublic(CommunityBase):
     id: uuid.UUID
     created_by: uuid.UUID
     current_user_role: CommunityMemberRole | None = None
+    notifications_enabled: bool | None = None
 
 
 class CommunityAnnouncementBase(SQLModel):
@@ -452,6 +454,7 @@ class UserPublic(UserBase):
 class CommunityMemberUpdate(SQLModel):
     role: CommunityMemberRole | None = Field(default=None)
     status: CommunityMemberStatus | None = Field(default=None)
+    notifications_enabled: bool | None = Field(default=None)
 
 
 class FriendshipPublic(SQLModel):
