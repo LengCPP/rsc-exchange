@@ -296,6 +296,7 @@ export type UserPublic = {
     full_name?: (string | null);
     public_id: string;
     id: string;
+    has_set_password?: boolean;
     communities?: Array<CommunityPublic>;
     community_role?: (CommunityMemberRole | null);
     community_status?: (CommunityMemberStatus | null);

@@ -11,10 +11,13 @@ import {
   Link as RouterLink,
   createFileRoute,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FaGoogle } from "react-icons/fa"
 import { FiLock, FiMail } from "react-icons/fi"
+import { z } from "zod"
 
 import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -26,9 +29,19 @@ import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import Logo from "/assets/images/rsc-x-logo.png"
 import { emailPattern, passwordRules } from "../utils"
 
+const loginSearchSchema = z.object({
+  token: z.string().optional(),
+  new_user: z.string().optional(),
+})
+
 export const Route = createFileRoute("/login")({
   component: Login,
-  beforeLoad: async () => {
+  validateSearch: (search) => loginSearchSchema.parse(search),
+  beforeLoad: async ({ search }) => {
+    // If we have a token in search params (OAuth callback), allow loading to process it
+    if (search.token) {
+      return
+    }
     if (isLoggedIn()) {
       throw redirect({
         to: "/",
@@ -40,6 +53,9 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const { colorMode } = useColorMode()
   const { loginMutation, error, resetError } = useAuth()
+  const navigate = useNavigate()
+  const { token, new_user } = Route.useSearch()
+  
   const {
     register,
     handleSubmit,
@@ -52,6 +68,17 @@ function Login() {
       password: "",
     },
   })
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("access_token", token)
+      if (new_user === "true") {
+        navigate({ to: "/settings", search: { tab: "password" } })
+      } else {
+        navigate({ to: "/" })
+      }
+    }
+  }, [token, new_user, navigate])
 
   const handleGoogleLogin = () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/api/v1/auth/google`

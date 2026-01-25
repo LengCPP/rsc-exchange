@@ -267,6 +267,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     public_id: str | None = Field(default=None, unique=True, index=True, max_length=8)
     hashed_password: str
+    has_set_password: bool = Field(default=True)
     items: list["Item"] = Relationship(back_populates="owners", link_model=UserItem)
     collections: list["Collection"] = Relationship(back_populates="owner")
     communities: list["Community"] = Relationship(
@@ -461,6 +462,7 @@ class CommunitiesPublic(SQLModel):
 class UserPublic(UserBase):
     id: uuid.UUID
     public_id: str
+    has_set_password: bool = True
     communities: list[CommunityPublic] = []
     community_role: CommunityMemberRole | None = None
     community_status: CommunityMemberStatus | None = None

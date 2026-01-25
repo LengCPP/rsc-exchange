@@ -1,9 +1,10 @@
-import { Box, Button, Container, Heading, VStack } from "@chakra-ui/react"
+import { Box, Button, Container, Heading, Text, VStack } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { FiLock } from "react-icons/fi"
 
 import { type ApiError, type UpdatePassword, UsersService } from "@/client"
+import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { confirmPasswordRules, handleError, passwordRules } from "@/utils"
 import { PasswordInput } from "../ui/password-input"
@@ -13,6 +14,7 @@ interface UpdatePasswordForm extends UpdatePassword {
 }
 
 const ChangePassword = () => {
+  const { user } = useAuth()
   const { showSuccessToast } = useCustomToast()
   const {
     register,
@@ -24,6 +26,8 @@ const ChangePassword = () => {
     mode: "onBlur",
     criteriaMode: "all",
   })
+
+  const hasSetPassword = user?.has_set_password ?? true
 
   const mutation = useMutation({
     mutationFn: (data: UpdatePassword) =>
@@ -38,6 +42,9 @@ const ChangePassword = () => {
   })
 
   const onSubmit: SubmitHandler<UpdatePasswordForm> = async (data) => {
+    if (!hasSetPassword) {
+      data.current_password = "placeholder"
+    }
     mutation.mutate(data)
   }
 
@@ -45,21 +52,29 @@ const ChangePassword = () => {
     <>
       <Container maxW="full">
         <Heading size="sm" py={4}>
-          Change Password
+          {hasSetPassword ? "Change Password" : "Set Password"}
         </Heading>
+        {!hasSetPassword && (
+          <Text fontSize="sm" mb={4} color="fg.muted">
+            You logged in via a social provider. Please set a password to enable
+            email/password login.
+          </Text>
+        )}
         <Box
           w={{ sm: "full", md: "300px" }}
           as="form"
           onSubmit={handleSubmit(onSubmit)}
         >
           <VStack gap={4}>
-            <PasswordInput
-              type="current_password"
-              startElement={<FiLock />}
-              {...register("current_password", passwordRules())}
-              placeholder="Current Password"
-              errors={errors}
-            />
+            {hasSetPassword && (
+              <PasswordInput
+                type="current_password"
+                startElement={<FiLock />}
+                {...register("current_password", passwordRules())}
+                placeholder="Current Password"
+                errors={errors}
+              />
+            )}
             <PasswordInput
               type="new_password"
               startElement={<FiLock />}

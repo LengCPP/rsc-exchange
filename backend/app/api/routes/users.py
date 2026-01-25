@@ -106,14 +106,18 @@ def update_password_me(
     """
     Update own password.
     """
-    if not verify_password(body.current_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect password")
-    if body.current_password == body.new_password:
+    # If the user has not set a password (e.g. Google signup), skip verification
+    if current_user.has_set_password:
+        if not verify_password(body.current_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Incorrect password")
+    
+    if body.current_password == body.new_password and current_user.has_set_password:
         raise HTTPException(
             status_code=400, detail="New password cannot be the same as the current one"
         )
     hashed_password = get_password_hash(body.new_password)
     current_user.hashed_password = hashed_password
+    current_user.has_set_password = True
     session.add(current_user)
     session.commit()
     return Message(message="Password updated successfully")

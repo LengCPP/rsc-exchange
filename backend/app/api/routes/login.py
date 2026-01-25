@@ -218,6 +218,7 @@ async def login_google_callback(
     full_name = user_info.get("name")
     
     user = crud.get_user_by_email(session=session, email=email)
+    is_new_user = False
     if not user:
         # Create user if not exists
         random_password = secrets.token_urlsafe(24)
@@ -227,6 +228,12 @@ async def login_google_callback(
             full_name=full_name,
         )
         user = crud.create_user(session=session, user_create=user_create)
+        # Google users start without a set password
+        user.has_set_password = False
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        is_new_user = True
         logger.info(f"Created new user via Google: {email}")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -239,4 +246,6 @@ async def login_google_callback(
     # Redirect to frontend with token
     # Using settings.FRONTEND_HOST
     frontend_redirect_url = f"{settings.FRONTEND_HOST}/login?token={token}"
+    if is_new_user:
+        frontend_redirect_url += "&new_user=true"
     return RedirectResponse(frontend_redirect_url)

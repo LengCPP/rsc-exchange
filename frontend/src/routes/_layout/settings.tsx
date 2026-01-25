@@ -6,24 +6,39 @@ import {
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { FiAlertTriangle, FiLock, FiSettings } from "react-icons/fi"
+import { z } from "zod"
 
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
 import UserPreferences from "@/components/UserSettings/UserPreferences"
 import useAuth from "@/hooks/useAuth"
 
+const settingsSearchSchema = z.object({
+  tab: z.enum(["preferences", "password", "danger-zone"]).optional(),
+})
+
 export const Route = createFileRoute("/_layout/settings")({
   component: UserSettings,
+  validateSearch: (search) => settingsSearchSchema.parse(search),
 })
 
 function UserSettings() {
   const { user: currentUser } = useAuth()
   const isMobile = useBreakpointValue({ base: true, md: false })
+  const navigate = useNavigate({ from: Route.fullPath })
+  const { tab } = Route.useSearch()
 
   if (!currentUser) {
     return null
+  }
+
+  const handleTabChange = (value: string) => {
+    navigate({
+      search: (prev: any) => ({ ...prev, tab: value }),
+      replace: true,
+    })
   }
 
   return (
@@ -33,7 +48,8 @@ function UserSettings() {
       </Heading>
 
       <Tabs.Root
-        defaultValue="preferences"
+        value={tab || "preferences"}
+        onValueChange={(e) => handleTabChange(e.value)}
         orientation={isMobile ? "horizontal" : "vertical"}
         variant="line"
         colorPalette="teal"
