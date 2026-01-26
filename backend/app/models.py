@@ -156,6 +156,10 @@ class Loan(SQLModel, table=True):
     status: LoanStatus = Field(default=LoanStatus.PENDING)
     start_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     end_date: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
+    pending_extension_date: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -1,6 +1,6 @@
 import uuid
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select, func, or_
@@ -372,6 +372,7 @@ async def return_loan(
 ) -> Any:
     """
     Mark an item as returned (Owner or Community Admin only).
+    Allows unilateral return by owner/admin regardless of 'return_pending' status.
     """
     loan = session.get(Loan, id)
     if not loan:
@@ -416,4 +417,125 @@ async def return_loan(
         loan.requester_id
     )
 
+    return loan
+
+
+@router.post("/{id}/extension", response_model=LoanPublic)
+async def create_extension_request(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, new_end_date: datetime
+) -> Any:
+    """
+    Request an extension for a loan (Requester only).
+    """
+    loan = session.get(Loan, id)
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    
+    if loan.requester_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    if loan.status != LoanStatus.ACTIVE:
+        raise HTTPException(status_code=400, detail="Loan must be active to request extension")
+        
+    if new_end_date <= loan.end_date:
+        raise HTTPException(status_code=400, detail="New end date must be after current end date")
+        
+    loan.pending_extension_date = new_end_date
+    session.add(loan)
+    session.commit()
+    session.refresh(loan)
+    
+    # Notify owner or admins
+    message_text = f"{current_user.full_name or current_user.email} requested an extension for '{loan.item.title}' until {new_end_date.strftime('%Y-%m-%d')}."
+    if loan.community_id:
+        from app.models import CommunityMember, CommunityMemberRole
+        admin_statement = select(CommunityMember).where(
+            CommunityMember.community_id == loan.community_id,
+            CommunityMember.role == CommunityMemberRole.ADMIN
+        )
+        admins = session.exec(admin_statement).all()
+        for admin in admins:
+            crud.create_notification(
+                session=session,
+                recipient_id=admin.user_id,
+                title="Extension Requested",
+                message=message_text,
+                type=NotificationType.INFO,
+                link="/loans"
+            )
+            await notification_manager.send_personal_message(
+                {"type": "new_notification"},
+                admin.user_id
+            )
+    elif loan.owner_id:
+        crud.create_notification(
+            session=session,
+            recipient_id=loan.owner_id,
+            title="Extension Requested",
+            message=message_text,
+            type=NotificationType.INFO,
+            link="/loans"
+        )
+        await notification_manager.send_personal_message(
+            {"type": "new_notification"},
+            loan.owner_id
+        )
+        
+    return loan
+
+
+@router.patch("/{id}/extension/respond", response_model=LoanPublic)
+async def respond_to_extension_request(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID, accept: bool
+) -> Any:
+    """
+    Accept or reject a loan extension request (Owner or Community Admin only).
+    """
+    loan = session.get(Loan, id)
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+        
+    # Permission check
+    can_respond = False
+    if loan.owner_id == current_user.id:
+        can_respond = True
+    elif loan.community_id:
+        from app.models import CommunityMember, CommunityMemberRole
+        statement = select(CommunityMember).where(
+            CommunityMember.community_id == loan.community_id,
+            CommunityMember.user_id == current_user.id,
+            CommunityMember.role == CommunityMemberRole.ADMIN
+        )
+        if session.exec(statement).first():
+            can_respond = True
+            
+    if not can_respond and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+        
+    if not loan.pending_extension_date:
+        raise HTTPException(status_code=400, detail="No pending extension request")
+        
+    if accept:
+        loan.end_date = loan.pending_extension_date
+        
+    loan.pending_extension_date = None
+    session.add(loan)
+    session.commit()
+    session.refresh(loan)
+    
+    # Notify requester
+    status_msg = "accepted" if accept else "rejected"
+    crud.create_notification(
+        session=session,
+        recipient_id=loan.requester_id,
+        title=f"Extension Request {status_msg.capitalize()}",
+        message=f"Your extension request for '{loan.item.title}' has been {status_msg}.",
+        type=NotificationType.SUCCESS if accept else NotificationType.WARNING,
+        link="/loans"
+    )
+    await notification_manager.send_personal_message(
+        {"type": "new_notification"},
+        loan.requester_id
+    )
+    
     return loan

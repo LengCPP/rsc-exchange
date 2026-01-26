@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlmodel import col, delete, func, select
+from sqlmodel import col, delete, func, select, or_
 
 from app import crud
 from app.api.deps import (
@@ -18,6 +18,8 @@ from app.models import (
     FriendshipStatus,
     Interest,
     Item,
+    Loan,
+    LoanStatus,
     Message,
     UpdatePassword,
     User,
@@ -219,6 +221,20 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
+        
+    # Check for outstanding loans
+    outstanding_loans = session.exec(
+        select(Loan).where(
+            or_(Loan.owner_id == current_user.id, Loan.requester_id == current_user.id),
+            Loan.status.in_([LoanStatus.ACTIVE, LoanStatus.RETURN_PENDING, LoanStatus.ACCEPTED])
+        )
+    ).first()
+    
+    if outstanding_loans:
+        raise HTTPException(
+            status_code=400, 
+            detail="You have active or pending loans. Please resolve all loans before deleting your account."
+        )
     
     # Handle items ownership before deleting user
     for item in list(current_user.items):
@@ -326,6 +342,20 @@ def delete_user(
     if user == current_user:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
+        )
+    
+    # Check for outstanding loans
+    outstanding_loans = session.exec(
+        select(Loan).where(
+            or_(Loan.owner_id == user.id, Loan.requester_id == user.id),
+            Loan.status.in_([LoanStatus.ACTIVE, LoanStatus.RETURN_PENDING, LoanStatus.ACCEPTED])
+        )
+    ).first()
+    
+    if outstanding_loans:
+        raise HTTPException(
+            status_code=400, 
+            detail="User has active or pending loans. These must be resolved before deletion."
         )
     
     # Handle items ownership before deleting user
