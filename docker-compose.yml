@@ -179,6 +179,8 @@ services:
       context: ./frontend
       args:
         - VITE_API_URL=https://api.${DOMAIN?Variable not set}
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - VITE_GOOGLE_BOOKS_API_KEY=${VITE_GOOGLE_BOOKS_API_KEY}
         - NODE_ENV=production
     labels:
       - traefik.enable=true
