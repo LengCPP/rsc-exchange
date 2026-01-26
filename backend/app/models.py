@@ -305,7 +305,7 @@ class CommunityUpdate(SQLModel):
 
 class Community(CommunityBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    created_by: uuid.UUID = Field(foreign_key="user.id", nullable=False)
+    created_by: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
     members: list["User"] = Relationship(
         back_populates="communities", link_model=CommunityMember
     )
