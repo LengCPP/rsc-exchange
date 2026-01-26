@@ -153,7 +153,7 @@ services:
       context: ./frontend
       target: build-stage
       args:
-        - VITE_API_URL=http://api.localhost
+        - VITE_API_URL=
         - NODE_ENV=development
     develop:
       watch:
@@ -165,6 +165,8 @@ services:
             - node_modules
         - path: ./frontend/package.json
           action: rebuild
+    environment:
+      - VITE_API_URL=
 
   playwright:
     build:

@@ -13,6 +13,25 @@ export default defineConfig({
   },
   plugins: [react(), TanStackRouterVite()],
   server: {
+    host: true,
+    allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: "http://backend:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/docs": {
+        target: "http://backend:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/openapi.json": {
+        target: "http://backend:8000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
