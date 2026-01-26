@@ -1,13 +1,13 @@
 import {
   Badge,
   Box,
-  Button,
   Container,
   Flex,
   Grid,
   HStack,
   Heading,
   IconButton,
+  Select,
   Separator,
   Skeleton,
   Text,
@@ -15,9 +15,11 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
+import { useMemo, useState } from "react"
 import { FiChevronLeft, FiPlus, FiTrash2 } from "react-icons/fi"
 
 import { CollectionsService, ItemsService } from "@/client"
+import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
 import { useColorModeValue } from "@/components/ui/color-mode"
 import useAuth from "@/hooks/useAuth"
@@ -34,8 +36,14 @@ function CollectionDetail() {
   const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
 
+  const [categoryFilter, setCategoryFilter] = useState("")
+  const [genreFilter, setGenreFilter] = useState("")
+
   const bgColor = useColorModeValue("orange.50", "gray.800")
   const borderColor = useColorModeValue("orange.200", "gray.600")
+  const selectBg = useColorModeValue("white", "gray.800")
+  const selectColor = useColorModeValue("black", "white")
+  const selectBorder = useColorModeValue("gray.300", "gray.600")
 
   const { data: collection, isLoading } = useQuery({
     queryKey: ["collections", collectionId],
@@ -70,6 +78,51 @@ function CollectionDetail() {
     onError: handleError,
   })
 
+  // Derive filters and filtered items
+  const { filteredItems, categories, genres } = useMemo(() => {
+    if (!collection?.items) {
+      return { filteredItems: [], categories: [], genres: [] }
+    }
+
+    const cats = new Set<string>()
+    const gens = new Set<string>()
+
+    const filtered = collection.items.filter((item) => {
+      let itemCategory = ""
+      let itemGenre = ""
+
+      if (item.extra_data) {
+        try {
+          // extra_data might be a string or object depending on how it's returned
+          const extra =
+            typeof item.extra_data === "string"
+              ? JSON.parse(item.extra_data)
+              : item.extra_data
+          itemCategory = extra.category || ""
+          itemGenre = extra.genre || ""
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+
+      if (itemCategory) cats.add(itemCategory)
+      if (itemGenre) gens.add(itemGenre)
+
+      const matchCategory = categoryFilter
+        ? itemCategory === categoryFilter
+        : true
+      const matchGenre = genreFilter ? itemGenre === genreFilter : true
+
+      return matchCategory && matchGenre
+    })
+
+    return {
+      filteredItems: filtered,
+      categories: Array.from(cats).sort(),
+      genres: Array.from(gens).sort(),
+    }
+  }, [collection?.items, categoryFilter, genreFilter])
+
   if (isLoading) {
     return (
       <Container maxW="full" pt={12}>
@@ -96,10 +149,20 @@ function CollectionDetail() {
       (item) => !collection.items?.some((ci) => ci.id === item.id),
     ) || []
 
+  const selectStyle = {
+    padding: "8px",
+    borderRadius: "4px",
+    border: `1px solid ${selectBorder}`,
+    backgroundColor: selectBg,
+    color: selectColor,
+    fontSize: "14px",
+    minWidth: "150px",
+  }
+
   return (
     <Container maxW="full" pt={12} pb={20}>
       <VStack align="start" gap={6} width="full">
-        <HStack width="full" justify="space-between">
+        <HStack width="full" justify="space-between" wrap="wrap" gap={4}>
           <HStack gap={4}>
             <IconButton asChild variant="ghost" colorPalette="orange">
               <Link
@@ -124,128 +187,166 @@ function CollectionDetail() {
           )}
         </HStack>
 
+        <Flex
+          width="full"
+          justify="space-between"
+          align="center"
+          wrap="wrap"
+          gap={4}
+        >
+          <HStack gap={2}>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="" style={{ backgroundColor: selectBg }}>
+                All Categories
+              </option>
+              {categories.map((cat) => (
+                <option
+                  key={cat}
+                  value={cat}
+                  style={{ backgroundColor: selectBg }}
+                >
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <select
+              value={genreFilter}
+              onChange={(e) => setGenreFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="" style={{ backgroundColor: selectBg }}>
+                All Genres
+              </option>
+              {genres.map((gen) => (
+                <option
+                  key={gen}
+                  value={gen}
+                  style={{ backgroundColor: selectBg }}
+                >
+                  {gen}
+                </option>
+              ))}
+            </select>
+          </HStack>
+
+          {isOwner && <AddItem collectionId={collection.id} />}
+        </Flex>
+
+        {isOwner && (
+          <Box
+            width="full"
+            p={4}
+            bg={bgColor}
+            borderRadius="lg"
+            border="1px solid"
+            borderColor={borderColor}
+          >
+            <Heading size="sm" mb={4}>
+              New Item
+            </Heading>
+            <Flex wrap="wrap" gap={2}>
+              {availableItems.length === 0 ? (
+                <Text fontSize="sm" color="gray.500">
+                  All your existing items are already in this collection. Use "Add
+                  Item" to create new ones.
+                </Text>
+              ) : (
+                availableItems.map((item) => (
+                  <Flex
+                    key={item.id}
+                    align="center"
+                    p={2}
+                    bg="whiteAlpha.500"
+                    borderRadius="md"
+                    border="1px solid"
+                    borderColor={borderColor}
+                    _dark={{ bg: "whiteAlpha.100" }}
+                  >
+                    <Text fontSize="xs" fontWeight="bold" mr={2}>
+                      {item.title}
+                    </Text>
+                    <IconButton
+                      aria-label="Add to collection"
+                      size="xs"
+                      colorPalette="orange"
+                      onClick={() => addMutation.mutate(item.id)}
+                      loading={
+                        addMutation.isPending &&
+                        addMutation.variables === item.id
+                      }
+                    >
+                      <FiPlus />
+                    </IconButton>
+                  </Flex>
+                ))
+              )}
+            </Flex>
+          </Box>
+        )}
+
         <Separator borderColor={borderColor} />
 
-        <Grid
-          templateColumns={{
-            base: "1fr",
-            lg: isOwner ? "3fr 1fr" : "1fr",
-          }}
-          gap={8}
-          width="full"
-        >
-          {/* Items Grid */}
-          <Box>
-            <Heading size="md" mb={4}>
-              Items in this{" "}
-              {collection.collection_type === "library"
-                ? "Library"
-                : "Collection"}
-            </Heading>
-            {!collection.items || collection.items.length === 0 ? (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                p={10}
-                bg={bgColor}
-                borderRadius="lg"
-                border="2px dashed"
-                borderColor={borderColor}
-              >
-                <Text color="gray.500">No items in this collection yet.</Text>
-              </Flex>
-            ) : (
-              <Grid
-                templateColumns={{
-                  base: "repeat(1, 1fr)",
-                  sm: "repeat(2, 1fr)",
-                  md: "repeat(3, 1fr)",
-                  xl: "repeat(4, 1fr)",
-                }}
-                gap={6}
-              >
-                {collection.items.map((item) => (
-                  <Box key={item.id} position="relative">
-                    <ItemCard item={item} />
-                    {isOwner && (
-                      <IconButton
-                        aria-label="Remove from collection"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        size="xs"
-                        colorPalette="red"
-                        variant="solid"
-                        onClick={() => removeMutation.mutate(item.id)}
-                        zIndex={10}
-                      >
-                        <FiTrash2 />
-                      </IconButton>
-                    )}
-                  </Box>
-                ))}
-              </Grid>
-            )}
-          </Box>
-
-          {/* Sidebar for Owner to add items */}
-          {isOwner && (
-            <Box
-              p={4}
+        <Box width="full">
+          <Heading size="md" mb={4}>
+            Items in this{" "}
+            {collection.collection_type === "library"
+              ? "Library"
+              : "Collection"}
+          </Heading>
+          {!filteredItems || filteredItems.length === 0 ? (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              p={10}
               bg={bgColor}
               borderRadius="lg"
-              border="1px solid"
+              border="2px dashed"
               borderColor={borderColor}
-              height="fit-content"
             >
-              <Heading size="sm" mb={4}>
-                Add your items
-              </Heading>
-              <VStack align="stretch" gap={3}>
-                {availableItems.length === 0 ? (
-                  <Text fontSize="xs" color="gray.500">
-                    All your items are already in this collection.
-                  </Text>
-                ) : (
-                  availableItems.map((item) => (
-                    <Flex
-                      key={item.id}
-                      justify="space-between"
-                      align="center"
-                      p={2}
-                      bg="whiteAlpha.500"
-                      borderRadius="md"
-                      _dark={{ bg: "whiteAlpha.100" }}
+              <Text color="gray.500">
+                {collection.items?.length === 0
+                  ? "No items in this collection yet."
+                  : "No items match your filters."}
+              </Text>
+            </Flex>
+          ) : (
+            <Grid
+              templateColumns={{
+                base: "repeat(1, 1fr)",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+                xl: "repeat(4, 1fr)",
+              }}
+              gap={6}
+            >
+              {filteredItems.map((item) => (
+                <Box key={item.id} position="relative">
+                  <ItemCard item={item} />
+                  {isOwner && (
+                    <IconButton
+                      aria-label="Remove from collection"
+                      position="absolute"
+                      top={2}
+                      right={2}
+                      size="xs"
+                      colorPalette="red"
+                      variant="solid"
+                      onClick={() => removeMutation.mutate(item.id)}
+                      zIndex={10}
                     >
-                      <Text
-                        fontSize="xs"
-                        fontWeight="bold"
-                        lineClamp={1}
-                        flex={1}
-                        mr={2}
-                      >
-                        {item.title}
-                      </Text>
-                      <IconButton
-                        aria-label="Add to collection"
-                        size="xs"
-                        colorPalette="orange"
-                        onClick={() => addMutation.mutate(item.id)}
-                        loading={
-                          addMutation.isPending &&
-                          addMutation.variables === item.id
-                        }
-                      >
-                        <FiPlus />
-                      </IconButton>
-                    </Flex>
-                  ))
-                )}
-              </VStack>
-            </Box>
+                      <FiTrash2 />
+                    </IconButton>
+                  )}
+                </Box>
+              ))}
+            </Grid>
           )}
-        </Grid>
+        </Box>
       </VStack>
     </Container>
   )

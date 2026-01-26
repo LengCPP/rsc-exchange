@@ -580,7 +580,9 @@ export type InterestsReadInterestsData = {
 export type InterestsReadInterestsResponse = (Array<InterestPublic>);
 
 export type ItemsReadItemsData = {
+    category?: (string | null);
     excludeCollections?: boolean;
+    genre?: (string | null);
     limit?: number;
     ownerId?: (string | null);
     skip?: number;
@@ -659,6 +661,20 @@ export type LoansReturnLoanData = {
 };
 
 export type LoansReturnLoanResponse = (LoanPublic);
+
+export type LoansCreateExtensionRequestData = {
+    id: string;
+    newEndDate: string;
+};
+
+export type LoansCreateExtensionRequestResponse = (LoanPublic);
+
+export type LoansRespondToExtensionRequestData = {
+    accept: boolean;
+    id: string;
+};
+
+export type LoansRespondToExtensionRequestResponse = (LoanPublic);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;

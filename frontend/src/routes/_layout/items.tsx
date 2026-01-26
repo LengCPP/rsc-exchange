@@ -7,6 +7,7 @@ import {
   HStack,
   Heading,
   VStack,
+  Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -17,7 +18,7 @@ import { z } from "zod"
 import { CollectionsService, ItemsService } from "@/client"
 import AddCollection from "@/components/Collections/AddCollection"
 import CollectionCard from "@/components/Collections/CollectionCard"
-import AddItem from "@/components/Items/AddItem"
+import AddItem, { BOOK_CLASSIFICATION } from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
 import PendingItems from "@/components/Pending/PendingItems"
 import { useColorModeValue } from "@/components/ui/color-mode"
@@ -34,6 +35,8 @@ const itemsSearchSchema = z.object({
   sort_by: z.string().catch("created_at"),
   sort_order: z.string().catch("desc"),
   limit: z.number().catch(8),
+  category: z.string().optional(),
+  genre: z.string().optional(),
 })
 
 function getItemsQueryOptions({
@@ -42,12 +45,16 @@ function getItemsQueryOptions({
   sort_order,
   limit,
   ownerId,
+  category,
+  genre,
 }: {
   page: number
   sort_by: string
   sort_order: string
   limit: number
   ownerId?: string
+  category?: string
+  genre?: string
 }) {
   return {
     queryFn: () =>
@@ -58,10 +65,21 @@ function getItemsQueryOptions({
         sortOrder: sort_order,
         excludeCollections: true,
         ownerId: ownerId,
+        category: category,
+        genre: genre,
       }),
     queryKey: [
       "items",
-      { page, sort_by, sort_order, limit, excludeCollections: true, ownerId },
+      {
+        page,
+        sort_by,
+        sort_order,
+        limit,
+        excludeCollections: true,
+        ownerId,
+        category,
+        genre,
+      },
     ],
   }
 }
@@ -107,7 +125,7 @@ function CollectionsTable() {
 
 function SortingControls() {
   const navigate = useNavigate({ from: Route.fullPath })
-  const { sort_by, sort_order, limit } = Route.useSearch()
+  const { sort_by, sort_order, limit, category, genre } = Route.useSearch()
 
   const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     navigate({
@@ -131,6 +149,27 @@ function SortingControls() {
     })
   }
 
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    navigate({
+      search: (prev: any) => ({
+        ...prev,
+        category: e.target.value || undefined,
+        genre: undefined, // Reset genre when category changes
+        page: 1,
+      }),
+    })
+  }
+
+  const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    navigate({
+      search: (prev: any) => ({
+        ...prev,
+        genre: e.target.value || undefined,
+        page: 1,
+      }),
+    })
+  }
+
   const selectBg = useColorModeValue("white", "gray.800")
   const selectColor = useColorModeValue("black", "white")
   const selectBorder = useColorModeValue("gray.300", "gray.600")
@@ -146,6 +185,38 @@ function SortingControls() {
 
   return (
     <Flex gap={2} align="center" wrap="wrap">
+      <select
+        value={category || ""}
+        onChange={handleCategoryChange}
+        style={selectStyle}
+      >
+        <option value="" style={{ backgroundColor: selectBg }}>
+          All Categories
+        </option>
+        {Object.keys(BOOK_CLASSIFICATION).map((cat) => (
+          <option key={cat} value={cat} style={{ backgroundColor: selectBg }}>
+            {cat}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={genre || ""}
+        onChange={handleGenreChange}
+        style={selectStyle}
+        disabled={!category}
+      >
+        <option value="" style={{ backgroundColor: selectBg }}>
+          All Genres
+        </option>
+        {category &&
+          BOOK_CLASSIFICATION[category]?.map((gen) => (
+            <option key={gen} value={gen} style={{ backgroundColor: selectBg }}>
+              {gen}
+            </option>
+          ))}
+      </select>
+
       <select value={sort_by} onChange={handleSortByChange} style={selectStyle}>
         <option value="created_at" style={{ backgroundColor: selectBg }}>
           Date Created
@@ -186,7 +257,8 @@ function SortingControls() {
 
 function ItemsTable() {
   const navigate = useNavigate({ from: Route.fullPath })
-  const { page, sort_by, sort_order, limit } = Route.useSearch()
+  const { page, sort_by, sort_order, limit, category, genre } =
+    Route.useSearch()
   const { user } = useAuth()
 
   const { data, isLoading, isPlaceholderData } = useQuery({
@@ -196,6 +268,8 @@ function ItemsTable() {
       sort_order,
       limit,
       ownerId: user?.id,
+      category,
+      genre,
     }),
     placeholderData: (prevData) => prevData,
     enabled: !!user,
@@ -223,10 +297,17 @@ function ItemsTable() {
   }
 
   if (items.length === 0 && page === 1) {
-    // If we have no visible items, but we DO have items (hidden in collections),
+    // If we have no visible items, but we DO have items (hidden in collections or filtered out),
     // we should NOT show the empty state.
     if (hasAnyItems) {
-      return null
+      return (
+        <Box mt={8}>
+          <Heading size="md" mb={4}>
+            My Items
+          </Heading>
+          <Text color="gray.500">No items match your filters.</Text>
+        </Box>
+      )
     }
 
     return (

@@ -62,7 +62,9 @@ def read_items(
     owner_id: uuid.UUID | None = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    exclude_collections: bool = False
+    exclude_collections: bool = False,
+    category: str | None = None,
+    genre: str | None = None
 ) -> Any:
     """
     Retrieve items.
@@ -91,6 +93,16 @@ def read_items(
         .join(UserItem)
         .where(UserItem.user_id.in_(all_visible_user_ids))
     )
+
+    if category:
+        item_ids_query = item_ids_query.where(
+            func.json_extract_path_text(Item.extra_data, 'category') == category
+        )
+    
+    if genre:
+        item_ids_query = item_ids_query.where(
+            func.json_extract_path_text(Item.extra_data, 'genre') == genre
+        )
 
     if exclude_collections:
         from app.models import CollectionItem, Collection

@@ -19,6 +19,7 @@ import { FaPlus } from "react-icons/fa"
 
 import {
   type Body_items_create_item,
+  CollectionsService,
   CommunitiesService,
   ItemsService,
 } from "@/client"
@@ -54,7 +55,7 @@ interface ItemCreate {
   image_url?: string
 }
 
-const BOOK_CLASSIFICATION: Record<string, string[]> = {
+export const BOOK_CLASSIFICATION: Record<string, string[]> = {
   Fiction: [
     "Fantasy",
     "Science Fiction (Sci-Fi)",
@@ -104,8 +105,9 @@ const BOOK_CLASSIFICATION: Record<string, string[]> = {
 
 const AddItem = ({
   communityId,
+  collectionId,
   isAdmin,
-}: { communityId?: string; isAdmin?: boolean }) => {
+}: { communityId?: string; collectionId?: string; isAdmin?: boolean }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [mode, setMode] = useState<"create" | "pool">("pool")
   const [searchQuery, setSearchQuery] = useState("")
@@ -197,12 +199,30 @@ const AddItem = ({
   const mutation = useMutation({
     mutationFn: (data: Body_items_create_item) =>
       ItemsService.createItem({ formData: data }),
-    onSuccess: () => {
+    onSuccess: (newItem) => {
       showSuccessToast(
         communityId
           ? "Community item created successfully."
           : "Item created successfully.",
       )
+
+      // If we are in a collection view, add the newly created item to the collection
+      if (collectionId) {
+        CollectionsService.addItemToCollection({
+          id: collectionId,
+          itemId: newItem.id,
+        })
+          .then(() => {
+            showSuccessToast("Item added to collection.")
+            queryClient.invalidateQueries({
+              queryKey: ["collections", collectionId],
+            })
+          })
+          .catch(() => {
+            showErrorToast("Failed to add new item to collection.")
+          })
+      }
+
       reset()
       setImageFile(null)
       setIsOpen(false)
