@@ -1,5 +1,6 @@
 import type { CollectionPublic } from "@/client"
 import { useColorModeValue } from "@/components/ui/color-mode"
+import { Tooltip } from "@/components/ui/tooltip"
 import { getImageUrl } from "@/utils"
 import {
   Badge,
@@ -35,13 +36,24 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
       overflow="hidden"
       transition="transform 0.2s"
       _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
+      display="flex"
+      flexDirection="column"
+      h="100%"
     >
-      <Card.Body p={4}>
+      <Card.Body p={4} as={Flex} direction="column" h="100%">
         <Flex justify="space-between" align="start" mb={4}>
           <VStack align="start" gap={0}>
-            <Text fontSize="xl" fontWeight="bold" color={textColor}>
-              {collection.title}
-            </Text>
+            <Tooltip content={collection.title} showArrow>
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                color={textColor}
+                lineClamp={2}
+                minHeight="3em"
+              >
+                {collection.title}
+              </Text>
+            </Tooltip>
             <Badge colorPalette="orange" variant="subtle" size="sm">
               {collection.collection_type === "library"
                 ? "Library"
@@ -131,10 +143,24 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
 
         <Text
           fontSize="sm"
-          lineClamp={2}
           color={textColor}
           opacity={0.8}
           mb={4}
+          height="3em"
+          overflowY="auto"
+          sx={{
+            "&::-webkit-scrollbar": { width: "4px" },
+            "&::-webkit-scrollbar-track": { bg: "transparent" },
+            "&::-webkit-scrollbar-thumb": {
+              bg: "gray.400",
+              borderRadius: "24px",
+            },
+            _dark: {
+              "&::-webkit-scrollbar-thumb": {
+                bg: "gray.600",
+              },
+            },
+          }}
         >
           {collection.description || "No description provided."}
         </Text>
@@ -145,6 +171,7 @@ const CollectionCard = ({ collection }: CollectionCardProps) => {
           colorPalette="orange"
           width="full"
           size="sm"
+          mt="auto"
         >
           <Link
             to="/collections/$collectionId"
