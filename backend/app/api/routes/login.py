@@ -151,10 +151,11 @@ def login_google_init():
     # Since we are running in docker/behind traefik, we might need a configured public URL.
     # For now, let's assume localhost:8000 or the request base url.
     
-    # A safer bet for local dev is hardcoding or using a setting for API_PUBLIC_URL.
-    # We will use http://localhost:8000 for local dev based on the user's prompt context.
-    
-    base_url = "http://localhost:8000" # Should ideally be in settings
+    if settings.ENVIRONMENT == "production":
+        base_url = f"https://api.{settings.DOMAIN}"
+    else:
+        base_url = "http://localhost:8000"
+        
     callback_url = f"{base_url}{settings.API_V1_STR}/auth/google/callback"
     
     google_auth_url = (
@@ -178,7 +179,11 @@ async def login_google_callback(
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Google credentials not configured")
         
-    base_url = "http://localhost:8000"
+    if settings.ENVIRONMENT == "production":
+        base_url = f"https://api.{settings.DOMAIN}"
+    else:
+        base_url = "http://localhost:8000"
+        
     callback_url = f"{base_url}{settings.API_V1_STR}/auth/google/callback"
 
     # Exchange code for token

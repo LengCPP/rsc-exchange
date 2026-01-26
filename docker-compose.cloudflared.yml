@@ -1,0 +1,19 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN?Variable not set}
+    depends_on:
+      - traefik
+    networks:
+      - traefik-public
+
+  # In Tunnel mode, we don't need to override anything because:
+  # 1. docker-compose.yml now ONLY has HTTP routers (no HTTPS to disable).
+  # 2. docker-compose.yml NO LONGER has 'https-redirect' middleware (so no need to remove it).
+  #
+  # This file now serves purely to add the 'cloudflared' service to the stack.
+
+networks:
+  traefik-public:
+    external: true

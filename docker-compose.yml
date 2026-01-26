@@ -35,11 +35,6 @@ services:
       - traefik.constraint-label=traefik-public
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.rule=Host(`adminer.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.rule=Host(`adminer.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls.certresolver=le
       - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
 
   prestart:
@@ -123,19 +118,9 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
       - traefik.constraint-label=traefik-public
-
       - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=8000
-
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=Host(`api.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.entrypoints=http
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.rule=Host(`api.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
-
-      # Enable redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
 
   minio:
     image: minio/minio
@@ -155,23 +140,18 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
       - traefik.constraint-label=traefik-public
-      - traefik.http.services.${STACK_NAME?Variable not set}-minio.loadbalancer.server.port=9000
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-http.rule=Host(`minio.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-https.rule=Host(`minio.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-https.tls.certresolver=le
       
+      # MinIO API
+      - traefik.http.services.${STACK_NAME?Variable not set}-minio.loadbalancer.server.port=9000
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-api.rule=Host(`minio.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-api.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-api.service=${STACK_NAME?Variable not set}-minio
+      
+      # MinIO Console
       - traefik.http.services.${STACK_NAME?Variable not set}-minio-console.loadbalancer.server.port=9001
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-http.rule=Host(`console.minio.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-https.rule=Host(`console.minio.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console-https.tls.certresolver=le
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console.rule=Host(`console.minio.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-minio-console.service=${STACK_NAME?Variable not set}-minio-console
 
   minio-mc:
     image: minio/mc
@@ -204,19 +184,9 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
       - traefik.constraint-label=traefik-public
-
       - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`dashboard.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`dashboard.${DOMAIN?Variable not set}`) || Host(`${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.entrypoints=http
-
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`dashboard.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=le
-
-      # Enable redirection for HTTP and HTTPS
-      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
 
   meilisearch:
     image: getmeili/meilisearch:v1.10
@@ -240,11 +210,6 @@ services:
       - traefik.http.services.${STACK_NAME?Variable not set}-meili.loadbalancer.server.port=7700
       - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.rule=Host(`search.${DOMAIN?Variable not set}`)
       - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.entrypoints=http
-      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-http.middlewares=https-redirect
-      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.rule=Host(`search.${DOMAIN?Variable not set}`)
-      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.entrypoints=https
-      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.tls=true
-      - traefik.http.routers.${STACK_NAME?Variable not set}-meili-https.tls.certresolver=le
 
 volumes:
   app-db-data:
