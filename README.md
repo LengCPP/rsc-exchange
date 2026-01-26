@@ -19,12 +19,15 @@ RSC-Xchange follows a modern, containerized monorepo architecture designed for s
 
 ---
 
-## Recent Features
+## Key Features
 
-- **Enhanced Profile Management**: Users can now update their bio, alias, contact details, and interests through a unified modal interface.
-- **Standardized Avatar Styling**: A deterministic, color-coded avatar system with a themed orange ring for a consistent visual identity.
-- **Profile Customization**: Direct photo upload and real-time preview integrated into the profile view.
-- **Responsive Layout**: A mobile-first, grid-based profile page with scrollable content areas.
+- **Community-Centric Sharing**: Create and join private communities to pool resources (books, games, tools) with trusted circles.
+- **Item Management & Discovery**: Easily catalog items with integrated search (e.g., Book search) and organize them into personal collections.
+- **Lending System**: comprehensive tracking for borrowed and lent items, including due dates, return status, and approval workflows.
+- **Social Connectivity**: Connect with friends, manage relationships, and view user profiles with distinct custom styling.
+- **Notifications**: Stay updated on loan requests, returns, and community activity.
+- **Enhanced Profile Management**: Unified interface for updating bio, alias, contact details, and interests.
+- **Visual Identity**: Standardized, deterministic avatar system with a themed orange ring for consistent user recognition.
 
 ---
 
