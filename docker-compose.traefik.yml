@@ -32,8 +32,10 @@ services:
       - --entrypoints.http.address=:80
       # Disable HTTPS/ACME entrypoints and resolvers since Cloudflare handles SSL
       - --accesslog
+      - --accesslog.format=json
       - --log
       - --log.level=INFO
+      - --log.format=json
       - --api
       - --api.insecure=false
 

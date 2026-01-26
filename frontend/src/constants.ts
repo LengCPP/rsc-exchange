@@ -1,3 +1,5 @@
+export const SESSION_INACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 minutes
+
 export const BOOK_CLASSIFICATION: Record<string, string[]> = {
   Fiction: [
     "Fantasy",

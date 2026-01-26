@@ -5,6 +5,7 @@ import Navbar from "@/components/Common/Navbar"
 import NotFound from "@/components/Common/NotFound"
 import Sidebar from "@/components/Common/Sidebar"
 import { isLoggedIn } from "@/hooks/useAuth"
+import useInactivityLogout from "@/hooks/useInactivityLogout"
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
@@ -19,6 +20,8 @@ export const Route = createFileRoute("/_layout")({
 })
 
 function Layout() {
+  useInactivityLogout()
+
   return (
     <Flex direction="column" h="100vh">
       <Navbar />
