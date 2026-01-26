@@ -28,6 +28,7 @@ interface ItemCardProps {
   communityId?: string
   isAdmin?: boolean
   displayOwnerId?: string
+  onRemoveFromCollection?: () => void
 }
 
 const ItemCard = ({
@@ -36,6 +37,7 @@ const ItemCard = ({
   communityId,
   isAdmin,
   displayOwnerId,
+  onRemoveFromCollection,
 }: ItemCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false)
   const { user } = useAuth()
@@ -216,6 +218,7 @@ const ItemCard = ({
                     item={item}
                     communityId={communityId}
                     isAdmin={isAdmin}
+                    onRemoveFromCollection={onRemoveFromCollection}
                   />
                 ) : (
                   <FriendItemActionsMenu

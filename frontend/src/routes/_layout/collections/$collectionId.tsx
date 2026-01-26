@@ -1,12 +1,15 @@
 import {
   Badge,
   Box,
+  Button,
   Container,
   Flex,
   Grid,
   HStack,
   Heading,
   IconButton,
+  Popover,
+  Portal,
   Select,
   Separator,
   Skeleton,
@@ -16,7 +19,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
-import { FiChevronLeft, FiPlus, FiTrash2 } from "react-icons/fi"
+import { FaFilter } from "react-icons/fa"
+import { FiPlus, FiTrash2 } from "react-icons/fi"
 
 import { CollectionsService, ItemsService } from "@/client"
 import AddItem from "@/components/Items/AddItem"
@@ -156,7 +160,7 @@ function CollectionDetail() {
     backgroundColor: selectBg,
     color: selectColor,
     fontSize: "14px",
-    minWidth: "150px",
+    width: "100%",
   }
 
   return (
@@ -164,14 +168,7 @@ function CollectionDetail() {
       <VStack align="start" gap={6} width="full">
         <HStack width="full" justify="space-between" wrap="wrap" gap={4}>
           <HStack gap={4}>
-            <IconButton asChild variant="ghost" colorPalette="orange">
-              <Link
-                to={isOwner ? "/items" : "/users/$userId"}
-                params={isOwner ? {} : { userId: collection.owner_id }}
-              >
-                <FiChevronLeft />
-              </Link>
-            </IconButton>
+            {/* Back arrow removed */}
             <VStack align="start" gap={0}>
               <Heading size="2xl">{collection.title}</Heading>
               <Text color="gray.500">
@@ -195,42 +192,99 @@ function CollectionDetail() {
           gap={4}
         >
           <HStack gap={2}>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="" style={{ backgroundColor: selectBg }}>
-                All Categories
-              </option>
-              {categories.map((cat) => (
-                <option
-                  key={cat}
-                  value={cat}
-                  style={{ backgroundColor: selectBg }}
+            {/* Filter Button */}
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  colorPalette={
+                    categoryFilter || genreFilter ? "orange" : "gray"
+                  }
                 >
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <select
-              value={genreFilter}
-              onChange={(e) => setGenreFilter(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="" style={{ backgroundColor: selectBg }}>
-                All Genres
-              </option>
-              {genres.map((gen) => (
-                <option
-                  key={gen}
-                  value={gen}
-                  style={{ backgroundColor: selectBg }}
-                >
-                  {gen}
-                </option>
-              ))}
-            </select>
+                  <FaFilter /> Filter
+                </Button>
+              </Popover.Trigger>
+              <Portal>
+                <Popover.Positioner>
+                  <Popover.Content width="300px">
+                    <Popover.Arrow />
+                    <Popover.Body>
+                      <VStack gap={4} align="stretch">
+                        <Box>
+                          <Text fontSize="sm" fontWeight="bold" mb={1}>
+                            Category
+                          </Text>
+                          <select
+                            value={categoryFilter}
+                            onChange={(e) => {
+                              setCategoryFilter(e.target.value)
+                              setGenreFilter("") // Reset genre
+                            }}
+                            style={selectStyle}
+                          >
+                            <option
+                              value=""
+                              style={{ backgroundColor: selectBg }}
+                            >
+                              All Categories
+                            </option>
+                            {categories.map((cat) => (
+                              <option
+                                key={cat}
+                                value={cat}
+                                style={{ backgroundColor: selectBg }}
+                              >
+                                {cat}
+                              </option>
+                            ))}
+                          </select>
+                        </Box>
+                        <Box>
+                          <Text fontSize="sm" fontWeight="bold" mb={1}>
+                            Genre
+                          </Text>
+                          <select
+                            value={genreFilter}
+                            onChange={(e) => setGenreFilter(e.target.value)}
+                            style={selectStyle}
+                            disabled={!categoryFilter}
+                          >
+                            <option
+                              value=""
+                              style={{ backgroundColor: selectBg }}
+                            >
+                              All Genres
+                            </option>
+                            {genres.map((gen) => (
+                              <option
+                                key={gen}
+                                value={gen}
+                                style={{ backgroundColor: selectBg }}
+                              >
+                                {gen}
+                              </option>
+                            ))}
+                          </select>
+                        </Box>
+                        {(categoryFilter || genreFilter) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setCategoryFilter("")
+                              setGenreFilter("")
+                            }}
+                          >
+                            Clear Filters
+                          </Button>
+                        )}
+                      </VStack>
+                    </Popover.Body>
+                  </Popover.Content>
+                </Popover.Positioner>
+              </Portal>
+            </Popover.Root>
           </HStack>
 
           {isOwner && <AddItem collectionId={collection.id} />}
@@ -246,7 +300,7 @@ function CollectionDetail() {
             borderColor={borderColor}
           >
             <Heading size="sm" mb={4}>
-              New Item
+              Add Your Items
             </Heading>
             <Flex wrap="wrap" gap={2}>
               {availableItems.length === 0 ? (
@@ -326,22 +380,14 @@ function CollectionDetail() {
             >
               {filteredItems.map((item) => (
                 <Box key={item.id} position="relative">
-                  <ItemCard item={item} />
-                  {isOwner && (
-                    <IconButton
-                      aria-label="Remove from collection"
-                      position="absolute"
-                      top={2}
-                      right={2}
-                      size="xs"
-                      colorPalette="red"
-                      variant="solid"
-                      onClick={() => removeMutation.mutate(item.id)}
-                      zIndex={10}
-                    >
-                      <FiTrash2 />
-                    </IconButton>
-                  )}
+                  <ItemCard
+                    item={item}
+                    onRemoveFromCollection={
+                      isOwner
+                        ? () => removeMutation.mutate(item.id)
+                        : undefined
+                    }
+                  />
                 </Box>
               ))}
             </Grid>

@@ -26,6 +26,7 @@ import {
 import type { ApiError } from "@/client/core/ApiError"
 import { BookSearchInput } from "@/components/BookSearchInput"
 import { useColorModeValue } from "@/components/ui/color-mode"
+import { BOOK_CLASSIFICATION } from "@/constants"
 import useAuth from "@/hooks/useAuth"
 import type { BookResult } from "@/hooks/useBookSearch"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -53,54 +54,6 @@ interface ItemCreate {
     [key: string]: any
   }
   image_url?: string
-}
-
-export const BOOK_CLASSIFICATION: Record<string, string[]> = {
-  Fiction: [
-    "Fantasy",
-    "Science Fiction (Sci-Fi)",
-    "Mystery & Crime",
-    "Thriller & Suspense",
-    "Romance",
-    "Historical Fiction",
-    "Horror",
-    "Literary Fiction",
-    "Adventure",
-    "Dystopian",
-    "Graphic Novels & Comics",
-    "Westerns",
-  ],
-  "Non-Fiction": [
-    "Biography & Memoir",
-    "Self-Help & Personal Development",
-    "History",
-    "Science & Nature",
-    "Business & Money",
-    "Health & Fitness",
-    "Travel",
-    "Cookbooks & Food",
-    "Religion & Spirituality",
-    "Philosophy",
-    "Politics & Social Sciences",
-    "True Crime",
-    "Art & Photography",
-    "Essays & Criticism",
-  ],
-  "Children's & Young Adult": [
-    "Board Books",
-    "Picture Books",
-    "Early Readers",
-    "Middle Grade",
-    "Young Adult (YA)",
-  ],
-  "Academic & Professional": [
-    "Textbooks",
-    "Reference (Dictionaries, Encyclopedias)",
-    "Medical",
-    "Law",
-    "Computer Science & Technology",
-    "Engineering",
-  ],
 }
 
 const AddItem = ({
@@ -453,7 +406,7 @@ const AddItem = ({
       <DialogTrigger asChild>
         <Button value="add-item" my={4}>
           <FaPlus fontSize="16px" />
-          Add Item
+          New Item
         </Button>
       </DialogTrigger>
       <DialogContent>

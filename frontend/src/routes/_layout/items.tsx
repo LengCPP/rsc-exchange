@@ -1,27 +1,38 @@
 import {
   Box,
+  Button,
   Container,
   EmptyState,
   Flex,
   Grid,
   HStack,
   Heading,
-  VStack,
+  Popover,
+  Portal,
   Text,
+  VStack,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import type React from "react"
+import { FaFilter, FaSortAmountDown } from "react-icons/fa"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
 import { CollectionsService, ItemsService } from "@/client"
 import AddCollection from "@/components/Collections/AddCollection"
 import CollectionCard from "@/components/Collections/CollectionCard"
-import AddItem, { BOOK_CLASSIFICATION } from "@/components/Items/AddItem"
+import AddItem from "@/components/Items/AddItem"
 import ItemCard from "@/components/Items/ItemCard"
 import PendingItems from "@/components/Pending/PendingItems"
-import { useColorModeValue } from "@/components/ui/color-mode"
+import {
+  MenuContent,
+  MenuItemGroup,
+  MenuRadioItem,
+  MenuRadioItemGroup,
+  MenuRoot,
+  MenuTrigger,
+} from "@/components/ui/menu"
 import {
   PaginationItems,
   PaginationNextTrigger,
@@ -29,6 +40,8 @@ import {
   PaginationRoot,
 } from "@/components/ui/pagination"
 import useAuth from "@/hooks/useAuth"
+import { useColorModeValue } from "@/components/ui/color-mode"
+import { BOOK_CLASSIFICATION } from "@/constants"
 
 const itemsSearchSchema = z.object({
   page: z.number().catch(1),
@@ -127,46 +140,9 @@ function SortingControls() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { sort_by, sort_order, limit, category, genre } = Route.useSearch()
 
-  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const updateSearch = (newParams: any) => {
     navigate({
-      search: (prev: any) => ({ ...prev, sort_by: e.target.value, page: 1 }),
-    })
-  }
-
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate({
-      search: (prev: any) => ({ ...prev, sort_order: e.target.value, page: 1 }),
-    })
-  }
-
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate({
-      search: (prev: any) => ({
-        ...prev,
-        limit: Number(e.target.value),
-        page: 1,
-      }),
-    })
-  }
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate({
-      search: (prev: any) => ({
-        ...prev,
-        category: e.target.value || undefined,
-        genre: undefined, // Reset genre when category changes
-        page: 1,
-      }),
-    })
-  }
-
-  const handleGenreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    navigate({
-      search: (prev: any) => ({
-        ...prev,
-        genre: e.target.value || undefined,
-        page: 1,
-      }),
+      search: (prev: any) => ({ ...prev, ...newParams, page: 1 }),
     })
   }
 
@@ -181,76 +157,140 @@ function SortingControls() {
     backgroundColor: selectBg,
     color: selectColor,
     fontSize: "14px",
+    width: "100%",
   }
 
   return (
     <Flex gap={2} align="center" wrap="wrap">
-      <select
-        value={category || ""}
-        onChange={handleCategoryChange}
-        style={selectStyle}
-      >
-        <option value="" style={{ backgroundColor: selectBg }}>
-          All Categories
-        </option>
-        {Object.keys(BOOK_CLASSIFICATION).map((cat) => (
-          <option key={cat} value={cat} style={{ backgroundColor: selectBg }}>
-            {cat}
-          </option>
-        ))}
-      </select>
+      {/* Filter Button */}
+      <Popover.Root>
+        <Popover.Trigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            colorPalette={category || genre ? "orange" : "gray"}
+          >
+            <FaFilter /> Filter
+          </Button>
+        </Popover.Trigger>
+        <Portal>
+          <Popover.Positioner>
+            <Popover.Content width="300px">
+              <Popover.Arrow />
+              <Popover.Body>
+                <VStack gap={4} align="stretch">
+                  <Box>
+                    <Text fontSize="sm" fontWeight="bold" mb={1}>
+                      Category
+                    </Text>
+                    <select
+                      value={category || ""}
+                      onChange={(e) =>
+                        updateSearch({
+                          category: e.target.value || undefined,
+                          genre: undefined,
+                        })
+                      }
+                      style={selectStyle}
+                    >
+                      <option value="" style={{ backgroundColor: selectBg }}>
+                        All Categories
+                      </option>
+                      {Object.keys(BOOK_CLASSIFICATION).map((cat) => (
+                        <option
+                          key={cat}
+                          value={cat}
+                          style={{ backgroundColor: selectBg }}
+                        >
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="bold" mb={1}>
+                      Genre
+                    </Text>
+                    <select
+                      value={genre || ""}
+                      onChange={(e) =>
+                        updateSearch({ genre: e.target.value || undefined })
+                      }
+                      style={selectStyle}
+                      disabled={!category}
+                    >
+                      <option value="" style={{ backgroundColor: selectBg }}>
+                        All Genres
+                      </option>
+                      {category &&
+                        BOOK_CLASSIFICATION[category]?.map((gen) => (
+                          <option
+                            key={gen}
+                            value={gen}
+                            style={{ backgroundColor: selectBg }}
+                          >
+                            {gen}
+                          </option>
+                        ))}
+                    </select>
+                  </Box>
+                  {(category || genre) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        updateSearch({ category: undefined, genre: undefined })
+                      }
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </VStack>
+              </Popover.Body>
+            </Popover.Content>
+          </Popover.Positioner>
+        </Portal>
+      </Popover.Root>
 
-      <select
-        value={genre || ""}
-        onChange={handleGenreChange}
-        style={selectStyle}
-        disabled={!category}
-      >
-        <option value="" style={{ backgroundColor: selectBg }}>
-          All Genres
-        </option>
-        {category &&
-          BOOK_CLASSIFICATION[category]?.map((gen) => (
-            <option key={gen} value={gen} style={{ backgroundColor: selectBg }}>
-              {gen}
-            </option>
-          ))}
-      </select>
-
-      <select value={sort_by} onChange={handleSortByChange} style={selectStyle}>
-        <option value="created_at" style={{ backgroundColor: selectBg }}>
-          Date Created
-        </option>
-        <option value="title" style={{ backgroundColor: selectBg }}>
-          Name
-        </option>
-      </select>
-      <select
-        value={sort_order}
-        onChange={handleSortOrderChange}
-        style={selectStyle}
-      >
-        <option value="desc" style={{ backgroundColor: selectBg }}>
-          Descending
-        </option>
-        <option value="asc" style={{ backgroundColor: selectBg }}>
-          Ascending
-        </option>
-      </select>
-      <select value={limit} onChange={handleLimitChange} style={selectStyle}>
-        <option value={4} style={{ backgroundColor: selectBg }}>
-          4 per page
-        </option>
-        <option value={8} style={{ backgroundColor: selectBg }}>
-          8 per page
-        </option>
-        <option value={12} style={{ backgroundColor: selectBg }}>
-          12 per page
-        </option>
-        <option value={10000} style={{ backgroundColor: selectBg }}>
-          All
-        </option>
-      </select>
+      {/* Sort Button */}
+      <MenuRoot>
+        <MenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            <FaSortAmountDown /> Sort
+          </Button>
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItemGroup title="Sort By">
+            <MenuRadioItemGroup
+              value={sort_by}
+              onValueChange={(e) => updateSearch({ sort_by: e.value })}
+            >
+              <MenuRadioItem value="created_at">Date Created</MenuRadioItem>
+              <MenuRadioItem value="title">Name</MenuRadioItem>
+            </MenuRadioItemGroup>
+          </MenuItemGroup>
+          <MenuItemGroup title="Order">
+            <MenuRadioItemGroup
+              value={sort_order}
+              onValueChange={(e) => updateSearch({ sort_order: e.value })}
+            >
+              <MenuRadioItem value="desc">Descending</MenuRadioItem>
+              <MenuRadioItem value="asc">Ascending</MenuRadioItem>
+            </MenuRadioItemGroup>
+          </MenuItemGroup>
+          <MenuItemGroup title="Items per page">
+            <MenuRadioItemGroup
+              value={String(limit)}
+              onValueChange={(e) => updateSearch({ limit: Number(e.value) })}
+            >
+              <MenuRadioItem value="4">4</MenuRadioItem>
+              <MenuRadioItem value="8">8</MenuRadioItem>
+              <MenuRadioItem value="12">12</MenuRadioItem>
+              <MenuRadioItem value="10000">All</MenuRadioItem>
+            </MenuRadioItemGroup>
+          </MenuItemGroup>
+        </MenuContent>
+      </MenuRoot>
     </Flex>
   )
 }
