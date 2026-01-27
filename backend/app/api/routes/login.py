@@ -43,6 +43,9 @@ def login_access_token(
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    elif not user.is_verified:
+        raise HTTPException(status_code=400, detail="User not verified. Please check your email.")
+        
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(
@@ -104,6 +107,55 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     session.add(user)
     session.commit()
     return Message(message="Password updated successfully")
+
+
+@router.post("/verify-email/")
+def verify_email(token: str, session: SessionDep) -> Message:
+    """
+    Verify email address
+    """
+    email = verify_password_reset_token(token=token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid token")
+    user = crud.get_user_by_email(session=session, email=email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this email does not exist in the system.",
+        )
+    if user.is_verified:
+        return Message(message="Email already verified")
+    
+    user.is_verified = True
+    session.add(user)
+    session.commit()
+    return Message(message="Email verified successfully")
+
+
+@router.post("/resend-verification-email/{email}")
+def resend_verification_email(email: str, session: SessionDep) -> Message:
+    """
+    Resend verification email
+    """
+    user = crud.get_user_by_email(session=session, email=email)
+    if not user:
+         raise HTTPException(
+            status_code=404,
+            detail="The user with this email does not exist in the system.",
+        )
+    if user.is_verified:
+         return Message(message="Email already verified")
+         
+    verification_token = generate_password_reset_token(email=email)
+    email_data = generate_verification_email(
+        email_to=user.email, email=email, token=verification_token
+    )
+    send_email(
+        email_to=user.email,
+        subject=email_data.subject,
+        html_content=email_data.html_content,
+    )
+    return Message(message="Verification email sent")
 
 
 @router.post(
@@ -235,6 +287,7 @@ async def login_google_callback(
         user = crud.create_user(session=session, user_create=user_create)
         # Google users start without a set password
         user.has_set_password = False
+        user.is_verified = True # Google verified
         session.add(user)
         session.commit()
         session.refresh(user)

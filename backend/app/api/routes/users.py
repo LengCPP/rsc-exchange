@@ -263,6 +263,18 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
         )
     user_create = UserCreate.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
+    
+    if settings.emails_enabled and user_in.email:
+        from app.utils import generate_password_reset_token, generate_verification_email
+        verification_token = generate_password_reset_token(email=user_in.email)
+        email_data = generate_verification_email(
+            email_to=user_in.email, email=user_in.email, token=verification_token
+        )
+        send_email(
+            email_to=user_in.email,
+            subject=email_data.subject,
+            html_content=email_data.html_content,
+        )
     return user
 
 

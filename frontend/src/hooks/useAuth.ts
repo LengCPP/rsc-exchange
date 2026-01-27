@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import {
   type Body_login_login_access_token as AccessToken,
@@ -20,11 +20,18 @@ const useAuth = () => {
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: user } = useQuery<UserPublic | null, Error>({
+  const { data: user, isError } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: UsersService.readUserMe,
     enabled: isLoggedIn(),
+    retry: false,
   })
+
+  useEffect(() => {
+    if (isError) {
+      logout()
+    }
+  }, [isError])
 
   const signUpMutation = useMutation({
     mutationFn: (data: UserRegister) =>
@@ -50,11 +57,11 @@ const useAuth = () => {
 
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
-      navigate({ to: "/" })
-    },
     onError: (err: ApiError) => {
+      let errDetail = (err.body as any)?.detail;
+      if (typeof errDetail === "string") {
+        setError(errDetail);
+      }
       handleError(err)
     },
   })
